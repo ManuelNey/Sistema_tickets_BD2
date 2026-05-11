@@ -22,12 +22,27 @@ El frontend todavía conserva la pantalla inicial generada por Vite y React.
 
 - `backend/`: solución .NET con la API principal
 - `frontend/`: cliente web con Vite y React
-- `database/`: recursos relacionados con la base de datos. Aqui colocaremos el mer correspondiente junto con otras cosas.
-- `docker-compose.yml`: entornos para la base de datos, backend y frontend
+- `database/`: documentos y scripts relacionados con la base de datos y el MER
+- `docker-compose.yml`: orquestacion de la base de datos, backend y frontend
+
+## Arquitectura Del Backend
+
+El backend esta dividido en capas para mantener el codigo ordenado y facilitar el crecimiento del sistema.
+
+- `Ticketing.API/`: es la puerta de entrada del sistema. Aca viven los endpoints HTTP, Swagger y la configuracion general.
+- `Ticketing.Application/`: contiene la logica principal de la aplicacion y los casos de uso, como compras, transferencias y validaciones.
+- `Ticketing.Domain/`: representa las entidades y reglas del negocio, como usuarios, eventos, entradas y ventas.
+- `Ticketing.Infrastructure/`: se encarga de la conexion con PostgreSQL, Entity Framework y la persistencia de datos.
+
+Flujo general:
+
+`Frontend` -> `API` -> `Application` -> `Domain` -> `Infrastructure` -> `PostgreSQL`
+
+La idea de esta separacion es que cada parte tenga una responsabilidad clara y sea mas facil agregar funcionalidades mas adelante.
 
 ## Requisitos
 
-- Docker por ahora.
+- Docker y Docker Compose.
 
 ## Ejecutar con Docker
 
