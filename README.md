@@ -1,81 +1,151 @@
-# Sistema_tickets_BD2
+# Sistema_tickets_BD2 — Guía detallada (carpeta por carpeta)
 
-Sistema de tickets en desarrollo con backend en .NET 8, frontend en React + Vite y base de datos PostgreSQL.
+Este README explica la estructura del proyecto y presenta instrucciones para comprender su funcionamiento, por ahora solo está enfocado en el backend del mismo.
+**Resumen**:El proyecto utiliza .NET 8 (API REST) con base de datos PostgreSQL y frontend Vite + React. 
 
-## Estado actual
+**Estructura de carpetas (top-level)**
+- **`backend/`**: solución .NET. La API está en **`backend/Ticketing.API`**.
+  - Revisa `backend/Ticketing.API/Program.cs` ([Program.cs](backend/Ticketing.API/Program.cs#L1)) para ver el pipeline mínimo, DI y Swagger.
+  - `backend/Ticketing.API/Controllers/` — controladores HTTP (ej.: `MenuMatchController`).
+  - `backend/Ticketing.API/Repositories/` — acceso a datos (ej.: `MenuMatchDtoRepository.cs`).
+  - `backend/Ticketing.API/Data/` — fábrica de conexiones (`IPostgresConnectionFactory` / `PostgresConnectionFactory`).
+  - `backend/Ticketing.API/DTOs/` — DTOs compartidos (ej.: `MenuMatchDto`).
+  - `backend/Ticketing.API/Models/` — entidades/ modelos del dominio (ej.: `Entrada`, `Encuentro`).
+  - `backend/Ticketing.API/appsettings.json` — connection string por defecto para correr local.
 
-El proyecto por ahora tiene:
+- **`database/init/`**: scripts SQL de inicialización.
+  - `schema.sql` — crea todas las tablas y constraints. Ver: [database/init/schema.sql](database/init/schema.sql#L1).
+  - `seed.sql` — inserta datos mínimos para desarrollo (equipos, estadio, encuentro, habilita, entrada, etc.).
 
-- una API en ASP.NET Core ubicada en `backend/Ticketing.API` 
-- una aplicación web en React ubicada en `frontend`
-- una base de datos PostgreSQL definida para ejecutarse con Docker
+- **`frontend/`**: proyecto Vite/React (o similar) con Dockerfile para servir la UI.
 
-Por ahora la API expone endpoints básicos de prueba:
+- **`scripts/`**: Se generaro scripts de automatización (PowerShell y Bash) para iniciar y reset. Ver `scripts/README.md` que detalla cada uno. IMPORTANTE SI DESEAS LEVANTAR EL PROYECTO
 
-- `GET /` devuelve `API funcionando`
-- `GET /weatherforecast` devuelve datos de ejemplo generados por una plantilla de .NET
-- Swagger está habilitado para que podamos ver la API
+**Detalles prácticos del backend**
 
-El frontend todavía conserva la pantalla inicial generada por Vite y React.
+**1) Inicio y configuración**
+- Por defecto `backend/Ticketing.API/appsettings.json` contiene:
+  - `ConnectionStrings:TicketingDb = "Host=localhost;Port=5432;Database=ticketing;Username=postgres;Password=postgres"`.
+  - Esto es relevante si querés conectar desde una herramienta externa (DataGrip, DBeaver) o ejecutar la API localmente con `dotnet run`.
 
-## Estructura
+**2) Cómo se conecta la API a la BD**
 
-- `backend/`: solución .NET con la API principal
-- `frontend/`: cliente web con Vite y React
-- `database/`: documentos y scripts relacionados con la base de datos y el MER
-- `docker-compose.yml`: orquestacion de la base de datos, backend y frontend
+- `backend/Ticketing.API/Data/PostgresConnectionFactory.cs` lee `ConnectionStrings:TicketingDb` desde `IConfiguration` y crea `NpgsqlConnection`. Centralizar la conexión facilita cambiar cadenas, añadir logging o mockear en tests.
 
-## Arquitectura Del Backend
+**Modelos (`Models`) vs DTOs (`DTOs`)**
 
-El backend esta dividido en capas para mantener el codigo ordenado y facilitar el crecimiento del sistema.
+- **`Models`**: representan las entidades del dominio y/o la estructura de las tablas en la base de datos (ej.: `Ticket`, `Encuentro`). Se usan internamente en la capa de datos o en la lógica de negocio.
+- **`DTOs`**: objetos de transferencia diseñados para la API. Se usan para devolver al cliente exactamente lo necesario (ej.: `MenuMatchDto`) o para recibir datos de entrada (`CreateTicketDto`).
 
-- `Ticketing.API/`: es la puerta de entrada del sistema. Aca viven los endpoints HTTP, Swagger y la configuracion general.
-- `Ticketing.Application/`: contiene la logica principal de la aplicacion y los casos de uso, como compras, transferencias y validaciones.
-- `Ticketing.Domain/`: representa las entidades y reglas del negocio, como usuarios, eventos, entradas y ventas.
-- `Ticketing.Infrastructure/`: se encarga de la conexion con PostgreSQL, Entity Framework y la persistencia de datos.
 
-Flujo general:
+Cuándo crear un DTO:
+- Cuando la forma del dato devuelto difiere de la entidad DB (agregados,joins,transformaciones).
+- Para controlar la superficie pública de la API (no exponer campos sensibles ni internos).
 
-`Frontend` -> `API` -> `Application` -> `Domain` -> `Infrastructure` -> `PostgreSQL`
+Ejemplo:
 
-La idea de esta separacion es que cada parte tenga una responsabilidad clara y sea mas facil agregar funcionalidades mas adelante.
+```csharp
+// backend/Ticketing.API/Models/Ticket.cs
+public class Ticket { public int Id { get; set; } public decimal Price { get; set; } /*...*/ }
 
-## Requisitos
-
-- Docker y Docker Compose.
-
-## Ejecutar con Docker
-
-Desde la raíz del proyecto:
-
-```bash
-docker-compose up --build
+// backend/Ticketing.API/DTOs/TicketDto.cs
+public class TicketDto { public int Id { get; set; } public decimal Price { get; set; } }
 ```
 
-Servicios disponibles:
+**3) Repositorios y mapeo (Repository Pattern)**
 
-- API: `http://localhost:8080`
-- Frontend: `http://localhost:5173`
-- PostgreSQL: `localhost:5432`
+- Un `Repository` encapsula la lógica de acceso a datos para una entidad o caso de uso concreto. Responsabilidades:
+  - Ejecutar SQL o usar un ORM(Yo quería :(  ).
+  - Mapear filas a `Model` o `DTO`.
+  - Manejar transacciones cuando corresponda.
+  - Exponer métodos con intención de negocio (`GetMenuMatchesAsync`, `CreateTicketAsync`).
 
-## Ejecutar localmente
+- Qué no debe hacer:
+  - No contener lógica de presentación ni exponer objetos de infraestructura.
 
-### Backend
+Interfaz y ejemplo (esbozo):
 
-```bash
-cd backend
-dotnet run --project Ticketing.API/Ticketing.API.csproj
+```csharp
+// backend/Ticketing.API/Repositories/IMenuMatchDtoRepository.cs
+public interface IMenuMatchDtoRepository {
+    Task<IReadOnlyCollection<MenuMatchDto>> GetMenuMatchesAsync(CancellationToken ct = default);
+}
+
+// backend/Ticketing.API/Repositories/MenuMatchDtoRepository.cs (esbozo)
+public class MenuMatchDtoRepository : IMenuMatchDtoRepository {
+    private readonly IPostgresConnectionFactory _connFactory;
+    public MenuMatchDtoRepository(IPostgresConnectionFactory connFactory) => _connFactory = connFactory;
+
+    public async Task<IReadOnlyCollection<MenuMatchDto>> GetMenuMatchesAsync(CancellationToken ct = default) {
+        await using var conn = _connFactory.Create();
+        await conn.OpenAsync(ct);
+        await using var cmd = conn.CreateCommand();
+        cmd.CommandText = "/* SQL complejo con joins */";
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        var list = new List<MenuMatchDto>();
+        while (await reader.ReadAsync(ct)) {
+            var dto = new MenuMatchDto {
+                //Si ven que dan problema con mapear fecha y tiempo por separado guiense con esto
+                Date = reader.IsDBNull(reader.GetOrdinal("fecha")) ? null : reader.GetFieldValue<DateOnly>(reader.GetOrdinal("fecha")), 
+                Time = reader.IsDBNull(reader.GetOrdinal("hora")) ? null : reader.GetFieldValue<TimeOnly>(reader.GetOrdinal("hora")),
+                // mapear otros campos
+            };
+            list.Add(dto);
+        }
+        return list;
+    }
+}
 ```
 
-### Frontend
+Buenas prácticas para repositorios:
+- Usar `async`/`await` y aceptar `CancellationToken`.
+- Centralizar `NpgsqlConnection` con `IPostgresConnectionFactory`.
 
-```bash
-cd frontend
-npm install
-npm run dev
+**4) Controladores (Controllers)**
+
+- Los controladores definen rutas HTTP, validan la entrada, llaman a repositorios o servicios y devuelven respuestas HTTP. Mantenerlos delgados (orquestación, validación básica, autorización).
+
+Ejemplo (actual en el repo):
+
+```csharp
+// backend/Ticketing.API/Controllers/MenuMatchController.cs
+[ApiController]
+[Route("api/[controller]")]
+public class MenuMatchController : ControllerBase {
+    private readonly IMenuMatchDtoRepository _menuMatchRepo;
+    public MenuMatchController(IMenuMatchDtoRepository menuMatchRepo) => _menuMatchRepo = menuMatchRepo;
+
+    [HttpGet("matches")]
+    public async Task<ActionResult<IReadOnlyCollection<MenuMatchDto>>> GetMenuMatches(CancellationToken ct) {
+        var matches = await _menuMatchRepo.GetMenuMatchesAsync(ct);
+        return Ok(matches);
+    }
+}
 ```
 
-## Notas
+Puntos clave:
+- Usar `ActionResult<T>` y `CancellationToken`.
+- No poner lógica de negocio compleja en controllers.
 
-- El backend usa Swagger en desarrollo.
-- La aplicación sigue en una etapa inicial, así que este README se actualizará cuando se agreguen las entidades, los endpoints y flujo del proyecto.
+**Dependency Injection (DI)**
+
+- Registrar servicios en `Program.cs` permite inyectar dependencias en controllers y repos. Ejemplo de registro:
+
+```csharp
+builder.Services.AddScoped<IMenuMatchDtoRepository, MenuMatchDtoRepository>();
+builder.Services.AddSingleton<IPostgresConnectionFactory, PostgresConnectionFactory>();
+```
+Cada nuevo Controller debe registrarse automáticamente mediante AddControllers().
+
+Program.cs se utiliza principalmente para configurar servicios, dependencias, Swagger y el pipeline de ejecución. 
+
+**Cómo añadir un nuevo endpoint (guía paso a paso)**
+
+1. Diseñá la respuesta o request/respuesta → creá DTOs o Models si lo ves correcto en `backend/Ticketing.API/DTOs/`. 
+2. Añadí un método en la interfaz del repository y su implementación que realice la query/operación.
+3. Implementá el mapeo dentro del repository.
+4. Añadí un controller con la ruta y acción, inyectando la interfaz del repo.
+5. Registrá la implementación en `Program.cs`.
+6. Probá en Swagger (`/swagger`) y con `curl` o Postman, lo que más te guste
+
+

@@ -1,4 +1,4 @@
-Scripts para automatizar el arranque y reset del proyecto (backend + BD + frontend).
+Los scripts de esta carpeta se hicieron para automatizar el arranque y reset del proyecto (backend + BD + frontend).
 
 PowerShell (Windows)
 - `scripts\\bootstrap.ps1` – compila, inicia Postgres, aplica schema+seed, arranca backend/frontend
@@ -23,4 +23,4 @@ Ejemplos de uso (Unix):
 Notas:
 - Los scripts asumen que `docker` y `docker compose` están instalados y disponibles en `PATH`.
 - `schema.sql` y `seed.sql` se aplican directamente en la base `ticketing` dentro del contenedor `ticketing-db`.
-- Ejecutar `reset-db` elimina volúmenes e imágenes locales para dejar la BD limpia.
+- Ejecutar `reset-db` elimina volúmenes e imágenes locales para dejar la BD limpia (es godd)

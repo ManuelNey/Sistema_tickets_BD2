@@ -12,12 +12,18 @@ services:
       POSTGRES_DB: ticketing
     ports:
       - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d:ro
 
   backend:
     build: ./backend
     container_name: ticketing-api
     ports:
       - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__TicketingDb: Host=postgres;Port=5432;Database=ticketing;Username=postgres;Password=postgres
     depends_on:
       - postgres
 
@@ -26,3 +32,6 @@ services:
     container_name: ticketing-front
     ports:
       - "5173:5173"
+
+volumes:
+  db-data:
