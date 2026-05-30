@@ -1,6 +1,11 @@
 @Ticketing.API_HostAddress = http://localhost:5161
 
-GET {{Ticketing.API_HostAddress}}/weatherforecast/
+GET {{Ticketing.API_HostAddress}}/api/health
+Accept: application/json
+
+###
+
+GET {{Ticketing.API_HostAddress}}/api/tickets
 Accept: application/json
 
 ###
