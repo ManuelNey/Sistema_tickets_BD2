@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Ticketing.API.DTOs;
 using Ticketing.API.Repositories;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Ticketing.API.Controllers;
 
@@ -16,6 +17,7 @@ public class MenuMatchController : ControllerBase
     }
 
     [HttpGet("matches")]
+    [Authorize]
     public async Task<ActionResult<IReadOnlyCollection<MenuMatchDto>>> GetMenuMatches()
     {
         var matches = await _menuMatchRepo.GetMenuMatchesAsync();
