@@ -20,9 +20,22 @@ public class UsuarioRepository : IUsuarioRepository
         using var cmd = connection.CreateCommand();
 
         cmd.CommandText = @"
-            SELECT p.mail, p.nombre, p.apellido, u.identidad_verificada, u.fecha_registro
+            SELECT
+                p.mail,
+                p.nombre,
+                p.apellido,
+                COALESCE(u.identidad_verificada, false) AS identidad_verificada,
+                COALESCE(u.fecha_registro, p.fecha_nacimiento::timestamp with time zone, now()) AS fecha_registro,
+                CASE
+                    WHEN a.persona_mail IS NOT NULL THEN 'admin'
+                    WHEN f.persona_mail IS NOT NULL THEN 'funcionario'
+                    WHEN u.persona_mail IS NOT NULL THEN 'usuario'
+                    ELSE 'persona'
+                END AS rol
             FROM persona p
-            JOIN usuario u ON p.mail = u.persona_mail
+            LEFT JOIN usuario u ON p.mail = u.persona_mail
+            LEFT JOIN administrador a ON p.mail = a.persona_mail
+            LEFT JOIN funcionario f ON p.mail = f.persona_mail
             WHERE p.mail = @mail";
 
         cmd.Parameters.AddWithValue("@mail", mail);
@@ -36,7 +49,8 @@ public class UsuarioRepository : IUsuarioRepository
                 Nombre = reader.GetString(1),
                 Apellido = reader.GetString(2),
                 IdentidadVerificada = reader.GetBoolean(3),
-                FechaRegistro = reader.GetDateTime(4)
+                FechaRegistro = reader.GetDateTime(4),
+                Rol = reader.GetString(5)
             };
         }
 
@@ -104,9 +118,23 @@ public class UsuarioRepository : IUsuarioRepository
         using var cmd = connection.CreateCommand();
 
         cmd.CommandText = @"
-            SELECT p.mail, p.nombre, p.apellido, p.contrasena, u.identidad_verificada, u.fecha_registro
+            SELECT
+                p.mail,
+                p.nombre,
+                p.apellido,
+                p.contrasena,
+                COALESCE(u.identidad_verificada, false) AS identidad_verificada,
+                COALESCE(u.fecha_registro, p.fecha_nacimiento::timestamp with time zone, now()) AS fecha_registro,
+                CASE
+                    WHEN a.persona_mail IS NOT NULL THEN 'admin'
+                    WHEN f.persona_mail IS NOT NULL THEN 'funcionario'
+                    WHEN u.persona_mail IS NOT NULL THEN 'usuario'
+                    ELSE 'persona'
+                END AS rol
             FROM persona p
-            JOIN usuario u ON p.mail = u.persona_mail
+            LEFT JOIN usuario u ON p.mail = u.persona_mail
+            LEFT JOIN administrador a ON p.mail = a.persona_mail
+            LEFT JOIN funcionario f ON p.mail = f.persona_mail
             WHERE p.mail = @mail";
 
         cmd.Parameters.AddWithValue("@mail", mail);
@@ -120,7 +148,8 @@ public class UsuarioRepository : IUsuarioRepository
                 Nombre = reader.GetString(1),
                 Apellido = reader.GetString(2),
                 IdentidadVerificada = reader.GetBoolean(4),
-                FechaRegistro = reader.GetDateTime(5)
+                FechaRegistro = reader.GetDateTime(5),
+                Rol = reader.GetString(6)
             };
         }
 
