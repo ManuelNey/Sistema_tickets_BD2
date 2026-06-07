@@ -74,4 +74,40 @@ public class EstadioRepository : IEstadioRepository
         PaisSedeId= reader.GetInt32(reader.GetOrdinal("fk_pais_sede"))
     };
     }
+
+    public async Task<EstadioDto> UpdateAsync(int id, ActualizarEstadioDto estadio)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+        await using var command = new NpgsqlCommand(
+            @"UPDATE estadio
+                SET nombre = @nuevoNombre, ciudad = @nuevaCiudad, fk_pais_sede = @nuevoPais
+                WHERE id_estadio= @idEstadio
+                RETURNING id_estadio, nombre, ciudad, fk_pais_sede;", connection);
+
+        command.Parameters.AddWithValue("@nuevoNombre",estadio.Nombre);
+        command.Parameters.AddWithValue("@nuevaCiudad",estadio.Ciudad);
+        command.Parameters.AddWithValue("@nuevoPais",estadio.PaisSedeId);
+        command.Parameters.AddWithValue("@idEstadio",id);
+
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if(!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        return new EstadioDto
+            {
+                Id= reader.GetInt32(reader.GetOrdinal("id_estadio")),
+                Nombre= reader.GetString(reader.GetOrdinal("nombre")),
+                Ciudad= reader.GetString(reader.GetOrdinal("ciudad")),
+                PaisSedeId= reader.GetInt32(reader.GetOrdinal("fk_pais_sede"))
+            };
+    }
+
+    
+
+    
 }

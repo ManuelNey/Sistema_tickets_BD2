@@ -38,4 +38,19 @@ public class EstadiosController : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { id = estadioCreado.Id }, estadioCreado);
 
     }
+
+    //Solo admin
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<EstadioDto>> UpdateAsync(int id, [FromBody] ActualizarEstadioDto estadio)
+    {
+
+        var estadioActualizado = await _estadioRepository.UpdateAsync(id, estadio);
+
+        if (estadioActualizado == null)
+        {
+            return NotFound();
+        }
+        
+        return Ok(estadioActualizado);
+    }
 }
