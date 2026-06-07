@@ -8,6 +8,15 @@ const emptyStadiumForm = {
   paisSedeId: '',
 }
 
+function getAuthHeaders(extraHeaders = {}) {
+  const token = localStorage.getItem('ticketmatch-token')
+
+  return {
+    ...extraHeaders,
+    Authorization: `Bearer ${token}`,
+  }
+}
+
 function EstadiosAdmin() {
   const [stadiums, setStadiums] = useState([])
   const [stadiumsError, setStadiumsError] = useState('')
@@ -23,7 +32,9 @@ function EstadiosAdmin() {
     setStadiumsLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8080/api/estadios')
+      const response = await fetch('http://localhost:8080/api/estadios', {
+        headers: getAuthHeaders(),
+      })
 
       if (!response.ok) {
         throw new Error('Stadium request failed')
@@ -91,9 +102,9 @@ function EstadiosAdmin() {
 
       const response = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
-        headers: {
+        headers: getAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify(payload),
       })
 
