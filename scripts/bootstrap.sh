@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Nota: si el volumen de Postgres ya existe, Docker NO vuelve a ejecutar los scripts de init.
+# En ese caso usá ./scripts/reset-db.sh para partir de cero.
+
 echo "Compilando la solución..."
 dotnet build backend/backend.sln
 
@@ -14,10 +17,6 @@ for i in {1..60}; do
   fi
   sleep 2
 done
-
-echo "Aplicando schema y seed..."
-docker exec -i ticketing-db psql -U postgres -d ticketing -q < database/init/schema.sql
-docker exec -i ticketing-db psql -U postgres -d ticketing -q < database/init/seed.sql
 
 echo "Construyendo e iniciando backend/frontend..."
 docker compose build backend frontend

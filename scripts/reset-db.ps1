@@ -1,5 +1,7 @@
 <#
-Resetear la base de datos: detiene servicios, elimina volúmenes/imágenes, recrea Postgres y aplica schema+seed.
+Resetear la base de datos: baja todos los servicios, elimina el volumen y recrea Postgres.
+Docker aplica automáticamente los archivos de database/init/ (01 a 05) en orden alfabético
+al crear el volumen desde cero.
 
 Uso: desde la raíz del repo en PowerShell:
   .\scripts\reset-db.ps1
@@ -13,7 +15,7 @@ docker compose down -v --rmi local --remove-orphans
 Write-Host "Iniciando Postgres desde cero..."
 docker compose up -d postgres
 
-Write-Host "Esperando a que Postgres esté listo..."
+Write-Host "Esperando a que Postgres esté listo (Docker aplica el schema y seed automáticamente)..."
 for ($i = 0; $i -lt 60; $i++) {
     docker exec ticketing-db pg_isready -U postgres > $null 2>&1
     if ($LASTEXITCODE -eq 0) { break }
@@ -25,8 +27,4 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "Aplicando schema y seed..."
-Get-Content -Raw .\database\init\schema.sql | docker exec -i ticketing-db psql -U postgres -d ticketing -q
-Get-Content -Raw .\database\init\seed.sql | docker exec -i ticketing-db psql -U postgres -d ticketing -q
-
-Write-Host "Reset de DB completado."
+Write-Host "Reset de DB completado. Datos cargados desde database/init/01_schema.sql ... 05_negocio.sql"

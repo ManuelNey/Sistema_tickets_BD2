@@ -8,11 +8,13 @@ Qué hace:
 - Compila la solución .NET
 - Inicia el contenedor Postgres (docker compose)
 - Espera que la BD esté lista
-- Aplica `schema.sql` y `seed.sql`
+- Docker aplica automáticamente los archivos database/init/01_schema.sql ... 05_negocio.sql
 - Construye e inicia los contenedores de backend y frontend
+
+Nota: si el volumen de Postgres ya existe, Docker NO vuelve a ejecutar los scripts de init.
+En ese caso usá .\scripts\reset-db.ps1 para partir de cero.
 #>
 
-set -e
 $ErrorActionPreference = 'Stop'
 
 Write-Host "Compilando la solución..."
@@ -32,10 +34,6 @@ if ($LASTEXITCODE -ne 0) {
   Write-Error "Postgres no quedó listo a tiempo. Revisa 'docker logs ticketing-db'."
   exit 1
 }
-
-Write-Host "Aplicando schema.sql y seed.sql..."
-Get-Content -Raw .\database\init\schema.sql | docker exec -i ticketing-db psql -U postgres -d ticketing -q
-Get-Content -Raw .\database\init\seed.sql | docker exec -i ticketing-db psql -U postgres -d ticketing -q
 
 Write-Host "Construyendo e iniciando contenedores backend/frontend..."
 docker compose build backend frontend

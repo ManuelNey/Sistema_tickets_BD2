@@ -25,9 +25,6 @@ CREATE TABLE IF NOT EXISTS persona (
   CONSTRAINT chk_persona_contrasena CHECK (length(trim(contrasena)) >= 6)
 );
 
--- Se utiliza CONSTRAINT para imponer una regla de validación en la tabla.
--- Si el dato no cumple esa condición, PostgreSQL rechaza el INSERT o UPDATE.
-
 CREATE TABLE IF NOT EXISTS telefonos (
   id SERIAL PRIMARY KEY,
   persona_mail VARCHAR(255) NOT NULL REFERENCES persona(mail) ON DELETE CASCADE,
@@ -98,12 +95,6 @@ CREATE TABLE IF NOT EXISTS encuentro (
   CONSTRAINT chk_encuentro_estado CHECK (estado IN ('programado', 'en_juego', 'finalizado', 'cancelado'))
 );
 
---Se incorporó a la tabla del encuentro una columna de estado para poder manejar 
--- las distintas estapas por las cuales puede pasar un encuentro.
---  Esto permitirá controlar mejor las operaciones relacionadas con los encuentros y evitar acciones no permitidas según su estado actual.
---IMPORTANTE: DESPUES HACER QUE EL ENCUENTRO CAMBIE SOLO DE ESTADO AL LLEGAR LA FECHA, O AL FINALIZAR EL ENCUENTRO, ETC. PARA EVITAR INCONSISTENCIAS.
--- NO TIENE QUE SER MANUAL, SINO AUTOMATICO. SE PUEDE HACER CON UN TRIGGER 
-
 CREATE TABLE IF NOT EXISTS sector (
   id_sector SERIAL PRIMARY KEY,
   nombre VARCHAR(200) NOT NULL,
@@ -113,9 +104,6 @@ CREATE TABLE IF NOT EXISTS sector (
   CONSTRAINT chk_sector_nombre CHECK (length(trim(nombre)) > 0),
   CONSTRAINT chk_sector_capacidad CHECK (capacidad_maxima > 0)
 );
---El sector tiene como PK un id propio y no depende de la combinación del estadio y el id del sector 
--- para facilitar las referencias desde otras tablas, como habilita, y evitar la necesidad de múltiples columnas para referenciar el estadio y el sector.
--- Esto simplifica las consultas y mantiene la integridad referencial de manera más eficiente.
 
 CREATE TABLE IF NOT EXISTS habilita (
   id SERIAL PRIMARY KEY,
@@ -123,14 +111,11 @@ CREATE TABLE IF NOT EXISTS habilita (
   fk_sector INTEGER NOT NULL REFERENCES sector(id_sector),
   fk_sector_estadio INTEGER NOT NULL REFERENCES estadio(id_estadio),
   precio NUMERIC(12,2) NOT NULL,
-  fk_administrador_mail VARCHAR(255) NOT NULL REFERENCES persona(mail),
+  fk_administrador_mail VARCHAR(255) NOT NULL REFERENCES administrador(persona_mail),
   CONSTRAINT uq_habilita_encuentro_sector UNIQUE (fk_encuentro, fk_sector),
   CONSTRAINT chk_habilita_precio CHECK (precio >= 0)
 );
 
---Se colocó finalmente un id a la tabla habilita para facilitar las referencias desde otras tablas,
--- como entrada, y evitar la necesidad de múltiples columnas para referenciar el encuentro, sector y estadio.
--- Esto simplifica las consultas y mantiene la integridad referencial de manera más eficiente.
 CREATE TABLE IF NOT EXISTS compra (
   id_compra SERIAL PRIMARY KEY,
   fecha TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -188,5 +173,10 @@ CREATE INDEX IF NOT EXISTS idx_persona_apellido ON persona(apellido);
 CREATE INDEX IF NOT EXISTS idx_usuario_registro ON usuario(fecha_registro);
 CREATE INDEX IF NOT EXISTS idx_encuentro_fecha ON encuentro(fecha);
 CREATE INDEX IF NOT EXISTS idx_entrada_estado ON entrada(estado);
+CREATE INDEX IF NOT EXISTS idx_entrada_habilita ON entrada(fk_habilita_id);
+CREATE INDEX IF NOT EXISTS idx_entrada_usuario ON entrada(fk_usuario_mail);
+CREATE INDEX IF NOT EXISTS idx_habilita_encuentro ON habilita(fk_encuentro);
+CREATE INDEX IF NOT EXISTS idx_habilita_sector ON habilita(fk_sector);
 CREATE INDEX IF NOT EXISTS idx_compra_fecha ON compra(fecha);
 CREATE INDEX IF NOT EXISTS idx_transferencia_fecha ON transferencia(fecha);
+CREATE INDEX IF NOT EXISTS idx_transferencia_entrada ON transferencia(fk_entrada_id);
