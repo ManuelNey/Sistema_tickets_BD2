@@ -18,7 +18,8 @@ builder.Services.AddAuthentication("Bearer").AddJwtBearer(opt =>
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
         ValidateIssuer = false,
-        ValidateAudience = false
+        ValidateAudience = false,
+        RoleClaimType = "rol"
     };
 });
 builder.Services.AddAuthorization();
@@ -39,7 +40,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => c.SchemaFilter<DateOnlySchemaFilter>());
 
 builder.Services.AddSingleton<Ticketing.API.Data.IPostgresConnectionFactory, Ticketing.API.Data.PostgresConnectionFactory>();
-builder.Services.AddSingleton<ITicketRepository, Ticketing.API.Repositories.TicketRepository>();
 builder.Services.AddSingleton<Ticketing.API.Repositories.IMenuMatchDtoRepository, Ticketing.API.Repositories.MenuMatchDtoRepository>();
 builder.Services.AddSingleton<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddSingleton<IJwtService, JwtService>();

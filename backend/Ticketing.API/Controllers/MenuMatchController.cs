@@ -17,7 +17,9 @@ public class MenuMatchController : ControllerBase
     }
 
     [HttpGet("matches")]
-    [Authorize]
+    [Authorize(Roles = "admin,usuario")]
+    // GET /api/MenuMatch/matches
+    // Muestra el menú de partidos disponibles, con información de estadio, equipos y fecha.
     public async Task<ActionResult<IReadOnlyCollection<MenuMatchDto>>> GetMenuMatches()
     {
         var matches = await _menuMatchRepo.GetMenuMatchesAsync();

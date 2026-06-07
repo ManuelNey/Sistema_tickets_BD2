@@ -166,3 +166,9 @@ INSERT INTO encuentro (fecha, fk_equipo_local, fk_equipo_visitante, fk_estadio, 
 ('2026-06-27 19:30:00-04', 42, 43, 6,  'programado'),
 ('2026-06-27 22:00:00-04', 38, 39, 10, 'programado'),
 ('2026-06-27 22:00:00-04', 40, 37, 8,  'programado');
+
+-- Sincronizar sequences después de insertar IDs explícitos.
+-- Sin esto, el próximo INSERT sin ID conflictuaría con los ya existentes.
+SELECT setval(pg_get_serial_sequence('pais_sede', 'id_pais_sede'), MAX(id_pais_sede)) FROM pais_sede;
+SELECT setval(pg_get_serial_sequence('estadio',   'id_estadio'),   MAX(id_estadio))   FROM estadio;
+SELECT setval(pg_get_serial_sequence('equipo',     'id_equipo'),    MAX(id_equipo))    FROM equipo;

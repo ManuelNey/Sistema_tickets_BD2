@@ -21,7 +21,7 @@ public class JwtService : IJwtService
 
     public string GenerateToken(UsuarioResponseDto usuario)
     {
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim("mail", usuario.Mail),
             new Claim("nombre", usuario.Nombre),
@@ -29,9 +29,12 @@ public class JwtService : IJwtService
             new Claim("rol", usuario.Rol)
         };
 
+        if (usuario.PaisSede.HasValue)
+            claims.Add(new Claim("pais_sede", usuario.PaisSede.Value.ToString()));
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(claims),
+            Subject = new ClaimsIdentity(claims.ToArray()),
             Expires = DateTime.UtcNow.AddHours(_expirationHours),
             SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256Signature)
         };

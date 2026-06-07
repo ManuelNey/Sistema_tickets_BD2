@@ -13,6 +13,7 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
         _connectionFactory = connectionFactory;
     }
 
+    // Obtiene el menú de partidos disponibles, con información de estadio, equipos, fecha, precios y cupos disponibles.
     public async Task<IReadOnlyCollection<MenuMatchDto>> GetMenuMatchesAsync()
     {
         var menuMatches = new List<MenuMatchDto>();
@@ -84,7 +85,7 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
         }
         catch (Npgsql.NpgsqlException ex)
         {
-            // DB not available or query failed - for development return empty list and log
+            // Si hay un error específico de la base de datos, lo registramos y devolvemos una lista vacía.
             Console.Error.WriteLine($"MenuMatchDtoRepository DB error: {ex.Message}");
             return menuMatches;
         }
@@ -95,6 +96,7 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
         }
     }
 
+    // Mapea un registro del resultado de la consulta a un MenuMatchDto
     private static MenuMatchDto MapMatchDto(NpgsqlDataReader reader)
     {
         var ordStadium = reader.GetOrdinal("estadio");

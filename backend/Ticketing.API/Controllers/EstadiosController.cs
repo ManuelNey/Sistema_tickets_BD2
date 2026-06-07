@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ticketing.API.DTOs;
 using Ticketing.API.Repositories;
@@ -18,8 +19,8 @@ public class EstadiosController : ControllerBase
     {
         _estadioRepository = estadioRepository;
     }
-    //User y admin
     [HttpGet]
+    [Authorize (Roles = "admin,usuario")]
     // GET /api/estadios
     // Pide todos los estadios al repositorio
     public async Task<ActionResult<IReadOnlyCollection<EstadioDto>>> GetAll()
@@ -28,19 +29,20 @@ public class EstadiosController : ControllerBase
         return Ok(estadios);
     }
 
-    //Solo admin
     [HttpPost("registro")]
+    [Authorize(Roles = "admin")]
+    // POST /api/estadios/registro
     public async Task<ActionResult<EstadioDto>> CreateAsync([FromBody] CrearEstadioDto estadio)
     {
 
         var estadioCreado = await _estadioRepository.CreateAsync(estadio);
         
         return CreatedAtAction(nameof(GetAll), new { id = estadioCreado.Id }, estadioCreado);
-
     }
 
-    //Solo admin
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "admin")]
+    // PUT /api/estadios/{id}
     public async Task<ActionResult<EstadioDto>> UpdateAsync(int id, [FromBody] ActualizarEstadioDto estadio)
     {
 

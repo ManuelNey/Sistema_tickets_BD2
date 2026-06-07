@@ -19,44 +19,36 @@ public class UsuarioRepository : IUsuarioRepository
         await connection.OpenAsync();
         using var cmd = connection.CreateCommand();
 
+        // se hace un left join con las tablas de roles para determinar el rol de la persona
         cmd.CommandText = @"
             SELECT
                 p.mail,
                 p.nombre,
                 p.apellido,
-                COALESCE(u.identidad_verificada, false) AS identidad_verificada,
-                COALESCE(u.fecha_registro, p.fecha_nacimiento::timestamp with time zone, now()) AS fecha_registro,
                 CASE
                     WHEN a.persona_mail IS NOT NULL THEN 'admin'
                     WHEN f.persona_mail IS NOT NULL THEN 'funcionario'
                     WHEN u.persona_mail IS NOT NULL THEN 'usuario'
-                    ELSE 'persona'
-                END AS rol
+                END AS rol,
+                u.identidad_verificada,
+                u.fecha_registro,
+                a.fk_pais_sede
             FROM persona p
-            LEFT JOIN usuario u ON p.mail = u.persona_mail
+            LEFT JOIN usuario u       ON p.mail = u.persona_mail
             LEFT JOIN administrador a ON p.mail = a.persona_mail
-            LEFT JOIN funcionario f ON p.mail = f.persona_mail
+            LEFT JOIN funcionario f   ON p.mail = f.persona_mail
             WHERE p.mail = @mail";
 
         cmd.Parameters.AddWithValue("@mail", mail);
 
         using var reader = await cmd.ExecuteReaderAsync();
-        if (await reader.ReadAsync())
-        {
-            return new UsuarioResponseDto
-            {
-                Mail = reader.GetString(0),
-                Nombre = reader.GetString(1),
-                Apellido = reader.GetString(2),
-                IdentidadVerificada = reader.GetBoolean(3),
-                FechaRegistro = reader.GetDateTime(4),
-                Rol = reader.GetString(5)
-            };
-        }
+        if (!await reader.ReadAsync())
+            return null;
 
-        return null;
+        return MapDto(reader);
     }
 
+    // Verifica si existe un usuario con el mail dado
     public async Task<bool> ExistsAsync(string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -70,12 +62,17 @@ public class UsuarioRepository : IUsuarioRepository
         return await reader.ReadAsync();
     }
 
+    // Crea un nuevo usuario, insertando en persona y usuario dentro de una transacción.
     public async Task CreateAsync(RegistroDto registro)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
+        //Abrimos la transacción para asegurar que ambas inserciones (persona y usuario) 
+        // se realicen correctamente o se deshagan en caso de error
+        await using var tx = await connection.BeginTransactionAsync();
 
         using var insertPersonaCmd = connection.CreateCommand();
+        insertPersonaCmd.Transaction = tx;
         insertPersonaCmd.CommandText = @"
             INSERT INTO persona (mail, nombre, apellido, fecha_nacimiento, tipo_documento,
                                 pais_documento, numero_documento, pais_casa, localidad,
@@ -101,6 +98,7 @@ public class UsuarioRepository : IUsuarioRepository
         await insertPersonaCmd.ExecuteNonQueryAsync();
 
         using var insertUsuarioCmd = connection.CreateCommand();
+        insertUsuarioCmd.Transaction = tx;
         insertUsuarioCmd.CommandText = @"
             INSERT INTO usuario (persona_mail, identidad_verificada, fecha_registro)
             VALUES (@mail, false, @fechaRegistro)";
@@ -109,8 +107,10 @@ public class UsuarioRepository : IUsuarioRepository
         insertUsuarioCmd.Parameters.AddWithValue("@fechaRegistro", DateTime.UtcNow);
 
         await insertUsuarioCmd.ExecuteNonQueryAsync();
+        await tx.CommitAsync();
     }
 
+    // Autentica a un usuario verificando el mail y la contraseña, y devuelve su información si es correcto.
     public async Task<UsuarioResponseDto?> AuthenticateAsync(string mail, string contrasena)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -122,37 +122,50 @@ public class UsuarioRepository : IUsuarioRepository
                 p.mail,
                 p.nombre,
                 p.apellido,
-                p.contrasena,
-                COALESCE(u.identidad_verificada, false) AS identidad_verificada,
-                COALESCE(u.fecha_registro, p.fecha_nacimiento::timestamp with time zone, now()) AS fecha_registro,
                 CASE
                     WHEN a.persona_mail IS NOT NULL THEN 'admin'
                     WHEN f.persona_mail IS NOT NULL THEN 'funcionario'
                     WHEN u.persona_mail IS NOT NULL THEN 'usuario'
-                    ELSE 'persona'
-                END AS rol
+                END AS rol,
+                u.identidad_verificada,
+                u.fecha_registro,
+                a.fk_pais_sede,
+                p.contrasena
             FROM persona p
-            LEFT JOIN usuario u ON p.mail = u.persona_mail
+            LEFT JOIN usuario u       ON p.mail = u.persona_mail
             LEFT JOIN administrador a ON p.mail = a.persona_mail
-            LEFT JOIN funcionario f ON p.mail = f.persona_mail
+            LEFT JOIN funcionario f   ON p.mail = f.persona_mail
             WHERE p.mail = @mail";
 
         cmd.Parameters.AddWithValue("@mail", mail);
 
         using var reader = await cmd.ExecuteReaderAsync();
-        if (await reader.ReadAsync() && contrasena == reader.GetString(3))
-        {
-            return new UsuarioResponseDto
-            {
-                Mail = reader.GetString(0),
-                Nombre = reader.GetString(1),
-                Apellido = reader.GetString(2),
-                IdentidadVerificada = reader.GetBoolean(4),
-                FechaRegistro = reader.GetDateTime(5),
-                Rol = reader.GetString(6)
-            };
-        }
+        if (!await reader.ReadAsync())
+            return null;
 
-        return null;
+        if (contrasena != reader.GetString(reader.GetOrdinal("contrasena")))
+            return null;
+
+        return MapDto(reader);
+    }
+
+    // Mapea lo renderizado de la consulta SQL a un DTO, manejando posibles valores nulos
+    private static UsuarioResponseDto MapDto(NpgsqlDataReader reader)
+    {
+        var ordRol     = reader.GetOrdinal("rol");
+        var ordIdV     = reader.GetOrdinal("identidad_verificada");
+        var ordFR      = reader.GetOrdinal("fecha_registro");
+        var ordPais    = reader.GetOrdinal("fk_pais_sede");
+
+        return new UsuarioResponseDto
+        {
+            Mail                = reader.GetString(reader.GetOrdinal("mail")),
+            Nombre              = reader.GetString(reader.GetOrdinal("nombre")),
+            Apellido            = reader.GetString(reader.GetOrdinal("apellido")),
+            Rol                 = reader.IsDBNull(ordRol)  ? string.Empty          : reader.GetString(ordRol),
+            IdentidadVerificada = reader.IsDBNull(ordIdV)  ? null                  : reader.GetBoolean(ordIdV),
+            FechaRegistro       = reader.IsDBNull(ordFR)   ? null                  : reader.GetDateTime(ordFR),
+            PaisSede            = reader.IsDBNull(ordPais) ? null                  : reader.GetInt32(ordPais)
+        };
     }
 }
