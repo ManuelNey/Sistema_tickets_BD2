@@ -25,7 +25,8 @@ public class JwtService : IJwtService
         {
             new Claim("mail", usuario.Mail),
             new Claim("nombre", usuario.Nombre),
-            new Claim("apellido", usuario.Apellido)
+            new Claim("apellido", usuario.Apellido),
+            new Claim("rol", usuario.Rol)
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
