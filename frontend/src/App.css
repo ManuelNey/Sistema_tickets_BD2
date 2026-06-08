@@ -414,11 +414,15 @@
 .matches-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
+  align-items: stretch;
   gap: 30px;
 }
 
 .match-card {
   overflow: hidden;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
   border: 1px solid #d7d9e2;
   border-radius: 12px;
@@ -426,6 +430,9 @@
 }
 
 .match-hero {
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
   padding: 24px 20px 20px;
   color: #ffffff;
   background: #16051f;
@@ -450,6 +457,7 @@
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 14px;
+  min-height: 128px;
 }
 
 .team {
@@ -478,6 +486,12 @@
 
 .team span {
   max-width: 100%;
+  height: 42px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.25;
+  overflow: hidden;
   overflow-wrap: anywhere;
   text-align: center;
 }
@@ -489,6 +503,9 @@
 }
 
 .match-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   padding: 22px 20px 20px;
 }
 
@@ -512,6 +529,9 @@
 }
 
 .price-block {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
   margin-top: 18px;
   padding-top: 18px;
   border-top: 1px solid #d7d9e2;
@@ -527,7 +547,7 @@
   display: block;
   margin-top: 8px;
   color: #08080b;
-  font-size: 30px;
+  font-size: 27px;
   line-height: 1;
   font-weight: 500;
 }
@@ -619,7 +639,8 @@
 
 .stadium-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(280px, 350px));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  align-items: stretch;
   gap: 30px;
 }
 
@@ -864,6 +885,64 @@
   border-radius: 10px;
   font-size: 15px;
   font-weight: 700;
+}
+
+.delete-confirm-modal {
+  width: min(100%, 480px);
+}
+
+.delete-confirm-modal p {
+  margin: 0;
+  color: #5f6a7e;
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.delete-confirm-modal strong {
+  color: #111111;
+}
+
+.delete-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.cancel-delete-button,
+.confirm-delete-button {
+  height: 54px;
+  border: 0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cancel-delete-button {
+  color: #111111;
+  background: #e7e9ee;
+}
+
+.cancel-delete-button:hover {
+  background: #d7d9e2;
+}
+
+.confirm-delete-button {
+  color: #ffffff;
+  background: #e11d48;
+}
+
+.confirm-delete-button:hover {
+  background: #be123c;
+}
+
+.cancel-delete-button:disabled,
+.confirm-delete-button:disabled,
+.modal-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
 }
 
 @media (max-width: 820px) {

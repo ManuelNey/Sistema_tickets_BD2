@@ -107,6 +107,21 @@ public class EstadioRepository : IEstadioRepository
             };
     }
 
+    public async Task<bool> DeleteAsync(int id)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            @"DELETE FROM estadio
+            WHERE id_estadio = @idEstadio;", connection);
+
+        command.Parameters.AddWithValue("@idEstadio", id);
+
+        var affectedRows = await command.ExecuteNonQueryAsync();
+
+        return affectedRows > 0;
+    }
     
 
     

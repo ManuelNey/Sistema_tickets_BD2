@@ -45,10 +45,12 @@ function StadiumModal({ error, form, isSaving, mode, onChange, onClose, onSubmit
             />
           </label>
 
-          <label>
-            <span>Capacidad Total</span>
-            <input disabled placeholder="Bloqueado hasta tener endpoint de sectores" />
-          </label>
+          {mode === 'edit' && (
+            <label>
+              <span>Capacidad Total</span>
+              <input disabled placeholder="Bloqueado hasta tener endpoint de sectores" />
+            </label>
+          )}
 
           {error && <p className="modal-error">{error}</p>}
 
