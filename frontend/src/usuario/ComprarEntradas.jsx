@@ -1,11 +1,18 @@
 import { useEffect, useState } from 'react'
 import MatchCard from './MatchCard'
+import CompraDetalle from './CompraDetalle'
+import CompraExitosa from './CompraExitosa'
 import { FilterIcon } from './matchIcons'
 
 function ComprarEntradas() {
   const [matches, setMatches] = useState([])
   const [matchesError, setMatchesError] = useState('')
   const [matchesLoading, setMatchesLoading] = useState(false)
+
+  // Maquina de estados de la vista: 'list' (menu) -> 'detalle' (compra) -> 'exito'
+  const [view, setView] = useState('list')
+  const [selectedMatch, setSelectedMatch] = useState(null)
+  const [compraResumen, setCompraResumen] = useState(null)
 
   useEffect(() => {
     const loadMatches = async () => {
@@ -35,6 +42,35 @@ function ComprarEntradas() {
 
     loadMatches()
   }, [])
+
+  const handleComprar = (match) => {
+    setSelectedMatch(match)
+    setView('detalle')
+  }
+
+  const handleVolverAlMenu = () => {
+    setSelectedMatch(null)
+    setView('list')
+  }
+
+  const handleCompraExitosa = (resumen) => {
+    setCompraResumen(resumen)
+    setView('exito')
+  }
+
+  if (view === 'detalle' && selectedMatch) {
+    return (
+      <CompraDetalle
+        match={selectedMatch}
+        onVolver={handleVolverAlMenu}
+        onCompraExitosa={handleCompraExitosa}
+      />
+    )
+  }
+
+  if (view === 'exito' && compraResumen) {
+    return <CompraExitosa resumen={compraResumen} onVolver={handleVolverAlMenu} />
+  }
 
   return (
     <div className="buy-view">
@@ -79,7 +115,11 @@ function ComprarEntradas() {
             <p className="matches-status">No hay partidos disponibles.</p>
           ) : (
             matches.map((match, index) => (
-              <MatchCard key={`${match.localTeam}-${match.visitorTeam}-${index}`} match={match} />
+              <MatchCard
+                key={`${match.localTeam}-${match.visitorTeam}-${index}`}
+                match={match}
+                onComprar={handleComprar}
+              />
             ))
           )}
         </div>

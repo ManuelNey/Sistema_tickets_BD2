@@ -33,3 +33,11 @@ C:\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\refint\Ticketing.A
 C:\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.pdb
 C:\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.genruntimeconfig.cache
 C:\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\ref\Ticketing.API.dll
+C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll

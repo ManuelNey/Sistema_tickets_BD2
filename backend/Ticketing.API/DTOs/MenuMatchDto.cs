@@ -2,6 +2,7 @@ namespace Ticketing.API.DTOs;
 
 public class MenuMatchDto
 {
+    public int IdEncuentro { get; set; }
     public string StadiumName { get; set; } = string.Empty;
     public string LocalTeam { get; set; } = string.Empty;
     public string VisitorTeam { get; set; } = string.Empty;
