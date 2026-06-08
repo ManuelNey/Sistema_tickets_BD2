@@ -4,7 +4,8 @@ import { formatDate, formatPrice, formatTime } from './format'
 function MatchCard({ match, onComprar }) {
   const dateText = formatDate(match.date)
   const timeText = formatTime(match.time)
-  const price = formatPrice(match.minPrice)
+  const minPrice = formatPrice(match.minPrice)
+  const maxPrice = formatPrice(match.maxPrice)
 
   return (
     <article className="match-card">
@@ -28,8 +29,14 @@ function MatchCard({ match, onComprar }) {
         <InfoLine icon="users" text={`${match.availableTickets} disponibles`} highlight />
 
         <div className="price-block">
-          <span>Desde</span>
-          <strong>{price}</strong>
+          <div>
+            <span>Desde</span>
+            <strong>{minPrice}</strong>
+          </div>
+          <div>
+            <span>Hasta</span>
+            <strong>{maxPrice}</strong>
+          </div>
         </div>
 
         <button className="buy-button" type="button" onClick={() => onComprar(match)}>

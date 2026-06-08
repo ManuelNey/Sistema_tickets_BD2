@@ -47,8 +47,8 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
                         ex.fecha::DATE AS fecha,
                         ex.fecha::TIME AS hora,
                         est.nombre AS estadio,
-                        local.nombre AS equipo_local,
-                        visitante.nombre AS equipo_visitante,
+                        local.pais AS equipo_local,
+                        visitante.pais AS equipo_visitante,
                         MIN(h.precio) AS precio_minimo,
                         MAX(h.precio) AS precio_maximo,
                         c.capacidad_total - COALESCE(v.entradas_vendidas, 0) AS cupos_disponibles
@@ -70,8 +70,8 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
                         ex.id_encuentro,
                         ex.fecha,
                         est.nombre,
-                        local.nombre,
-                        visitante.nombre,
+                        local.pais,
+                        visitante.pais,
                         c.capacidad_total,
                         v.entradas_vendidas
                     ORDER BY ex.fecha;", connection);
