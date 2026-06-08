@@ -10,10 +10,8 @@ API REST para la gestión de entradas al Mundial 2026. Permite registro de usuar
 | Base de datos | PostgreSQL 17 |
 | Acceso a datos | ADO.NET + Npgsql (sin ORM) |
 | Autenticación | JWT Bearer (claims personalizados) |
-| Frontend | React + Vite *(pendiente de implementar)* |
+| Frontend | React + Vite |
 | Infraestructura | Docker Compose |
-
-> **Sin ORM.** Todas las queries se escriben en SQL puro dentro de los repositorios usando `NpgsqlCommand`. Es una restricción académica del proyecto.
 
 ---
 
@@ -101,7 +99,7 @@ pais_sede  → id del país sede (solo para admins, ej: 1=Canadá, 2=México, 3=
 [Authorize]                                     // cualquier usuario autenticado
 ```
 
-Esto funciona porque `Program.cs` configura `RoleClaimType = "rol"` en los parámetros de validación del JWT, mapeando el claim personalizado al sistema de roles de ASP.NET.
+Esto funciona porque `Program.cs` configura `RoleClaimType = "rol"` en los parámetros de validación del JWT, permitiendo el acceso al sistema según el rol.
 
 ### Usuarios de prueba (seed)
 
@@ -211,7 +209,7 @@ Sistema_tickets_BD2/
 │       ├── 03_usuarios.sql
 │       ├── 04_operacion.sql
 │       └── 05_negocio.sql
-├── frontend/                  → React + Vite (pendiente)
+├── frontend/                  → React + Vite 
 ├── scripts/                   → bootstrap, reset-db, reset-backend, reset-all (.ps1 y .sh)
 └── docker-compose.yml
 ```
@@ -265,8 +263,3 @@ public class EjemploRepository : IEjemploRepository {
 ```
 
 ---
-
-## Documentación adicional
-
-- `docs/INFORME_AUDITORIA.md` — Auditoría completa del proyecto (arquitectura, bugs encontrados y corregidos, decisiones técnicas).
-- `scripts/README.md` — Detalle de cada script de automatización.
