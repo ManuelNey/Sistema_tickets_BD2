@@ -4,6 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Ticketing.API.DTOs;
 using Ticketing.API.Repositories;
 
+//Token QR
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using Ticketing.API.Services;
+
 namespace Ticketing.API.Controllers;
 
 
@@ -15,10 +21,12 @@ namespace Ticketing.API.Controllers;
 public class EntradasController : ControllerBase
 {
     private readonly IEntradaRepository _entradaRepository;
+    private readonly IJwtService _jwtService;
 
-    public EntradasController(IEntradaRepository entradaRepository)
+    public EntradasController(IEntradaRepository entradaRepository, IJwtService jwtService)
     {
         _entradaRepository = entradaRepository;
+        _jwtService = jwtService;
     }
 
 
@@ -58,4 +66,36 @@ public class EntradasController : ControllerBase
         var entradaCreada = await _entradaRepository.CreateAsync(request.IdHabilita, request.Cantidad, mail);
         return CreatedAtAction(nameof(GetAll), null, entradaCreada);
     }
+    
+
+
+    [HttpPost("{id_Entrada:int}/qr")]
+    [Authorize(Roles = "usuario")]
+    public async Task<ActionResult> GenerarQr(int idEntrada)
+{
+    var mail = User.FindFirstValue("mail");
+
+    if (mail == null)
+        return Unauthorized(new { message = "Usuario no autenticado" });
+
+    var entrada = await _entradaRepository.ObtenerEntradaDto(idEntrada);
+
+    if (entrada == null)
+        return NotFound(new { message = "Entrada no encontrada para este usuario" });
+
+    if (entrada.Estado != "activa")
+        return BadRequest(new { message = "La entrada no está activa" });
+
+    var tokenQr = _jwtService.GenerateQrToken(idEntrada, mail);
+
+    var qrContenido = $"http://localhost:8080/validarEntrada?token={Uri.EscapeDataString(tokenQr)}";
+
+    return Ok(new
+    {
+        entradaId = idEntrada,
+        qrContenido,
+        expiraEn = 30
+    });
+}
+
 }

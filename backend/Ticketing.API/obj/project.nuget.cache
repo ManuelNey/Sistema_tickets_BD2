@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "SxHJp6/vjvU=",
+  "dgSpecHash": "2jvN0OZE818=",
   "success": true,
-  "projectFilePath": "C:\\Sistema_tickets_BD2\\backend\\Ticketing.API\\Ticketing.API.csproj",
+  "projectFilePath": "C:\\Users\\Estudiante UCU\\Desktop\\Sistema_tickets_BD2\\backend\\Ticketing.API\\Ticketing.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Estudiante UCU\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.7\\microsoft.aspnetcore.authentication.jwtbearer.8.0.7.nupkg.sha512",
     "C:\\Users\\Estudiante UCU\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.7\\microsoft.aspnetcore.openapi.8.0.7.nupkg.sha512",

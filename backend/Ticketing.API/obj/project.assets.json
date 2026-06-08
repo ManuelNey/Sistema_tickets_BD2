@@ -953,11 +953,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Sistema_tickets_BD2\\backend\\Ticketing.API\\Ticketing.API.csproj",
+      "projectUniqueName": "C:\\Users\\Estudiante UCU\\Desktop\\Sistema_tickets_BD2\\backend\\Ticketing.API\\Ticketing.API.csproj",
       "projectName": "Ticketing.API",
-      "projectPath": "C:\\Sistema_tickets_BD2\\backend\\Ticketing.API\\Ticketing.API.csproj",
+      "projectPath": "C:\\Users\\Estudiante UCU\\Desktop\\Sistema_tickets_BD2\\backend\\Ticketing.API\\Ticketing.API.csproj",
       "packagesPath": "C:\\Users\\Estudiante UCU\\.nuget\\packages\\",
-      "outputPath": "C:\\Sistema_tickets_BD2\\backend\\Ticketing.API\\obj\\",
+      "outputPath": "C:\\Users\\Estudiante UCU\\Desktop\\Sistema_tickets_BD2\\backend\\Ticketing.API\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Estudiante UCU\\AppData\\Roaming\\NuGet\\NuGet.Config"

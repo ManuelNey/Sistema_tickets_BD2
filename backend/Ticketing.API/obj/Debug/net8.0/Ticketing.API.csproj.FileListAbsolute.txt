@@ -41,3 +41,46 @@ C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.Identity
 C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
 C:\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\appsettings.Development.json
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\appsettings.json
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Ticketing.API.exe
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Ticketing.API.deps.json
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Ticketing.API.runtimeconfig.json
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Ticketing.API.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Ticketing.API.pdb
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.AspNetCore.OpenApi.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Abstractions.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Microsoft.OpenApi.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Npgsql.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.csproj.AssemblyReference.cache
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.AssemblyInfoInputs.cache
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.AssemblyInfo.cs
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.csproj.CoreCompileInputs.cache
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.sourcelink.json
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\staticwebassets.build.json
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\staticwebassets.development.json
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\staticwebassets\msbuild.Ticketing.API.Microsoft.AspNetCore.StaticWebAssets.props
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\staticwebassets\msbuild.build.Ticketing.API.props
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\staticwebassets\msbuild.buildMultiTargeting.Ticketing.API.props
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\staticwebassets\msbuild.buildTransitive.Ticketing.API.props
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\staticwebassets.pack.json
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\scopedcss\bundle\Ticketing.API.styles.css
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketin.B21E7EC8.Up2Date
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\refint\Ticketing.API.dll
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.pdb
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\Ticketing.API.genruntimeconfig.cache
+C:\Users\Estudiante UCU\Desktop\Sistema_tickets_BD2\backend\Ticketing.API\obj\Debug\net8.0\ref\Ticketing.API.dll

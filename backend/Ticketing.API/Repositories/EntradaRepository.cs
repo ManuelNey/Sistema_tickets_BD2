@@ -186,4 +186,24 @@ public class EntradaRepository : IEntradaRepository
     {
         throw new NotImplementedException();
     }
+
+    
+    public async Task<ObtenerEntradaDto> ObtenerEntradaDto(int idEntrada)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(@"SELECT id_entrada, estado FROM Entrada WHERE id_entrada = @idEntrada
+            ", connection);
+        cmd.Parameters.AddWithValue("@idEntrada", idEntrada);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        int id = reader.GetInt32(reader.GetOrdinal("id_entrada"));
+        string estado = reader.GetString(reader.GetOrdinal("estado"));
+
+        return new ObtenerEntradaDto{
+            IdEntrada = id,
+            Estado = estado
+        };
+    }
 }
