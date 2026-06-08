@@ -2,6 +2,7 @@ import { useState } from 'react'
 import BallLogo from '../shared/BallLogo'
 import Sidebar from '../shared/Sidebar'
 import EstadiosAdmin from './EstadiosAdmin'
+import SectoresAdmin from './SectoresAdmin'
 
 const adminTabs = [
   { id: 'dashboard', label: 'Dashboard', icon: 'chart' },
@@ -12,7 +13,13 @@ const adminTabs = [
 
 function AdminPanel({ onLogout, user }) {
   const [activeTab, setActiveTab] = useState('estadios')
+  const [selectedStadiumForSectors, setSelectedStadiumForSectors] = useState(null)
   const selectedTab = adminTabs.find((tab) => tab.id === activeTab)
+
+  const changeTab = (tabId) => {
+    setSelectedStadiumForSectors(null)
+    setActiveTab(tabId)
+  }
 
   return (
     <main className="dashboard-shell">
@@ -22,13 +29,18 @@ function AdminPanel({ onLogout, user }) {
         brandSubtitle="Panel Admin"
         label="Opciones de administrador"
         onLogout={onLogout}
-        onTabChange={setActiveTab}
+        onTabChange={changeTab}
         tabs={adminTabs}
       />
 
       <section className="dashboard-content" aria-labelledby="dashboard-title">
-        {activeTab === 'estadios' ? (
-          <EstadiosAdmin />
+        {activeTab === 'estadios' && selectedStadiumForSectors ? (
+          <SectoresAdmin
+            onBack={() => setSelectedStadiumForSectors(null)}
+            stadium={selectedStadiumForSectors}
+          />
+        ) : activeTab === 'estadios' ? (
+          <EstadiosAdmin onOpenSectors={setSelectedStadiumForSectors} />
         ) : (
           <div className="dashboard-card">
             <BallLogo />

@@ -17,7 +17,7 @@ function getAuthHeaders(extraHeaders = {}) {
   }
 }
 
-function EstadiosAdmin() {
+function EstadiosAdmin({ onOpenSectors }) {
   const [stadiums, setStadiums] = useState([])
   const [stadiumsError, setStadiumsError] = useState('')
   const [stadiumsLoading, setStadiumsLoading] = useState(false)
@@ -186,6 +186,7 @@ function EstadiosAdmin() {
                 key={stadium.id}
                 onDelete={() => openDeleteConfirm(stadium)}
                 onDetails={() => openEditStadium(stadium)}
+                onOpenSectors={onOpenSectors}
                 stadium={stadium}
               />
             ))
@@ -217,7 +218,7 @@ function EstadiosAdmin() {
   )
 }
 
-function StadiumCard({ onDelete, onDetails, stadium }) {
+function StadiumCard({ onDelete, onDetails, onOpenSectors, stadium }) {
   return (
     <article className="stadium-card">
       <header className="stadium-card-header">
@@ -246,7 +247,7 @@ function StadiumCard({ onDelete, onDetails, stadium }) {
           <SidebarIcon name="edit" />
           <span>Ver Detalles</span>
         </button>
-        <button className="sections-button" type="button">
+        <button className="sections-button" type="button" onClick={() => onOpenSectors(stadium)}>
           <SidebarIcon name="sections" />
           <span>Ver Sectores</span>
         </button>

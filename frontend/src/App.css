@@ -637,6 +637,116 @@
   background: #8a22e6;
 }
 
+.back-link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 28px;
+  border: 0;
+  color: #5f6a7e;
+  background: transparent;
+  font: inherit;
+  font-size: 19px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.back-link-button:hover {
+  color: #8a22e6;
+}
+
+.back-link-button .sidebar-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.stadium-summary-card {
+  margin-bottom: 42px;
+  padding: 30px;
+  background: #ffffff;
+  border: 1px solid #d7d9e2;
+  border-radius: 14px;
+  box-shadow: 0 5px 14px rgba(17, 17, 17, 0.09);
+}
+
+.stadium-summary-panel {
+  padding: 36px 30px;
+  color: #ffffff;
+  background:
+    linear-gradient(135deg, rgba(155, 45, 238, 0.28), transparent 46%),
+    #16051f;
+  border-radius: 12px;
+}
+
+.stadium-summary-panel h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 38px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.stadium-summary-panel p {
+  margin: 14px 0 0;
+  color: #f0e5ff;
+  font-size: 21px;
+}
+
+.stadium-summary-panel span {
+  display: block;
+  margin-top: 16px;
+  color: #d8b4fe;
+  font-size: 17px;
+}
+
+.sector-list-header {
+  align-items: center;
+}
+
+.sector-list-header h2 {
+  margin: 0;
+  color: #08080b;
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.sector-admin-header {
+  align-items: flex-start;
+}
+
+.sector-title-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+}
+
+.back-admin-button {
+  min-width: 118px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 12px;
+  color: #ffffff;
+  background: #16051f;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.back-admin-button:hover {
+  background: #2b0a3d;
+}
+
+.back-admin-button .sidebar-icon {
+  width: 19px;
+  height: 19px;
+}
+
 .stadium-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
@@ -716,6 +826,13 @@
 .stadium-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 56px;
+  gap: 10px;
+  padding: 0 20px 20px;
+}
+
+.sector-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px;
   gap: 10px;
   padding: 0 20px 20px;
 }

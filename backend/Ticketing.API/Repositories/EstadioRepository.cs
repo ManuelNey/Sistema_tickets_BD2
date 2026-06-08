@@ -122,7 +122,6 @@ public class EstadioRepository : IEstadioRepository
 
         return affectedRows > 0;
     }
-    
 
     
 }
