@@ -32,8 +32,19 @@ public class SectoresController : ControllerBase
     // POST /api/sectores/registro
     public async Task<ActionResult<SectorDto>> CreateAsync([FromBody] CrearSectorDto sector)
     {
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
 
-        var sectorCreado = await _sectorRepository.CreateAsync(sector);
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var sectorCreado = await _sectorRepository.CreateAsync(sector, paisSedeId);
+
+        if (sectorCreado == null)
+        {
+            return Forbid();
+        }
         
         return CreatedAtAction(nameof(GetAll), new { id = sectorCreado.Id }, sectorCreado);
     }
@@ -43,8 +54,14 @@ public class SectoresController : ControllerBase
     // PUT /api/sectores/{id}
     public async Task<ActionResult<SectorDto>> UpdateAsync(int id, [FromBody] ActualizarSectorDto sector)
     {
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
 
-        var sectorActualizado = await _sectorRepository.UpdateAsync(id, sector);
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var sectorActualizado = await _sectorRepository.UpdateAsync(id, sector, paisSedeId);
 
         if (sectorActualizado == null)
         {
@@ -59,8 +76,14 @@ public class SectoresController : ControllerBase
     // Delete /api/sectores/{id}
     public async Task<IActionResult> DeleteAsync(int id)
     {
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
 
-        var sectorEliminado = await _sectorRepository.DeleteAsync(id);
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var sectorEliminado = await _sectorRepository.DeleteAsync(id, paisSedeId);
 
         if (!sectorEliminado)
         {

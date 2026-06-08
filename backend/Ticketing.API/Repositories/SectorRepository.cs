@@ -46,24 +46,31 @@ public class SectorRepository : ISectorRepository
         return sectores;
     }
 
-    public async Task<SectorDto> CreateAsync(CrearSectorDto sector)
+    public async Task<SectorDto?> CreateAsync(CrearSectorDto sector, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
         await using var command = new NpgsqlCommand(
             @"INSERT INTO sector(nombre, capacidad_maxima, fk_estadio)
-            VALUES (@nombre,@capacidad,@idEstadio)
-            RETURNING id_sector, nombre, capacidad_maxima, fk_estadio;;", connection);
+            SELECT @nombre, @capacidad, @idEstadio
+            WHERE EXISTS (
+                SELECT 1
+                FROM estadio
+                WHERE id_estadio = @idEstadio
+                AND fk_pais_sede = @paisSedeId
+            )
+            RETURNING id_sector, nombre, capacidad_maxima, fk_estadio;", connection);
 
         command.Parameters.AddWithValue("@nombre", sector.Nombre);
         command.Parameters.AddWithValue("@capacidad", sector.Capacidad);
         command.Parameters.AddWithValue("@idEstadio", sector.Estadio);
+        command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
     
     await using var reader = await command.ExecuteReaderAsync();
 
     if(!await reader.ReadAsync())
     {
-        throw new InvalidOperationException("No se pudo crear el sector.");
+        return null;
     }
 
     return new SectorDto
@@ -75,19 +82,23 @@ public class SectorRepository : ISectorRepository
     };
     }
 
-    public async Task<SectorDto?> UpdateAsync(int id, ActualizarSectorDto sector)
+    public async Task<SectorDto?> UpdateAsync(int id, ActualizarSectorDto sector, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
         await using var command = new NpgsqlCommand(
-            @"UPDATE sector
+            @"UPDATE sector AS s
                 SET nombre = @nuevoNombre, capacidad_maxima = @nuevaCapacidad
-                WHERE id_sector= @idSector
-                RETURNING id_sector, nombre, capacidad_maxima, fk_estadio;", connection);
+                FROM estadio AS e
+                WHERE s.id_sector = @idSector
+                AND s.fk_estadio = e.id_estadio
+                AND e.fk_pais_sede = @paisSedeId
+                RETURNING s.id_sector, s.nombre, s.capacidad_maxima, s.fk_estadio;", connection);
 
         command.Parameters.AddWithValue("@idSector",id);
         command.Parameters.AddWithValue("@nuevoNombre",sector.Nombre);
         command.Parameters.AddWithValue("@nuevaCapacidad",sector.Capacidad);
+        command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
 
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -105,16 +116,20 @@ public class SectorRepository : ISectorRepository
             };
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
         await using var command = new NpgsqlCommand(
-            @"DELETE FROM sector
-            WHERE id_sector = @idSector;", connection);
+            @"DELETE FROM sector AS s
+            USING estadio AS e
+            WHERE s.id_sector = @idSector
+            AND s.fk_estadio = e.id_estadio
+            AND e.fk_pais_sede = @paisSedeId;", connection);
 
         command.Parameters.AddWithValue("@idSector", id);
+        command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
 
         var affectedRows = await command.ExecuteNonQueryAsync();
 

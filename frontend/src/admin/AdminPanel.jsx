@@ -38,9 +38,10 @@ function AdminPanel({ onLogout, user }) {
           <SectoresAdmin
             onBack={() => setSelectedStadiumForSectors(null)}
             stadium={selectedStadiumForSectors}
+            user={user}
           />
         ) : activeTab === 'estadios' ? (
-          <EstadiosAdmin onOpenSectors={setSelectedStadiumForSectors} />
+          <EstadiosAdmin onOpenSectors={setSelectedStadiumForSectors} user={user} />
         ) : (
           <div className="dashboard-card">
             <BallLogo />

@@ -17,7 +17,7 @@ function getAuthHeaders(extraHeaders = {}) {
   }
 }
 
-function EstadiosAdmin({ onOpenSectors }) {
+function EstadiosAdmin({ onOpenSectors, user }) {
   const [stadiums, setStadiums] = useState([])
   const [stadiumsError, setStadiumsError] = useState('')
   const [stadiumsLoading, setStadiumsLoading] = useState(false)
@@ -28,6 +28,7 @@ function EstadiosAdmin({ onOpenSectors }) {
   const [stadiumFormError, setStadiumFormError] = useState('')
   const [stadiumToDelete, setStadiumToDelete] = useState(null)
   const [stadiumDeleting, setStadiumDeleting] = useState(false)
+  const adminCountryId = getAdminCountryId(user)
 
   const loadStadiums = async () => {
     setStadiumsError('')
@@ -90,14 +91,13 @@ function EstadiosAdmin({ onOpenSectors }) {
     setStadiumFormError('')
     setStadiumSaving(true)
 
+    const isEdit = stadiumModal === 'edit'
     const payload = {
       nombre: stadiumForm.nombre,
       ciudad: stadiumForm.ciudad,
-      paisSedeId: Number(stadiumForm.paisSedeId),
     }
 
     try {
-      const isEdit = stadiumModal === 'edit'
       const url = isEdit
         ? `http://localhost:8080/api/estadios/${selectedStadium.id}`
         : 'http://localhost:8080/api/estadios/registro'
@@ -181,8 +181,9 @@ function EstadiosAdmin({ onOpenSectors }) {
           {stadiums.length === 0 ? (
             <p className="matches-status">No hay estadios disponibles.</p>
           ) : (
-            stadiums.map((stadium) => (
+            sortStadiumsByPermission(stadiums, adminCountryId).map((stadium) => (
               <StadiumCard
+                adminCountryId={adminCountryId}
                 key={stadium.id}
                 onDelete={() => openDeleteConfirm(stadium)}
                 onDetails={() => openEditStadium(stadium)}
@@ -218,7 +219,9 @@ function EstadiosAdmin({ onOpenSectors }) {
   )
 }
 
-function StadiumCard({ onDelete, onDetails, onOpenSectors, stadium }) {
+function StadiumCard({ adminCountryId, onDelete, onDetails, onOpenSectors, stadium }) {
+  const canManageStadium = adminCountryId !== null && Number(stadium.paisSedeId) === adminCountryId
+
   return (
     <article className="stadium-card">
       <header className="stadium-card-header">
@@ -242,21 +245,45 @@ function StadiumCard({ onDelete, onDetails, onOpenSectors, stadium }) {
         </p>
       </div>
 
-      <footer className="stadium-actions">
-        <button className="details-button" type="button" onClick={onDetails}>
-          <SidebarIcon name="edit" />
-          <span>Ver Detalles</span>
-        </button>
+      <footer className={`stadium-actions ${canManageStadium ? '' : 'is-readonly'}`}>
+        {canManageStadium && (
+          <button className="details-button" type="button" onClick={onDetails}>
+            <SidebarIcon name="edit" />
+            <span>Ver Detalles</span>
+          </button>
+        )}
         <button className="sections-button" type="button" onClick={() => onOpenSectors(stadium)}>
           <SidebarIcon name="sections" />
           <span>Ver Sectores</span>
         </button>
-        <button className="delete-button" type="button" onClick={onDelete} aria-label="Borrar estadio">
-          <SidebarIcon name="trash" />
-        </button>
+        {canManageStadium && (
+          <button className="delete-button" type="button" onClick={onDelete} aria-label="Borrar estadio">
+            <SidebarIcon name="trash" />
+          </button>
+        )}
       </footer>
     </article>
   )
+}
+
+function getAdminCountryId(user) {
+  const countryId = user?.paisSede ?? user?.paisSedeId ?? user?.pais_sede
+  const parsedCountryId = Number(countryId)
+
+  return Number.isInteger(parsedCountryId) ? parsedCountryId : null
+}
+
+function sortStadiumsByPermission(stadiums, adminCountryId) {
+  return [...stadiums].sort((first, second) => {
+    const firstCanManage = Number(first.paisSedeId) === adminCountryId
+    const secondCanManage = Number(second.paisSedeId) === adminCountryId
+
+    if (firstCanManage === secondCanManage) {
+      return first.nombre.localeCompare(second.nombre)
+    }
+
+    return firstCanManage ? -1 : 1
+  })
 }
 
 function DeleteStadiumConfirm({ isDeleting, onCancel, onConfirm, stadium }) {
