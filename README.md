@@ -1,151 +1,272 @@
-# Sistema_tickets_BD2 — Guía detallada (carpeta por carpeta)
+# Sistema de Ticketing — Mundial 2026
 
-Este README explica la estructura del proyecto y presenta instrucciones para comprender su funcionamiento, por ahora solo está enfocado en el backend del mismo.
-**Resumen**:El proyecto utiliza .NET 8 (API REST) con base de datos PostgreSQL y frontend Vite + React. 
+API REST para la gestión de entradas al Mundial 2026. Permite registro de usuarios, compra y transferencia de entradas, y validación en puerta mediante QR.
 
-**Estructura de carpetas (top-level)**
-- **`backend/`**: solución .NET. La API está en **`backend/Ticketing.API`**.
-  - Revisa `backend/Ticketing.API/Program.cs` ([Program.cs](backend/Ticketing.API/Program.cs#L1)) para ver el pipeline mínimo, DI y Swagger.
-  - `backend/Ticketing.API/Controllers/` — controladores HTTP (ej.: `MenuMatchController`).
-  - `backend/Ticketing.API/Repositories/` — acceso a datos (ej.: `MenuMatchDtoRepository.cs`).
-  - `backend/Ticketing.API/Data/` — fábrica de conexiones (`IPostgresConnectionFactory` / `PostgresConnectionFactory`).
-  - `backend/Ticketing.API/DTOs/` — DTOs compartidos (ej.: `MenuMatchDto`).
-  - `backend/Ticketing.API/Models/` — entidades/ modelos del dominio (ej.: `Entrada`, `Encuentro`).
-  - `backend/Ticketing.API/appsettings.json` — connection string por defecto para correr local.
+## Stack tecnológico
 
-- **`database/init/`**: scripts SQL de inicialización.
-  - `schema.sql` — crea todas las tablas y constraints. Ver: [database/init/schema.sql](database/init/schema.sql#L1).
-  - `seed.sql` — inserta datos mínimos para desarrollo (equipos, estadio, encuentro, habilita, entrada, etc.).
+| Capa | Tecnología |
+|---|---|
+| Backend | .NET 8 (ASP.NET Core) |
+| Base de datos | PostgreSQL 17 |
+| Acceso a datos | ADO.NET + Npgsql (sin ORM) |
+| Autenticación | JWT Bearer (claims personalizados) |
+| Frontend | React + Vite *(pendiente de implementar)* |
+| Infraestructura | Docker Compose |
 
-- **`frontend/`**: proyecto Vite/React (o similar) con Dockerfile para servir la UI.
+> **Sin ORM.** Todas las queries se escriben en SQL puro dentro de los repositorios usando `NpgsqlCommand`. Es una restricción académica del proyecto.
 
-- **`scripts/`**: Se generaro scripts de automatización (PowerShell y Bash) para iniciar y reset. Ver `scripts/README.md` que detalla cada uno. IMPORTANTE SI DESEAS LEVANTAR EL PROYECTO
+---
 
-**Detalles prácticos del backend**
+## Levantar el proyecto
 
-**1) Inicio y configuración**
-- Por defecto `backend/Ticketing.API/appsettings.json` contiene:
-  - `ConnectionStrings:TicketingDb = "Host=localhost;Port=5432;Database=ticketing;Username=postgres;Password=postgres"`.
-  - Esto es relevante si querés conectar desde una herramienta externa (DataGrip, DBeaver) o ejecutar la API localmente con `dotnet run`.
+Requiere **Docker** y **Docker Compose** instalados.
 
-**2) Cómo se conecta la API a la BD**
-
-- `backend/Ticketing.API/Data/PostgresConnectionFactory.cs` lee `ConnectionStrings:TicketingDb` desde `IConfiguration` y crea `NpgsqlConnection`. Centralizar la conexión facilita cambiar cadenas, añadir logging o mockear en tests.
-
-**Modelos (`Models`) vs DTOs (`DTOs`)**
-
-- **`Models`**: representan las entidades del dominio y/o la estructura de las tablas en la base de datos (ej.: `Ticket`, `Encuentro`). Se usan internamente en la capa de datos o en la lógica de negocio.
-- **`DTOs`**: objetos de transferencia diseñados para la API. Se usan para devolver al cliente exactamente lo necesario (ej.: `MenuMatchDto`) o para recibir datos de entrada (`CreateTicketDto`).
-
-
-Cuándo crear un DTO:
-- Cuando la forma del dato devuelto difiere de la entidad DB (agregados,joins,transformaciones).
-- Para controlar la superficie pública de la API (no exponer campos sensibles ni internos).
-
-Ejemplo:
-
-```csharp
-// backend/Ticketing.API/Models/Ticket.cs
-public class Ticket { public int Id { get; set; } public decimal Price { get; set; } /*...*/ }
-
-// backend/Ticketing.API/DTOs/TicketDto.cs
-public class TicketDto { public int Id { get; set; } public decimal Price { get; set; } }
+**Windows (PowerShell):**
+```powershell
+.\scripts\bootstrap.ps1
 ```
 
-**3) Repositorios y mapeo (Repository Pattern)**
+**Linux / macOS:**
+```bash
+./scripts/bootstrap.sh
+```
 
-- Un `Repository` encapsula la lógica de acceso a datos para una entidad o caso de uso concreto. Responsabilidades:
-  - Ejecutar SQL o usar un ORM(Yo quería :(  ).
-  - Mapear filas a `Model` o `DTO`.
-  - Manejar transacciones cuando corresponda.
-  - Exponer métodos con intención de negocio (`GetMenuMatchesAsync`, `CreateTicketAsync`).
+Esto levanta tres contenedores:
 
-- Qué no debe hacer:
-  - No contener lógica de presentación ni exponer objetos de infraestructura.
+| Contenedor | Puerto | Descripción |
+|---|---|---|
+| `ticketing-db` | 5432 | PostgreSQL 17 |
+| `ticketing-api` | 8080 | API REST (.NET 8) |
+| `ticketing-front` | 5173 | Frontend React (pendiente) |
 
-Interfaz y ejemplo (esbozo):
+La BD se inicializa automáticamente la primera vez: Docker ejecuta los archivos de `database/init/` en orden alfabético al crear el volumen.
+
+### Resetear la base de datos
+
+```powershell
+# Windows
+.\scripts\reset-db.ps1
+
+# Linux/macOS
+./scripts/reset-db.sh
+```
+
+Esto baja los contenedores, **elimina el volumen** (borrando todos los datos) y los vuelve a levantar. Docker re-ejecuta los scripts de init automáticamente con datos limpios.
+
+---
+
+## Inicialización de la base de datos
+
+Los archivos en `database/init/` se ejecutan en orden numérico al crear el volumen:
+
+| Archivo | Contenido |
+|---|---|
+| `01_schema.sql` | Creación de todas las tablas, constraints e índices |
+| `02_tablasMundial.sql` | 3 países sede, 16 estadios, 48 equipos, 72 encuentros |
+| `03_usuarios.sql` | 10 usuarios, 5 funcionarios, 3 administradores de prueba |
+| `04_operacion.sql` | Dispositivos, sectores (64 en total), habilitaciones, entradas |
+| `05_negocio.sql` | Compras, transferencias y datos de operación |
+
+> El orden importa: schema primero, datos del mundial, luego usuarios (que son FK de operacion y negocio).
+
+---
+
+## Autenticación y roles
+
+El sistema usa **JWT Bearer**. El token se obtiene en el login y debe enviarse en el header `Authorization: Bearer <token>` para los endpoints protegidos.
+
+### Roles
+
+| Rol | Descripción |
+|---|---|
+| `usuario` | Comprador de entradas. Puede ver estadios y sus propias entradas. |
+| `admin` | Administrador de un país sede. Gestiona estadios y habilita encuentros. Tiene el claim `pais_sede` que restringe su scope a su país. |
+| `funcionario` | Valida entradas en la puerta (scan de QR). |
+
+### Claims del JWT
+
+```
+mail       → correo del usuario
+nombre     → nombre
+apellido   → apellido
+rol        → "usuario" | "admin" | "funcionario"
+pais_sede  → id del país sede (solo para admins, ej: 1=Canadá, 2=México, 3=USA)
+```
+
+### Cómo proteger un endpoint por rol
 
 ```csharp
-// backend/Ticketing.API/Repositories/IMenuMatchDtoRepository.cs
-public interface IMenuMatchDtoRepository {
-    Task<IReadOnlyCollection<MenuMatchDto>> GetMenuMatchesAsync(CancellationToken ct = default);
+[Authorize(Roles = "admin")]                    // solo admins
+[Authorize(Roles = "admin,funcionario")]        // admins o funcionarios
+[Authorize]                                     // cualquier usuario autenticado
+```
+
+Esto funciona porque `Program.cs` configura `RoleClaimType = "rol"` en los parámetros de validación del JWT, mapeando el claim personalizado al sistema de roles de ASP.NET.
+
+### Usuarios de prueba (seed)
+
+| Mail | Contraseña | Rol | País sede |
+|---|---|---|---|
+| `usuario1@mail.com` | `pass123` | usuario | — |
+| `usuario2@mail.com` | `pass456` | usuario | — |
+| `admin1@mail.com` | `adminpass1` | admin | Canadá (1) |
+| `admin2@mail.com` | `adminpass2` | admin | México (2) |
+| `admin3@mail.com` | `adminpass3` | admin | USA (3) |
+| `funcionario1@mail.com` | `funcpass1` | funcionario | — |
+
+---
+
+## Endpoints disponibles
+
+### Usuario (`/api/usuario`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `POST` | `/api/usuario/registro` | No | Registra un nuevo usuario. Devuelve el JWT. |
+| `POST` | `/api/usuario/login` | No | Autentica y devuelve el JWT con claims de rol. |
+| `GET` | `/api/usuario/perfil/{mail}` | No | Perfil de un usuario por mail. |
+
+#### Body de registro
+```json
+{
+  "mail": "nuevo@mail.com",
+  "nombre": "Juan",
+  "apellido": "García",
+  "contrasena": "mipassword",
+  "fechaNacimiento": "1995-03-15",
+  "tipoDocumento": "CI",
+  "paisDocumento": "Uruguay",
+  "numeroDocumento": "12345678",
+  "paisCasa": "Uruguay",
+  "localidad": "Montevideo",
+  "calle": "Av. 18 de Julio",
+  "numeroCasa": "1234",
+  "codigoPostal": "11100"
+}
+```
+
+#### Body de login
+```json
+{
+  "mail": "admin1@mail.com",
+  "contrasena": "adminpass1"
+}
+```
+
+---
+
+### Estadios (`/api/estadios`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/estadios` | `admin`, `usuario` | Lista todos los estadios. |
+| `POST` | `/api/estadios/registro` | `admin` | Crea un nuevo estadio. |
+| `PUT` | `/api/estadios/{id}` | `admin` | Actualiza un estadio existente. |
+
+#### Body de crear estadio
+```json
+{
+  "nombre": "Estadio Ejemplo",
+  "ciudad": "Montevideo",
+  "fkPaisSede": 1
+}
+```
+
+---
+
+### Partidos (`/api/menumatch`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/menumatch/matches` | No | Lista encuentros con equipos, estadio y fecha. |
+
+---
+
+### Health check (`/api/health`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/health` | No | Verifica que la API está corriendo. |
+
+---
+
+## Estructura del proyecto
+
+```
+Sistema_tickets_BD2/
+├── backend/
+│   └── Ticketing.API/
+│       ├── Controllers/       → Rutas HTTP (orquestación, sin lógica de negocio)
+│       ├── Repositories/      → Acceso a datos: SQL puro + mapeo a DTO
+│       ├── Services/          → JwtService (generación de tokens)
+│       ├── Data/              → IPostgresConnectionFactory / PostgresConnectionFactory
+│       ├── DTOs/              → Objetos de entrada/salida de la API
+│       ├── Models/            → Entidades del dominio
+│       ├── Filters/           → Filtros de Swagger (ej: DateOnly)
+│       └── Program.cs         → DI, JWT, CORS, pipeline
+├── database/
+│   └── init/
+│       ├── 01_schema.sql
+│       ├── 02_tablasMundial.sql
+│       ├── 03_usuarios.sql
+│       ├── 04_operacion.sql
+│       └── 05_negocio.sql
+├── frontend/                  → React + Vite (pendiente)
+├── scripts/                   → bootstrap, reset-db, reset-backend, reset-all (.ps1 y .sh)
+└── docker-compose.yml
+```
+
+---
+
+## Cómo añadir un nuevo endpoint
+
+1. **DTO**: Crear en `DTOs/` el objeto de entrada y/o respuesta que necesite el endpoint.
+2. **Interfaz del repositorio**: Declarar el método en `IXxxRepository`.
+3. **Implementación**: En `XxxRepository.cs`, escribir la query SQL y mapear el resultado al DTO.
+   - Si hay que leer un `DateOnly` o `TimeOnly` desde el reader, usar `reader.GetFieldValue<DateOnly>(ordinal)`.
+   - Si hay múltiples INSERTs relacionados, envolverlos en `NpgsqlTransaction`.
+4. **Controller**: Crear el controller con `[ApiController]`, `[Route("api/[controller]")]` y los atributos de autorización que correspondan.
+5. **Registrar en `Program.cs`**: `builder.Services.AddSingleton<IXxxRepository, XxxRepository>();`
+6. **Probar**: Swagger está disponible en `http://localhost:8080/swagger`.
+
+### Patrón de repositorio (ejemplo)
+
+```csharp
+// Repositories/IEjemploRepository.cs
+public interface IEjemploRepository {
+    Task<EjemploDto?> GetByIdAsync(int id);
 }
 
-// backend/Ticketing.API/Repositories/MenuMatchDtoRepository.cs (esbozo)
-public class MenuMatchDtoRepository : IMenuMatchDtoRepository {
-    private readonly IPostgresConnectionFactory _connFactory;
-    public MenuMatchDtoRepository(IPostgresConnectionFactory connFactory) => _connFactory = connFactory;
+// Repositories/EjemploRepository.cs
+public class EjemploRepository : IEjemploRepository {
+    private readonly IPostgresConnectionFactory _connectionFactory;
 
-    public async Task<IReadOnlyCollection<MenuMatchDto>> GetMenuMatchesAsync(CancellationToken ct = default) {
-        await using var conn = _connFactory.Create();
-        await conn.OpenAsync(ct);
-        await using var cmd = conn.CreateCommand();
-        cmd.CommandText = "/* SQL complejo con joins */";
-        await using var reader = await cmd.ExecuteReaderAsync(ct);
-        var list = new List<MenuMatchDto>();
-        while (await reader.ReadAsync(ct)) {
-            var dto = new MenuMatchDto {
-                //Si ven que dan problema con mapear fecha y tiempo por separado guiense con esto
-                Date = reader.IsDBNull(reader.GetOrdinal("fecha")) ? null : reader.GetFieldValue<DateOnly>(reader.GetOrdinal("fecha")), 
-                Time = reader.IsDBNull(reader.GetOrdinal("hora")) ? null : reader.GetFieldValue<TimeOnly>(reader.GetOrdinal("hora")),
-                // mapear otros campos
-            };
-            list.Add(dto);
-        }
-        return list;
+    public EjemploRepository(IPostgresConnectionFactory connectionFactory) {
+        _connectionFactory = connectionFactory;
+    }
+
+    public async Task<EjemploDto?> GetByIdAsync(int id) {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = "SELECT id, nombre FROM ejemplo WHERE id = @id";
+        cmd.Parameters.AddWithValue("@id", id);
+
+        using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync()) return null;
+
+        return new EjemploDto {
+            Id = reader.GetInt32(reader.GetOrdinal("id")),
+            Nombre = reader.GetString(reader.GetOrdinal("nombre"))
+        };
     }
 }
 ```
 
-Buenas prácticas para repositorios:
-- Usar `async`/`await` y aceptar `CancellationToken`.
-- Centralizar `NpgsqlConnection` con `IPostgresConnectionFactory`.
+---
 
-**4) Controladores (Controllers)**
+## Documentación adicional
 
-- Los controladores definen rutas HTTP, validan la entrada, llaman a repositorios o servicios y devuelven respuestas HTTP. Mantenerlos delgados (orquestación, validación básica, autorización).
-
-Ejemplo (actual en el repo):
-
-```csharp
-// backend/Ticketing.API/Controllers/MenuMatchController.cs
-[ApiController]
-[Route("api/[controller]")]
-public class MenuMatchController : ControllerBase {
-    private readonly IMenuMatchDtoRepository _menuMatchRepo;
-    public MenuMatchController(IMenuMatchDtoRepository menuMatchRepo) => _menuMatchRepo = menuMatchRepo;
-
-    [HttpGet("matches")]
-    public async Task<ActionResult<IReadOnlyCollection<MenuMatchDto>>> GetMenuMatches(CancellationToken ct) {
-        var matches = await _menuMatchRepo.GetMenuMatchesAsync(ct);
-        return Ok(matches);
-    }
-}
-```
-
-Puntos clave:
-- Usar `ActionResult<T>` y `CancellationToken`.
-- No poner lógica de negocio compleja en controllers.
-
-**Dependency Injection (DI)**
-
-- Registrar servicios en `Program.cs` permite inyectar dependencias en controllers y repos. Ejemplo de registro:
-
-```csharp
-builder.Services.AddScoped<IMenuMatchDtoRepository, MenuMatchDtoRepository>();
-builder.Services.AddSingleton<IPostgresConnectionFactory, PostgresConnectionFactory>();
-```
-Cada nuevo Controller debe registrarse automáticamente mediante AddControllers().
-
-Program.cs se utiliza principalmente para configurar servicios, dependencias, Swagger y el pipeline de ejecución. 
-
-**Cómo añadir un nuevo endpoint (guía paso a paso)**
-
-1. Diseñá la respuesta o request/respuesta → creá DTOs o Models si lo ves correcto en `backend/Ticketing.API/DTOs/`. 
-2. Añadí un método en la interfaz del repository y su implementación que realice la query/operación.
-3. Implementá el mapeo dentro del repository.
-4. Añadí un controller con la ruta y acción, inyectando la interfaz del repo.
-5. Registrá la implementación en `Program.cs`.
-6. Probá en Swagger (`/swagger`) y con `curl` o Postman, lo que más te guste
-
-
+- `docs/INFORME_AUDITORIA.md` — Auditoría completa del proyecto (arquitectura, bugs encontrados y corregidos, decisiones técnicas).
+- `scripts/README.md` — Detalle de cada script de automatización.

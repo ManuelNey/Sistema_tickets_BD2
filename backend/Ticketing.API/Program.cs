@@ -44,6 +44,7 @@ builder.Services.AddSingleton<Ticketing.API.Repositories.IMenuMatchDtoRepository
 builder.Services.AddSingleton<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddSingleton<IEstadioRepository, EstadioRepository>();
+builder.Services.AddSingleton<IEntradaRepository, EntradaRepository>();
 
 
 var app = builder.Build();
