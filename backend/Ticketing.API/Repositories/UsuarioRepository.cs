@@ -1,16 +1,21 @@
 using Ticketing.API.Data;
 using Ticketing.API.Dtos;
 using Npgsql;
+using Ticketing.API.Services;
 
 namespace Ticketing.API.Repositories;
 
 public class UsuarioRepository : IUsuarioRepository
 {
+    //Para el hasheo
+    private readonly IPasswordService _passwordService;
+
     private readonly IPostgresConnectionFactory _connectionFactory;
 
-    public UsuarioRepository(IPostgresConnectionFactory connectionFactory)
+    public UsuarioRepository(IPostgresConnectionFactory connectionFactory, IPasswordService passwordService)
     {
         _connectionFactory = connectionFactory;
+        _passwordService = passwordService;
     }
 
     public async Task<UsuarioResponseDto?> GetByMailAsync(string mail)
@@ -71,6 +76,8 @@ public class UsuarioRepository : IUsuarioRepository
         // se realicen correctamente o se deshagan en caso de error
         await using var tx = await connection.BeginTransactionAsync();
 
+        var hashedPassword = _passwordService.HashPassword(registro.Contrasena);
+
         using var insertPersonaCmd = connection.CreateCommand();
         insertPersonaCmd.Transaction = tx;
         insertPersonaCmd.CommandText = @"
@@ -93,18 +100,17 @@ public class UsuarioRepository : IUsuarioRepository
         insertPersonaCmd.Parameters.AddWithValue("@calle", registro.Calle);
         insertPersonaCmd.Parameters.AddWithValue("@numeroCasa", registro.NumeroCasa);
         insertPersonaCmd.Parameters.AddWithValue("@codigoPostal", registro.CodigoPostal);
-        insertPersonaCmd.Parameters.AddWithValue("@contrasena", registro.Contrasena);
+        insertPersonaCmd.Parameters.AddWithValue("@contrasena", hashedPassword);
 
         await insertPersonaCmd.ExecuteNonQueryAsync();
 
         using var insertUsuarioCmd = connection.CreateCommand();
         insertUsuarioCmd.Transaction = tx;
         insertUsuarioCmd.CommandText = @"
-            INSERT INTO usuario (persona_mail, identidad_verificada, fecha_registro)
-            VALUES (@mail, false, @fechaRegistro)";
+            INSERT INTO usuario (persona_mail, identidad_verificada)
+            VALUES (@mail, false)";
 
         insertUsuarioCmd.Parameters.AddWithValue("@mail", registro.Mail);
-        insertUsuarioCmd.Parameters.AddWithValue("@fechaRegistro", DateTime.UtcNow);
 
         await insertUsuarioCmd.ExecuteNonQueryAsync();
         await tx.CommitAsync();
@@ -143,8 +149,13 @@ public class UsuarioRepository : IUsuarioRepository
         if (!await reader.ReadAsync())
             return null;
 
-        if (contrasena != reader.GetString(reader.GetOrdinal("contrasena")))
+
+        var hashedPassword = reader.GetString(reader.GetOrdinal("contrasena"));
+
+        if (!_passwordService.VerifyPassword(hashedPassword,contrasena))
+        {
             return null;
+        }
 
         return MapDto(reader);
     }
