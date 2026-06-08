@@ -55,4 +55,20 @@ public class EstadiosController : ControllerBase
         
         return Ok(estadioActualizado);
     }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "admin")]
+    // Delete /api/estadios/{id}
+    public async Task<IActionResult> DeleteAsync(int id)
+    {
+
+        var estadioEliminado = await _estadioRepository.DeleteAsync(id);
+
+        if (!estadioEliminado)
+        {
+            return NotFound();
+        }
+        
+        return NoContent();
+    }
 }

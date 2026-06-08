@@ -26,6 +26,8 @@ function EstadiosAdmin() {
   const [stadiumForm, setStadiumForm] = useState(emptyStadiumForm)
   const [stadiumSaving, setStadiumSaving] = useState(false)
   const [stadiumFormError, setStadiumFormError] = useState('')
+  const [stadiumToDelete, setStadiumToDelete] = useState(null)
+  const [stadiumDeleting, setStadiumDeleting] = useState(false)
 
   const loadStadiums = async () => {
     setStadiumsError('')
@@ -121,6 +123,43 @@ function EstadiosAdmin() {
     }
   }
 
+  const openDeleteConfirm = (stadium) => {
+    setStadiumsError('')
+    setStadiumToDelete(stadium)
+  }
+
+  const closeDeleteConfirm = () => {
+    setStadiumToDelete(null)
+    setStadiumDeleting(false)
+  }
+
+  const deleteStadium = async () => {
+    if (!stadiumToDelete) {
+      return
+    }
+
+    setStadiumsError('')
+    setStadiumDeleting(true)
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/estadios/${stadiumToDelete.id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      })
+
+      if (!response.ok) {
+        throw new Error('Delete stadium failed')
+      }
+
+      await loadStadiums()
+      closeDeleteConfirm()
+    } catch {
+      setStadiumsError('No se pudo eliminar el estadio')
+    } finally {
+      setStadiumDeleting(false)
+    }
+  }
+
   return (
     <div className="admin-view">
       <header className="admin-header">
@@ -145,6 +184,7 @@ function EstadiosAdmin() {
             stadiums.map((stadium) => (
               <StadiumCard
                 key={stadium.id}
+                onDelete={() => openDeleteConfirm(stadium)}
                 onDetails={() => openEditStadium(stadium)}
                 stadium={stadium}
               />
@@ -164,11 +204,20 @@ function EstadiosAdmin() {
           onSubmit={saveStadium}
         />
       )}
+
+      {stadiumToDelete && (
+        <DeleteStadiumConfirm
+          isDeleting={stadiumDeleting}
+          onCancel={closeDeleteConfirm}
+          onConfirm={deleteStadium}
+          stadium={stadiumToDelete}
+        />
+      )}
     </div>
   )
 }
 
-function StadiumCard({ onDetails, stadium }) {
+function StadiumCard({ onDelete, onDetails, stadium }) {
   return (
     <article className="stadium-card">
       <header className="stadium-card-header">
@@ -199,13 +248,40 @@ function StadiumCard({ onDetails, stadium }) {
         </button>
         <button className="sections-button" type="button">
           <SidebarIcon name="sections" />
-          <span>Ver Secciones</span>
+          <span>Ver Sectores</span>
         </button>
-        <button className="delete-button" type="button" aria-label="Borrar estadio">
+        <button className="delete-button" type="button" onClick={onDelete} aria-label="Borrar estadio">
           <SidebarIcon name="trash" />
         </button>
       </footer>
     </article>
+  )
+}
+
+function DeleteStadiumConfirm({ isDeleting, onCancel, onConfirm, stadium }) {
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="stadium-modal delete-confirm-modal" aria-labelledby="delete-stadium-title" role="dialog">
+        <button className="modal-close" type="button" onClick={onCancel} aria-label="Cerrar" disabled={isDeleting}>
+          <SidebarIcon name="close" />
+        </button>
+
+        <h2 id="delete-stadium-title">Eliminar Estadio</h2>
+        <p>
+          Estas seguro de eliminar el estadio <strong>{stadium.nombre}</strong> de{' '}
+          <strong>{stadium.ciudad}</strong>?
+        </p>
+
+        <div className="delete-confirm-actions">
+          <button className="cancel-delete-button" type="button" onClick={onCancel} disabled={isDeleting}>
+            Cancelar
+          </button>
+          <button className="confirm-delete-button" type="button" onClick={onConfirm} disabled={isDeleting}>
+            {isDeleting ? 'Eliminando...' : 'Eliminar'}
+          </button>
+        </div>
+      </section>
+    </div>
   )
 }
 
