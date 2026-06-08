@@ -18,6 +18,7 @@ public class EntradaRepository : IEntradaRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Consultamos la información del encuentro, estadio, equipos, precio y cupos disponibles para la columna de habilita.
         await using var cmd = new NpgsqlCommand(@"
             SELECT h.id, h.precio, s.capacidad_maxima,
                    COUNT(e.id_entrada)  AS entradas_vendidas,
@@ -72,9 +73,9 @@ public class EntradaRepository : IEntradaRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        // Verificar que la habilita existe y tiene cupo suficiente para la cantidad pedida,
-        // y traer los datos del encuentro para armar el response.
-        // Se usan bloques {} para cerrar cada reader antes de abrir el siguiente (Npgsql no soporta readers simultáneos).
+        // Verificamos que la habilita existe y tiene cupo suficiente para la cantidad pedida,
+        // y traer los datos del encuentro para la respuesta.
+        
         decimal precio;
         int idEncuentro, capacidadMaxima, entradasVendidas;
         string equipoLocal, equipoVisitante, nombreEstadio, ciudadEstadio, paisEstadio, nombreSector;
@@ -127,7 +128,7 @@ public class EntradaRepository : IEntradaRepository
             nombreSector    = reader.GetString(reader.GetOrdinal("nombre_sector"));
         }
 
-        // Transacción: 1 INSERT compra → N INSERTs entrada (una por cada ticket pedido)
+        // Transacción del insert de compra y de cada insert entrada.
         await using var tx = await connection.BeginTransactionAsync();
 
         using var insertCompra = connection.CreateCommand();
@@ -162,6 +163,8 @@ public class EntradaRepository : IEntradaRepository
 
         return new ComprarEntradaResponse
         {
+            IdCompra                    = idCompra,
+            CodigoOrden                 = $"TM-{idCompra:D6}",
             IdsEntradas                 = idsEntradas,
             EquipoLocal                 = equipoLocal,
             EquipoVisitante             = equipoVisitante,

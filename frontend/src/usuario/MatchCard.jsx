@@ -1,6 +1,7 @@
 import { InfoLine, TrophyIcon } from './matchIcons'
+import { formatDate, formatPrice, formatTime } from './format'
 
-function MatchCard({ match }) {
+function MatchCard({ match, onComprar }) {
   const dateText = formatDate(match.date)
   const timeText = formatTime(match.time)
   const price = formatPrice(match.minPrice)
@@ -31,7 +32,7 @@ function MatchCard({ match }) {
           <strong>{price}</strong>
         </div>
 
-        <button className="buy-button" type="button">
+        <button className="buy-button" type="button" onClick={() => onComprar(match)}>
           Comprar Entradas
         </button>
       </div>
@@ -46,35 +47,6 @@ function TeamBadge({ name }) {
       <span>{name}</span>
     </div>
   )
-}
-
-function formatDate(date) {
-  if (!date) {
-    return 'Fecha a confirmar'
-  }
-
-  return new Intl.DateTimeFormat('es-UY', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date(`${date}T00:00:00`))
-}
-
-function formatTime(time) {
-  if (!time) {
-    return 'Hora a confirmar'
-  }
-
-  return time.slice(0, 5)
-}
-
-function formatPrice(price) {
-  if (price === undefined || price === null) {
-    return '$0'
-  }
-
-  return `$${Math.round(price)}`
 }
 
 function getInitials(name) {

@@ -45,6 +45,7 @@ builder.Services.AddSingleton<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddSingleton<IJwtService, JwtService>();
 builder.Services.AddSingleton<IEstadioRepository, EstadioRepository>();
 builder.Services.AddSingleton<IEntradaRepository, EntradaRepository>();
+builder.Services.AddSingleton<IEncuentroRepository, EncuentroRepository>();
 
 
 var app = builder.Build();

@@ -2,6 +2,12 @@ namespace Ticketing.API.DTOs;
 
 public class ComprarEntradaResponse
 {
+    // Id real de la fila compra que agrupa las entradas. Es el identificador del pedido.
+    public int IdCompra { get; set; }
+
+    // Numero de orden mostrado al usuario, derivado del IdCompra (ej. TM-000042).
+    public string CodigoOrden { get; set; } = string.Empty;
+
     public List<int> IdsEntradas { get; set; } = new();
 
     public string EquipoLocal { get; set; } = string.Empty;

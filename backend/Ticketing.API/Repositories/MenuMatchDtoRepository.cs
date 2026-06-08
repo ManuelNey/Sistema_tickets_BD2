@@ -43,6 +43,7 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
                         GROUP BY h.fk_encuentro
                     )
                     SELECT
+                        ex.id_encuentro AS id_encuentro,
                         ex.fecha::DATE AS fecha,
                         ex.fecha::TIME AS hora,
                         est.nombre AS estadio,
@@ -99,6 +100,7 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
     // Mapea un registro del resultado de la consulta a un MenuMatchDto
     private static MenuMatchDto MapMatchDto(NpgsqlDataReader reader)
     {
+        var ordEncuentro = reader.GetOrdinal("id_encuentro");
         var ordStadium = reader.GetOrdinal("estadio");
         var ordLocal = reader.GetOrdinal("equipo_local");
         var ordVisitor = reader.GetOrdinal("equipo_visitante");
@@ -110,6 +112,7 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
 
         return new MenuMatchDto
         {
+            IdEncuentro = reader.GetInt32(ordEncuentro),
             StadiumName = reader.GetString(ordStadium),
             LocalTeam = reader.GetString(ordLocal),
             VisitorTeam = reader.GetString(ordVisitor),
