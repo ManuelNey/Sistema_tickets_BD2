@@ -1,2 +1,0 @@
--- Reemplazado por los archivos 01_schema.sql a 05_negocio.sql.
--- Este archivo se mantiene vacío intencionalmente.
