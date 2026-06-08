@@ -92,6 +92,12 @@ function SidebarIcon({ name }) {
         <path d="M6 6l12 12M18 6 6 18" />
       </>
     ),
+    arrowLeft: (
+      <>
+        <path d="M19 12H5" />
+        <path d="m12 19-7-7 7-7" />
+      </>
+    ),
   }
 
   return (
