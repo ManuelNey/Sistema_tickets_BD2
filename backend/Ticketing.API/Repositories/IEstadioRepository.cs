@@ -5,7 +5,7 @@ namespace Ticketing.API.Repositories;
 public interface IEstadioRepository
 {
     Task<IReadOnlyCollection<EstadioDto>> GetAllAsync();
-    Task<EstadioDto> CreateAsync(CrearEstadioDto estadio);
-    Task<EstadioDto> UpdateAsync(int id, ActualizarEstadioDto estadio);
-    Task<bool> DeleteAsync(int id);
+    Task<EstadioDto> CreateAsync(CrearEstadioDto estadio, int paisSedeId);
+    Task<EstadioDto?> UpdateAsync(int id, ActualizarEstadioDto estadio, int paisSedeId);
+    Task<bool> DeleteAsync(int id, int paisSedeId);
 }

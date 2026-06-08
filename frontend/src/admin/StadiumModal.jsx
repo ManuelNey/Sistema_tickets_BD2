@@ -34,24 +34,6 @@ function StadiumModal({ error, form, isSaving, mode, onChange, onClose, onSubmit
             />
           </label>
 
-          <label>
-            <span>Pais</span>
-            <input
-              required
-              inputMode="numeric"
-              placeholder="Ej: 1"
-              value={form.paisSedeId}
-              onChange={(event) => onChange('paisSedeId', event.target.value)}
-            />
-          </label>
-
-          {mode === 'edit' && (
-            <label>
-              <span>Capacidad Total</span>
-              <input disabled placeholder="Bloqueado hasta tener endpoint de sectores" />
-            </label>
-          )}
-
           {error && <p className="modal-error">{error}</p>}
 
           <button className="modal-submit" type="submit" disabled={isSaving}>

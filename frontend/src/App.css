@@ -756,6 +756,9 @@
 
 .stadium-card {
   overflow: hidden;
+  min-height: 486px;
+  display: flex;
+  flex-direction: column;
   background: #ffffff;
   border: 1px solid #d7d9e2;
   border-radius: 12px;
@@ -763,6 +766,7 @@
 }
 
 .stadium-card-header {
+  min-height: 122px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -788,19 +792,29 @@
 }
 
 .stadium-card-header h2 {
+  min-height: 54px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   margin: 0;
   color: #ffffff;
   font-size: 23px;
   line-height: 1.15;
+  overflow: hidden;
 }
 
 .stadium-card-header p {
+  min-height: 20px;
   margin: 8px 0 0;
   color: #f0e5ff;
   font-size: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .stadium-card-body {
+  min-height: 188px;
   display: grid;
   gap: 24px;
   padding: 24px 20px;
@@ -824,13 +838,19 @@
 }
 
 .stadium-actions {
+  margin-top: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 56px;
   gap: 10px;
   padding: 0 20px 20px;
 }
 
+.stadium-actions.is-readonly {
+  grid-template-columns: 1fr;
+}
+
 .sector-actions {
+  margin-top: auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 56px;
   gap: 10px;

@@ -15,7 +15,7 @@ function getAuthHeaders(extraHeaders = {}) {
   }
 }
 
-function SectoresAdmin({ onBack, stadium }) {
+function SectoresAdmin({ onBack, stadium, user }) {
   const [sectors, setSectors] = useState([])
   const [sectorsError, setSectorsError] = useState('')
   const [sectorsLoading, setSectorsLoading] = useState(false)
@@ -158,6 +158,7 @@ function SectoresAdmin({ onBack, stadium }) {
 
   const totalCapacity = sectors.reduce((sum, sector) => sum + Number(sector.capacidad || 0), 0)
   const formattedCapacity = new Intl.NumberFormat('es-UY').format(totalCapacity)
+  const canManageSectors = Number(stadium.paisSedeId) === getAdminCountryId(user)
 
   return (
     <div className="admin-view">
@@ -177,12 +178,14 @@ function SectoresAdmin({ onBack, stadium }) {
       <header className="admin-header sector-list-header">
         <div>
           <h2>Sectores del Estadio</h2>
-          <p>Administra los sectores disponibles</p>
+          <p>{canManageSectors ? 'Administra los sectores disponibles' : 'Consulta los sectores disponibles'}</p>
         </div>
-        <button className="create-stadium-button" type="button" onClick={openCreateSector}>
-          <SidebarIcon name="plus" />
-          <span>Crear Sector</span>
-        </button>
+        {canManageSectors && (
+          <button className="create-stadium-button" type="button" onClick={openCreateSector}>
+            <SidebarIcon name="plus" />
+            <span>Crear Sector</span>
+          </button>
+        )}
       </header>
 
       {sectorsLoading && <p className="matches-status">Cargando sectores...</p>}
@@ -195,6 +198,7 @@ function SectoresAdmin({ onBack, stadium }) {
           ) : (
             sectors.map((sector) => (
               <SectorCard
+                canManage={canManageSectors}
                 key={sector.id}
                 onDelete={() => setSectorToDelete(sector)}
                 onDetails={() => openEditSector(sector)}
@@ -230,7 +234,7 @@ function SectoresAdmin({ onBack, stadium }) {
   )
 }
 
-function SectorCard({ onDelete, onDetails, sector }) {
+function SectorCard({ canManage, onDelete, onDetails, sector }) {
   return (
     <article className="stadium-card">
       <header className="stadium-card-header">
@@ -254,17 +258,26 @@ function SectorCard({ onDelete, onDetails, sector }) {
         </p>
       </div>
 
-      <footer className="sector-actions">
-        <button className="details-button" type="button" onClick={onDetails}>
-          <SidebarIcon name="edit" />
-          <span>Ver Detalles</span>
-        </button>
-        <button className="delete-button" type="button" onClick={onDelete} aria-label="Borrar sector">
-          <SidebarIcon name="trash" />
-        </button>
-      </footer>
+      {canManage && (
+        <footer className="sector-actions">
+          <button className="details-button" type="button" onClick={onDetails}>
+            <SidebarIcon name="edit" />
+            <span>Ver Detalles</span>
+          </button>
+          <button className="delete-button" type="button" onClick={onDelete} aria-label="Borrar sector">
+            <SidebarIcon name="trash" />
+          </button>
+        </footer>
+      )}
     </article>
   )
+}
+
+function getAdminCountryId(user) {
+  const countryId = user?.paisSede ?? user?.paisSedeId ?? user?.pais_sede
+  const parsedCountryId = Number(countryId)
+
+  return Number.isInteger(parsedCountryId) ? parsedCountryId : null
 }
 
 function SectorModal({ error, form, isSaving, mode, onChange, onClose, onSubmit, stadium }) {

@@ -31,28 +31,38 @@ public class EstadiosController : ControllerBase
 
     [HttpPost("registro")]
     [Authorize(Roles = "admin")]
-    // POST /api/estadios/registro
     public async Task<ActionResult<EstadioDto>> CreateAsync([FromBody] CrearEstadioDto estadio)
     {
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
 
-        var estadioCreado = await _estadioRepository.CreateAsync(estadio);
-        
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var estadioCreado = await _estadioRepository.CreateAsync(estadio, paisSedeId);
+
         return CreatedAtAction(nameof(GetAll), new { id = estadioCreado.Id }, estadioCreado);
     }
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = "admin")]
-    // PUT /api/estadios/{id}
     public async Task<ActionResult<EstadioDto>> UpdateAsync(int id, [FromBody] ActualizarEstadioDto estadio)
     {
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
 
-        var estadioActualizado = await _estadioRepository.UpdateAsync(id, estadio);
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var estadioActualizado = await _estadioRepository.UpdateAsync(id, estadio, paisSedeId);
 
         if (estadioActualizado == null)
         {
             return NotFound();
         }
-        
+
         return Ok(estadioActualizado);
     }
 
@@ -61,8 +71,14 @@ public class EstadiosController : ControllerBase
     // Delete /api/estadios/{id}
     public async Task<IActionResult> DeleteAsync(int id)
     {
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
 
-        var estadioEliminado = await _estadioRepository.DeleteAsync(id);
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var estadioEliminado = await _estadioRepository.DeleteAsync(id, paisSedeId);
 
         if (!estadioEliminado)
         {
