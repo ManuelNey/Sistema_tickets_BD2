@@ -105,12 +105,12 @@ Esto funciona porque `Program.cs` configura `RoleClaimType = "rol"` en los pará
 
 | Mail | Contraseña | Rol | País sede |
 |---|---|---|---|
-| `usuario1@mail.com` | `pass123` | usuario | — |
-| `usuario2@mail.com` | `pass456` | usuario | — |
-| `admin1@mail.com` | `adminpass1` | admin | Canadá (1) |
-| `admin2@mail.com` | `adminpass2` | admin | México (2) |
-| `admin3@mail.com` | `adminpass3` | admin | USA (3) |
-| `funcionario1@mail.com` | `funcpass1` | funcionario | — |
+| `usuario1@mail.com` | `Password123` | usuario | — |
+| `usuario2@mail.com` | `Password123` | usuario | — |
+| `admin1@mail.com` | `Password123` | admin | Canadá (1) |
+| `admin2@mail.com` | `Password123` | admin | México (2) |
+| `admin3@mail.com` | `Password123` | admin | USA (3) |
+| `funcionario1@mail.com` | `Password123` | funcionario | — |
 
 ---
 
