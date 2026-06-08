@@ -42,4 +42,31 @@ public class JwtService : IJwtService
         var handler = new JwtSecurityTokenHandler();
         return handler.WriteToken(handler.CreateToken(tokenDescriptor));
     }
+
+        public string GenerateQrToken(int idEntrada, string mailUsuario)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim("entradaId", idEntrada.ToString()),
+            new Claim("mail", mailUsuario),
+            new Claim("tipo", "qr_entrada")
+        };
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims.ToArray()),
+
+            // el QR (Token) vence en 30 segundos.
+            Expires = DateTime.UtcNow.AddSeconds(30),
+
+            SigningCredentials = new SigningCredentials(
+                _signingKey,
+                SecurityAlgorithms.HmacSha256Signature
+            )
+        };
+
+        var handler = new JwtSecurityTokenHandler();
+
+        return handler.WriteToken(handler.CreateToken(tokenDescriptor));
+    }
 }
