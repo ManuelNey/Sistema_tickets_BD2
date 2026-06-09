@@ -128,5 +128,35 @@ public class EstadioRepository : IEstadioRepository
         return affectedRows > 0;
     }
 
+    public async Task<IReadOnlyCollection<EstadioDto>> GetEstadiosAdmin(int paisSedeId)
+    {
+        var estadios = new List<EstadioDto>();
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            @"SELECT id_estadio, nombre, ciudad, fk_pais_sede
+            FROM estadio
+            WHERE fk_pais_sede=@PaisSedeId
+            ORDER BY nombre;", connection);
+
+        command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
+        await using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            estadios.Add(new EstadioDto
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("id_estadio")),
+                Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                Ciudad = reader.GetString(reader.GetOrdinal("ciudad")),
+                PaisSedeId = reader.GetInt32(reader.GetOrdinal("fk_pais_sede"))
+            });
+        }
+
+        return estadios;
+    }
+
     
 }
