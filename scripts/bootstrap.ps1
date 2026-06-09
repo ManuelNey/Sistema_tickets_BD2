@@ -24,14 +24,22 @@ Write-Host "Iniciando Postgres (docker compose)..."
 docker compose up -d postgres
 
 Write-Host "Esperando a que Postgres este listo..."
+
+$ready = $false
+
 for ($i = 0; $i -lt 60; $i++) {
-    $res = docker exec ticketing-db pg_isready -U postgres 2>&1
-    if ($LASTEXITCODE -eq 0) { break }
+    docker compose exec -T postgres pg_isready -U postgres *> $null
+
+    if ($LASTEXITCODE -eq 0) {
+        $ready = $true
+        break
+    }
+
     Start-Sleep -Seconds 2
 }
 
-if ($LASTEXITCODE -ne 0) {
-  Write-Error "Postgres no quedo listo a tiempo. Revisa 'docker logs ticketing-db'."
+if (-not $ready) {
+  Write-Error "Postgres no quedo listo a tiempo. Revisa 'docker compose logs postgres'."
   exit 1
 }
 
@@ -39,4 +47,6 @@ Write-Host "Construyendo e iniciando contenedores backend/frontend..."
 docker compose build backend frontend
 docker compose up -d backend frontend
 
-Write-Host "Bootstrap completado. Backend disponible en http://localhost:8080"
+Write-Host "Bootstrap completado."
+Write-Host "Backend disponible en http://localhost:8080"
+Write-Host "Frontend disponible en http://localhost:5173"
