@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import BallLogo from '../shared/BallLogo'
 import Sidebar from '../shared/Sidebar'
+import EncuentrosAdmin from './EncuentrosAdmin'
 import EstadiosAdmin from './EstadiosAdmin'
 import SectoresAdmin from './SectoresAdmin'
 
 const adminTabs = [
   { id: 'dashboard', label: 'Dashboard', icon: 'chart' },
   { id: 'estadios', label: 'Estadios', icon: 'stadium' },
-  { id: 'eventos', label: 'Eventos', icon: 'calendar' },
+  { id: 'eventos', label: 'Encuentros', icon: 'calendar' },
   { id: 'dispositivos', label: 'Dispositivos', icon: 'device' },
 ]
 
@@ -42,6 +43,8 @@ function AdminPanel({ onLogout, user }) {
           />
         ) : activeTab === 'estadios' ? (
           <EstadiosAdmin onOpenSectors={setSelectedStadiumForSectors} user={user} />
+        ) : activeTab === 'eventos' ? (
+          <EncuentrosAdmin user={user} />
         ) : (
           <div className="dashboard-card">
             <BallLogo />

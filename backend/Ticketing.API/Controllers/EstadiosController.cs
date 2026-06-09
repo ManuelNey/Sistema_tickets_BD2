@@ -87,4 +87,20 @@ public class EstadiosController : ControllerBase
         
         return NoContent();
     }
+
+    [HttpGet("admin")]
+    [Authorize(Roles = "admin")]
+    // GET /api/estadios/admin
+    public async Task<ActionResult<IReadOnlyCollection<EstadioDto>>> GetEstadiosAdmin()
+    {
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
+
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var estadios = await _estadioRepository.GetEstadiosAdmin(paisSedeId);
+        return Ok(estadios);
+    }
 }

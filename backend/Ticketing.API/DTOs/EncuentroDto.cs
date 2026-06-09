@@ -7,4 +7,5 @@ public class EncuentroDto
     public int EquipoLocal { get; set; }
     public int EquipoVisitante { get; set; }
     public int Estadio { get; set; }
+    public int Pais { get; set;}
 }
