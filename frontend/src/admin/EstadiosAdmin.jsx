@@ -53,7 +53,9 @@ function EstadiosAdmin({ onOpenSectors, user }) {
   }
 
   useEffect(() => {
-    loadStadiums()
+    // Diferimos la carga fuera del render sincrono para no disparar
+    // setState de forma sincrona dentro del effect (react-hooks/set-state-in-effect).
+    Promise.resolve().then(loadStadiums)
   }, [])
 
   const openCreateStadium = () => {

@@ -50,7 +50,9 @@ function SectoresAdmin({ onBack, stadium, user }) {
   }
 
   useEffect(() => {
-    loadSectors()
+    // Diferimos la carga fuera del render sincrono para no disparar
+    // setState de forma sincrona dentro del effect (react-hooks/set-state-in-effect).
+    Promise.resolve().then(loadSectors)
   }, [stadium.id])
 
   const openCreateSector = () => {
