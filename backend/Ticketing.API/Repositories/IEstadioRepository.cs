@@ -8,4 +8,5 @@ public interface IEstadioRepository
     Task<EstadioDto> CreateAsync(CrearEstadioDto estadio, int paisSedeId);
     Task<EstadioDto?> UpdateAsync(int id, ActualizarEstadioDto estadio, int paisSedeId);
     Task<bool> DeleteAsync(int id, int paisSedeId);
+    Task<IReadOnlyCollection<EstadioDto>> GetEstadiosAdmin(int paisSedeId);
 }
