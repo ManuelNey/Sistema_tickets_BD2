@@ -7,7 +7,8 @@ public interface IEntradaRepository
     Task<IReadOnlyCollection<ComprarEntradaResponse>> GetAllAsync();
     Task<DisponibilidadDto?> GetDisponibilidadAsync(int idHabilita);
     Task<ComprarEntradaResponse> CreateAsync(int idHabilita, int cantidad, string mail);
-    Task<ObtenerEntradaDto> ObtenerEntradaDto(int idEntrada);
+    Task<ObtenerEntradaDto?> ObtenerEntradaDto(int idEntrada, string mail);
+    Task<IReadOnlyCollection<EntradaCodigoQrDto>>ObtenerEntradasQr(string mail);
     
 
     // hay que hacer un DTO específico para actualizar la entrada.

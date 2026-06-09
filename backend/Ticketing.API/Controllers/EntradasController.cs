@@ -69,33 +69,48 @@ public class EntradasController : ControllerBase
     
 
 
-    [HttpPost("{id_Entrada:int}/qr")]
+    [HttpPost("{idEntrada:int}/Qr")]
     [Authorize(Roles = "usuario")]
     public async Task<ActionResult> GenerarQr(int idEntrada)
-{
-    var mail = User.FindFirstValue("mail");
-
-    if (mail == null)
-        return Unauthorized(new { message = "Usuario no autenticado" });
-
-    var entrada = await _entradaRepository.ObtenerEntradaDto(idEntrada);
-
-    if (entrada == null)
-        return NotFound(new { message = "Entrada no encontrada para este usuario" });
-
-    if (entrada.Estado != "activa")
-        return BadRequest(new { message = "La entrada no está activa" });
-
-    var tokenQr = _jwtService.GenerateQrToken(idEntrada, mail);
-
-    var qrContenido = $"http://localhost:8080/validarEntrada?token={Uri.EscapeDataString(tokenQr)}";
-
-    return Ok(new
     {
-        entradaId = idEntrada,
-        qrContenido,
-        expiraEn = 30
-    });
-}
+        var mail = User.FindFirstValue("mail");
+
+        if (mail == null)
+            return Unauthorized(new { message = "Usuario no autenticado" });
+
+        var entrada = await _entradaRepository.ObtenerEntradaDto(idEntrada, mail);
+
+        if (entrada == null)
+            return NotFound(new { message = "Entrada no encontrada para este usuario" });
+
+        if (entrada.Estado != "activa")
+            return BadRequest(new { message = "La entrada no está activa" });
+
+        var tokenQr = _jwtService.GenerateQrToken(idEntrada, mail);
+
+        var qrContenido =
+            $"http://localhost:5173/validarEntrada?token={Uri.EscapeDataString(tokenQr)}";
+
+        return Ok(new
+        {
+            entradaId = idEntrada,
+            qrContenido,
+            expiraEn = 30
+        });
+    }
+
+    [HttpGet("codigosQr")]
+    [Authorize(Roles = "usuario")]
+    public async Task<ActionResult<IReadOnlyCollection<EntradaCodigoQrDto>>> GetCodigosQr()
+    {
+        var mail = User.FindFirstValue("mail");
+
+        if (mail == null)
+            return Unauthorized();
+
+        var entradas = await _entradaRepository.ObtenerEntradasQr(mail);
+
+        return Ok(entradas);
+    }
 
 }
