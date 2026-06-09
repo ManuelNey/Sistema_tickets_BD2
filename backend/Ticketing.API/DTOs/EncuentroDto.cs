@@ -1,6 +1,6 @@
 namespace Ticketing.API.DTOs;
 
-public class EstadioDto
+public class EncuentroDto
 {
     public int Id { get; set; }
     public DateTime Fecha { get; set; }

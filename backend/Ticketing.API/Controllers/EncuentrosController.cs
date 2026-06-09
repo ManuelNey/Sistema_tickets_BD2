@@ -30,9 +30,9 @@ public class EncuentrosController : ControllerBase
 
     [HttpGet]
     // GET /api/encuentros
-    public async Task<IReadOnlyCollection<EncuentroDto>> GetAllEncuentros()
+    public async Task<ActionResult<IReadOnlyCollection<EncuentroDto>>> GetAllEncuentros()
     {
-        var encuentros = await _encuentroRepository.GetAllAsync();
+        var encuentros = await _encuentroRepository.GetAllEncuentros();
         return Ok(encuentros);
     }
 }

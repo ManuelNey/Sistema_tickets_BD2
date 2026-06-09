@@ -71,7 +71,7 @@ public class EncuentroRepository : IEncuentroRepository
                 EquipoVisitante = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
                 Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio"))
             } 
-            )
+            );
         }
 
         return encuentros;
