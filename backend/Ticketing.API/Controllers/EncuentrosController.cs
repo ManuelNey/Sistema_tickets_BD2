@@ -35,4 +35,35 @@ public class EncuentrosController : ControllerBase
         var encuentros = await _encuentroRepository.GetAllEncuentros();
         return Ok(encuentros);
     }
+
+    [HttpPost("registro")]
+    [Authorize(Roles = "admin")]
+    public async Task<ActionResult<EncuentroDto>> CreateAsync([FromBody] CrearEncuentroDto encuentro)
+    {
+        var mailAdmin = User.FindFirst("mail")?.Value;
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
+
+        if (string.IsNullOrWhiteSpace(mailAdmin))
+        {
+            return Forbid();
+        }
+
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var encuentroCreado = await _encuentroRepository.CreateAsync(encuentro, mailAdmin, paisSedeId);
+
+        if (encuentroCreado == null)
+        {
+            return Forbid();
+        }
+
+        return CreatedAtAction(
+            nameof(GetAllEncuentros),
+            new { id = encuentroCreado.Id },
+            encuentroCreado
+        );
+    }
 }
