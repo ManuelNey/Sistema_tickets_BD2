@@ -1,2 +1,23 @@
-Prueba/
-Pantallas/
+# .NET
+**/bin/
+**/obj/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+
+# Archivos de usuario
+*.user
+*.suo
+*.rsuser
+
+# Logs
+*.log
+
+# Variables locales
+.env
+.env.local
+
+# Sistema operativo
+.DS_Store
+Thumbs.db

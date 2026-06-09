@@ -24,6 +24,10 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__TicketingDb: Host=postgres;Port=5432;Database=ticketing;Username=postgres;Password=postgres
+    volumes:
+      - ./backend:/app
+    working_dir: /app
+    command: dotnet watch --project ./Ticketing.API/Ticketing.API.csproj run --urls http://0.0.0.0:8080
     depends_on:
       - postgres
 
