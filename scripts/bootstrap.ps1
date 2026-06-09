@@ -17,13 +17,13 @@ En ese caso usá .\scripts\reset-db.ps1 para partir de cero.
 
 $ErrorActionPreference = 'Stop'
 
-Write-Host "Compilando la solución..."
+Write-Host "Compilando la solucion..."
 dotnet build backend\backend.sln
 
 Write-Host "Iniciando Postgres (docker compose)..."
 docker compose up -d postgres
 
-Write-Host "Esperando a que Postgres esté listo..."
+Write-Host "Esperando a que Postgres este listo..."
 for ($i = 0; $i -lt 60; $i++) {
     $res = docker exec ticketing-db pg_isready -U postgres 2>&1
     if ($LASTEXITCODE -eq 0) { break }
@@ -31,7 +31,7 @@ for ($i = 0; $i -lt 60; $i++) {
 }
 
 if ($LASTEXITCODE -ne 0) {
-  Write-Error "Postgres no quedó listo a tiempo. Revisa 'docker logs ticketing-db'."
+  Write-Error "Postgres no quedo listo a tiempo. Revisa 'docker logs ticketing-db'."
   exit 1
 }
 
