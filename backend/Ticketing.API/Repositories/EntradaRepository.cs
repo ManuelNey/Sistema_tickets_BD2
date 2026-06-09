@@ -188,22 +188,67 @@ public class EntradaRepository : IEntradaRepository
     }
 
     
-    public async Task<ObtenerEntradaDto> ObtenerEntradaDto(int idEntrada)
+    public async Task<ObtenerEntradaDto?> ObtenerEntradaDto(int idEntrada, string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        await using var cmd = new NpgsqlCommand(@"SELECT id_entrada, estado FROM Entrada WHERE id_entrada = @idEntrada
-            ", connection);
+        await using var cmd = new NpgsqlCommand(@"
+            SELECT id_entrada, estado 
+            FROM entrada 
+            WHERE id_entrada = @idEntrada
+            AND fk_usuario_mail = @mail
+        ", connection);
+
         cmd.Parameters.AddWithValue("@idEntrada", idEntrada);
+        cmd.Parameters.AddWithValue("@mail", mail);
+
         await using var reader = await cmd.ExecuteReaderAsync();
 
-        int id = reader.GetInt32(reader.GetOrdinal("id_entrada"));
-        string estado = reader.GetString(reader.GetOrdinal("estado"));
+        if (!await reader.ReadAsync())
+            return null;
 
-        return new ObtenerEntradaDto{
-            IdEntrada = id,
-            Estado = estado
+        return new ObtenerEntradaDto
+        {
+            IdEntrada = reader.GetInt32(reader.GetOrdinal("id_entrada")),
+            Estado = reader.GetString(reader.GetOrdinal("estado"))
         };
+    }
+
+    public async Task<IReadOnlyCollection<EntradaCodigoQrDto>> ObtenerEntradasQr(string mail)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(@" 
+            SELECT e.id_entrada AS IdEntrada, equipo_local.nombre AS EquipoLocal, equipo_visitante.nombre AS EquipoVisitante,
+                enc.fecha AS FechaEncuentro, s.nombre AS Sector, e.estado AS Estado
+                FROM entrada e INNER JOIN habilita h ON h.id = e.fk_habilita_id 
+                    INNER JOIN encuentro enc ON enc.id_encuentro = h.fk_encuentro
+                    INNER JOIN equipo equipo_local ON equipo_local.id_equipo = enc.fk_equipo_local 
+                    INNER JOIN equipo equipo_visitante ON equipo_visitante.id_equipo = enc.fk_equipo_visitante
+                    INNER JOIN sector s ON s.id_sector = h.fk_sector
+                        WHERE e.estado = 'activa' AND e.fk_usuario_mail = @mail 
+                        ORDER BY enc.fecha, e.id_entrada;
+            ", connection);
+        cmd.Parameters.AddWithValue("@mail", mail);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var entradas = new List<EntradaCodigoQrDto>();
+
+    while (await reader.ReadAsync())
+    {
+        entradas.Add(new EntradaCodigoQrDto
+        {
+            IdEntrada = reader.GetInt32(reader.GetOrdinal("identrada")),
+            EquipoLocal = reader.GetString(reader.GetOrdinal("equipolocal")),
+            EquipoVisitante = reader.GetString(reader.GetOrdinal("equipovisitante")),
+            FechaEncuentro = reader.GetDateTime(reader.GetOrdinal("fechaencuentro")),
+            Sector = reader.GetString(reader.GetOrdinal("sector")),
+            Estado = reader.GetString(reader.GetOrdinal("estado"))
+        });
+    }
+
+    return entradas;
     }
 }
