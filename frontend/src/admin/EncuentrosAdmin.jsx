@@ -56,7 +56,9 @@ function EncuentrosAdmin({ user }) {
   }
 
   useEffect(() => {
-    loadEncuentros()
+    // Diferimos la carga fuera del render sincrono para no disparar
+    // setState de forma sincrona dentro del effect (react-hooks/set-state-in-effect).
+    Promise.resolve().then(loadEncuentros)
   }, [])
 
   const loadAdminStadiums = async () => {
