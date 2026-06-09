@@ -48,4 +48,34 @@ public class EncuentroRepository : IEncuentroRepository
 
         return sectores;
     }
+
+    public async Task<IReadOnlyCollection<EncuentroDto>> GetAllEncuentros()
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(
+            @"SELECT id_encuentro,fecha,fk_equipo_local,fk_equipo_visitante,fk_estadio
+            FROM encuentro", connection);
+
+        var encuentros= new List<EncuentroDto>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            encuentros.Add(new EncuentroDto
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("id_encuentro")),
+                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
+                EquipoLocal = reader.GetInt32(reader.GetOrdinal("fk_equipo_local")),
+                EquipoVisitante = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
+                Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio"))
+            } 
+            )
+        }
+
+        return encuentros;
+        
+    }
 }
+

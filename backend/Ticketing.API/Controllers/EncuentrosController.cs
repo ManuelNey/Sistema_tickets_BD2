@@ -27,4 +27,12 @@ public class EncuentrosController : ControllerBase
         var sectores = await _encuentroRepository.GetSectoresByEncuentroAsync(idEncuentro);
         return Ok(sectores);
     }
+
+    [HttpGet]
+    // GET /api/encuentros
+    public async Task<IReadOnlyCollection<EncuentroDto>> GetAllEncuentros()
+    {
+        var encuentros = await _encuentroRepository.GetAllAsync();
+        return Ok(encuentros);
+    }
 }
