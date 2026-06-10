@@ -1,12 +1,14 @@
 import SidebarIcon from './SidebarIcon'
+import Ticket from '../assets/ticket.png'
 
-function Sidebar({ activeTab, brandIcon, brandSubtitle, label, onLogout, onTabChange, tabs }) {
+function Sidebar({ activeTab, brandSubtitle, label, onLogout, onTabChange, tabs }) {
   return (
     <aside className="user-sidebar" aria-label={label}>
       <header className="sidebar-brand">
         <div className="sidebar-logo" aria-hidden="true">
-          <SidebarIcon name={brandIcon} />
+          <img src={Ticket} alt="Logo TicketMatch" className="sidebar-logo-img" />
         </div>
+
         <div>
           <strong>TicketMatch</strong>
           <span>{brandSubtitle}</span>

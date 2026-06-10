@@ -21,7 +21,6 @@ function UsuarioPanel({ onLogout, user }) {
     <main className="dashboard-shell">
       <Sidebar
         activeTab={activeTab}
-        brandIcon="ticket"
         brandSubtitle="Portal de Usuario"
         label="Opciones de usuario"
         onLogout={onLogout}

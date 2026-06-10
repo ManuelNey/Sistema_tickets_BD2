@@ -207,19 +207,19 @@
 }
 
 .sidebar-logo {
-  width: 58px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: #9b2dee;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.sidebar-logo .sidebar-icon {
-  width: 32px;
-  height: 32px;
-  stroke: #ffffff;
+.sidebar-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .sidebar-brand strong {
