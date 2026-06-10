@@ -8,4 +8,5 @@ public class EncuentroDto
     public int EquipoVisitante { get; set; }
     public int Estadio { get; set; }
     public int Pais { get; set;}
+    public string Estado { get; set; } = string.Empty;
 }
