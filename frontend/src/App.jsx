@@ -1,35 +1,26 @@
-import { useState } from 'react'
 import AdminPanel from './admin/AdminPanel'
 import FuncionarioPanel from './funcionario/FuncionarioPanel'
 import LoginPage from './LoginPage'
 import UsuarioPanel from './usuario/UsuarioPanel'
+import { useAuth } from './context/useAuth'
 import './App.css'
 
 function App() {
-  const [user, setUser] = useState(null)
-
-  const handleLogin = (usuario) => {
-    setUser(usuario)
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('ticketmatch-token')
-    setUser(null)
-  }
+  const { user, logout } = useAuth()
 
   if (!user) {
-    return <LoginPage onLogin={handleLogin} />
+    return <LoginPage />
   }
 
   if (user.rol === 'admin') {
-    return <AdminPanel onLogout={handleLogout} user={user} />
+    return <AdminPanel onLogout={logout} user={user} />
   }
 
   if (user.rol === 'funcionario') {
-    return <FuncionarioPanel onLogout={handleLogout} user={user} />
+    return <FuncionarioPanel onLogout={logout} user={user} />
   }
 
-  return <UsuarioPanel onLogout={handleLogout} user={user} />
+  return <UsuarioPanel onLogout={logout} user={user} />
 }
 
 export default App
