@@ -71,20 +71,29 @@ function CodigoQr() {
   }, [])
 
   useEffect(() => {
+  const timeout = setTimeout(() => {
     obtenerEntradasQr()
-  }, [obtenerEntradasQr])
+  }, 0)
 
-  useEffect(() => {
-    if (!modalAbierto || !entradaSeleccionada) return undefined
+  return () => clearTimeout(timeout)
+}, [obtenerEntradasQr])
 
+useEffect(() => {
+  if (!modalAbierto || !entradaSeleccionada) return undefined
+
+  const timeout = setTimeout(() => {
     generarQr(entradaSeleccionada.idEntrada)
+  }, 0)
 
-    const intervalo = setInterval(() => {
-      generarQr(entradaSeleccionada.idEntrada)
-    }, 25000)
+  const intervalo = setInterval(() => {
+    generarQr(entradaSeleccionada.idEntrada)
+  }, 25000)
 
-    return () => clearInterval(intervalo)
-  }, [modalAbierto, entradaSeleccionada, generarQr])
+  return () => {
+    clearTimeout(timeout)
+    clearInterval(intervalo)
+  }
+}, [modalAbierto, entradaSeleccionada, generarQr])
 
   function abrirModalQr(entrada) {
     setEntradaSeleccionada(entrada)
