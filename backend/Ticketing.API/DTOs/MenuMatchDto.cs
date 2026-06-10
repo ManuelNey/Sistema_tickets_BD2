@@ -10,5 +10,6 @@ public class MenuMatchDto
     public DateOnly Date { get; set; }
     public double MinPrice { get; set; }
     public double MaxPrice { get; set; }
-    public int AvailableTickets { get; set; }
+    public int AvailableTickets { get; set;}
+
 }

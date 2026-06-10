@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { TrophyIcon } from './matchIcons'
-import { formatDate, formatPrice, formatTime } from './format'
+import { calcularTotales, formatDate, formatPrice, formatTime } from './format'
 
 const MAX_ENTRADAS = 5
-const CARGO_SERVICIO = 0.1 // 10% de cargo por servicio (solo se muestra, no lo guarda el backend)
 
-function CompraDetalle({ match, onVolver, onCompraExitosa }) {
+// Pantalla de compra: el usuario elige seccion + cantidad que quiera reservar, y luego confirma para avanzar con el pago.
+function CompraDetalle({ match, onVolver, onReservaExitosa }) {
   const [sectores, setSectores] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -15,6 +15,7 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+
 
   useEffect(() => {
     const loadSectores = async () => {
@@ -53,7 +54,7 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
     [sectores, idHabilitaSel],
   )
 
-  // El tope de entradas es 5, pero nunca mas que los cupos disponibles del sector elegido.
+  // El tope de entradas es 5, pero por las dudas miramos también que nunca mas que los cupos disponibles del sector elegido.
   const maxCantidad = sectorSeleccionado
     ? Math.min(MAX_ENTRADAS, sectorSeleccionado.disponibles)
     : MAX_ENTRADAS
@@ -64,11 +65,9 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
     setSubmitError('')
   }
 
-  const subtotal = sectorSeleccionado ? sectorSeleccionado.precio * cantidad : 0
-  const cargo = subtotal * CARGO_SERVICIO
-  const total = subtotal + cargo
+  const { subtotal, cargo, total } = calcularTotales(sectorSeleccionado?.precio, cantidad)
 
-  const handleConfirmar = async () => {
+  const handleReservar = async () => {
     if (!sectorSeleccionado) {
       return
     }
@@ -78,7 +77,7 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
 
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const response = await fetch('http://localhost:8080/api/entradas/compra', {
+      const response = await fetch('http://localhost:8080/api/compra/reservar', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,25 +90,39 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
       })
 
       if (!response.ok) {
-        throw new Error('Compra request failed')
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message ?? 'Reserva fallida')
       }
 
-      const data = await response.json()
+      const data = await response.json()  // 
+      // En este punto la reserva ya se hizo, y el back devuelve el idCompra.
+      // Aún no tenemos un GET para traer el detalle de una reserva, asi que hacemos un mock.
 
-      onCompraExitosa({
-        ...data,
-        cantidad,
+      //Armamos la reserva exitasa y vamos a larte del countdown, pasando toda la info que tenemos a mano (y un codigo de reserva generado a partir del idCompra).
+      onReservaExitosa({
+        //Los datos despues del idCompra son para mostrar en el countdown, falta el GET de la reserva.
+        idCompra: data.idCompra,
+        codigoReserva: `RSV-${String(data.idCompra).padStart(6, '0')}`,
+        equipoLocal: match.localTeam,
+        equipoVisitante: match.visitorTeam,
+        fecha: match.date,
+        hora: match.time,
+        estadio: match.stadiumName,
+        sector: sectorSeleccionado.sector,
         precioUnitario: sectorSeleccionado.precio,
-        totalConCargo: sectorSeleccionado.precio * cantidad * (1 + CARGO_SERVICIO),
-        ordenCodigo: data.codigoOrden,
+        cantidad,
+        // Usamos el momento actual para el countdown (cuando exista el GET, vendra del back).
+        fechaReserva: new Date().toISOString(),
       })
-    } catch {
-      setSubmitError('No se pudo completar la compra. Intenta nuevamente.')
+    } catch (err) {
+      setSubmitError(err.message || 'No se pudo completar la reserva. Intenta nuevamente.')
     } finally {
       setSubmitting(false)
     }
   }
 
+
+  // Render principal que muestra el detalle del partido, sector y cantidad comprada.
   return (
     <div className="compra-view">
       <header className="compra-topbar">
@@ -118,7 +131,7 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
             <TrophyIcon />
           </span>
           <div>
-            <strong>Compra de Entradas</strong>
+            <strong>Reservar Entradas</strong>
             <span>
               {match.localTeam} vs {match.visitorTeam}
             </span>
@@ -229,7 +242,7 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
         <aside className="resumen-card">
           <h3>
             <CardIcon />
-            Resumen de Compra
+            Resumen de Reserva
           </h3>
 
           {!sectorSeleccionado ? (
@@ -260,7 +273,7 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
               </dl>
 
               <div className="resumen-total">
-                <span>Total a pagar</span>
+                <span>Total a reservar</span>
                 <strong>{formatPrice(total)}</strong>
               </div>
 
@@ -269,10 +282,10 @@ function CompraDetalle({ match, onVolver, onCompraExitosa }) {
               <button
                 className="resumen-confirmar"
                 type="button"
-                onClick={handleConfirmar}
+                onClick={handleReservar}
                 disabled={submitting}
               >
-                {submitting ? 'Procesando...' : 'Confirmar Compra'}
+                {submitting ? 'Reservando...' : 'Reservar entradas'}
               </button>
 
               <p className="resumen-ssl">Pago seguro con cifrado SSL</p>

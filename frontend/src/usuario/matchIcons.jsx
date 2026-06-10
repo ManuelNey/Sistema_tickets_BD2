@@ -1,3 +1,5 @@
+
+//Iconos usados en la pantalla de MatchDetails y en el filtro de partidos.
 export function FilterIcon() {
   return (
     <svg className="filter-icon" viewBox="0 0 24 24" aria-hidden="true">

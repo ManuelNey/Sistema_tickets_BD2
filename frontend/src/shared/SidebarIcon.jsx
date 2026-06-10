@@ -98,6 +98,11 @@ function SidebarIcon({ name }) {
         <path d="m12 19-7-7 7-7" />
       </>
     ),
+    bookmark: (
+      <>
+        <path d="M6 4h12v16l-6-4-6 4V4Z" />
+      </>
+    ),
   }
 
   return (

@@ -26,10 +26,9 @@ CREATE TABLE IF NOT EXISTS persona (
 );
 
 CREATE TABLE IF NOT EXISTS telefonos (
-  id SERIAL PRIMARY KEY,
   persona_mail VARCHAR(255) NOT NULL REFERENCES persona(mail) ON DELETE CASCADE,
   telefono VARCHAR(50) NOT NULL,
-  CONSTRAINT uq_telefonos_persona_telefono UNIQUE (persona_mail, telefono)
+  PRIMARY KEY (persona_mail, telefono)
 );
 
 CREATE TABLE IF NOT EXISTS usuario (
@@ -109,7 +108,6 @@ CREATE TABLE IF NOT EXISTS habilita (
   id SERIAL PRIMARY KEY,
   fk_encuentro INTEGER NOT NULL REFERENCES encuentro(id_encuentro) ON DELETE CASCADE,
   fk_sector INTEGER NOT NULL REFERENCES sector(id_sector),
-  fk_sector_estadio INTEGER NOT NULL REFERENCES estadio(id_estadio),
   precio NUMERIC(12,2) NOT NULL,
   fk_administrador_mail VARCHAR(255) NOT NULL REFERENCES administrador(persona_mail),
   CONSTRAINT uq_habilita_encuentro_sector UNIQUE (fk_encuentro, fk_sector),
@@ -124,7 +122,7 @@ CREATE TABLE IF NOT EXISTS compra (
   monto_total NUMERIC(12,2) NOT NULL,
   fk_comision INTEGER REFERENCES comision(id_comision),
   fk_usuario_mail VARCHAR(255) NOT NULL REFERENCES usuario(persona_mail),
-  CONSTRAINT chk_compra_estado CHECK (estado IN ('pendiente', 'confirmada', 'pagada')),
+  CONSTRAINT chk_compra_estado CHECK (estado IN ('pendiente', 'pagada', 'cancelada')),
   CONSTRAINT chk_compra_monto CHECK (monto_total >= 0)
 );
 
@@ -135,7 +133,7 @@ CREATE TABLE IF NOT EXISTS entrada (
   fk_habilita_id INTEGER NOT NULL REFERENCES habilita(id),
   fk_compra_id INTEGER NOT NULL REFERENCES compra(id_compra),
   fk_usuario_mail VARCHAR(255) NOT NULL REFERENCES usuario(persona_mail),
-  CONSTRAINT chk_entrada_estado CHECK (estado IN ('activa', 'utilizada')),
+  CONSTRAINT chk_entrada_estado CHECK (estado IN ('reservada', 'activa', 'utilizada')),
   CONSTRAINT chk_entrada_transferencias CHECK (cantidad_transferencias >= 0 AND cantidad_transferencias <= 3)
 );
 
@@ -143,7 +141,7 @@ CREATE TABLE IF NOT EXISTS trabaja_con (
   funcionario_mail VARCHAR(255) NOT NULL REFERENCES funcionario(persona_mail) ON DELETE CASCADE,
   numero_dispositivo VARCHAR(100) NOT NULL REFERENCES dispositivo(numero_dispositivo) ON DELETE CASCADE,
   fecha TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  PRIMARY KEY (funcionario_mail, numero_dispositivo, fecha)
+  PRIMARY KEY (funcionario_mail, numero_dispositivo)
 );
 
 CREATE TABLE IF NOT EXISTS transferencia (
