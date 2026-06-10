@@ -2,7 +2,9 @@ import { useState } from 'react'
 import BallLogo from '../shared/BallLogo'
 import Sidebar from '../shared/Sidebar'
 import ComprarEntradas from './ComprarEntradas'
+
 import MisReservas from './MisReservas'
+import CodigoQr from './CodigoQr'
 
 // Panel del costadito, no es side bar pero es maso así.
 const userTabs = [
@@ -37,6 +39,8 @@ function UsuarioPanel({ onLogout, user }) {
           <ComprarEntradas />
         ) : activeTab === 'reservas' ? (
           <MisReservas />
+        ) : activeTab === 'qr' ? (
+          <CodigoQr />
         ) : (
           <div className="dashboard-card">
             <BallLogo />

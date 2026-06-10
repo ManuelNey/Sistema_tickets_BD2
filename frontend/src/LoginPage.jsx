@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import BallLogo from './shared/BallLogo'
+import { useAuth } from './context/useAuth'
 
-function LoginPage({ onLogin }) {
+function LoginPage() {
+  const { login } = useAuth()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -24,13 +27,19 @@ function LoginPage({ onLogin }) {
         }),
       })
 
-      if (!response.ok) {
-        throw new Error('Login failed')
+      let data = null
+
+      try {
+        data = await response.json()
+      } catch {
+        data = null
       }
 
-      const usuario = await response.json()
-      localStorage.setItem('ticketmatch-token', usuario.token)
-      onLogin(usuario)
+      if (!response.ok) {
+        throw new Error(data?.message || 'Login failed')
+      }
+
+      login(data)
     } catch {
       setError('No se pudo iniciar sesion')
     } finally {

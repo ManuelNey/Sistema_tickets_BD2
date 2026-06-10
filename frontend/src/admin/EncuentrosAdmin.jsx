@@ -9,6 +9,17 @@ const emptyEventForm = {
   estadioId: '',
 }
 
+const emptyEditEventForm = {
+  estado: 'programado',
+}
+
+const eventStatusOptions = [
+  { value: 'programado', label: 'Programado' },
+  { value: 'en_juego', label: 'En juego' },
+  { value: 'finalizado', label: 'Finalizado' },
+  { value: 'cancelado', label: 'Cancelado' },
+]
+
 function getAuthHeaders(extraHeaders = {}) {
   const token = localStorage.getItem('ticketmatch-token')
 
@@ -26,6 +37,11 @@ function EncuentrosAdmin({ user }) {
   const [eventForm, setEventForm] = useState(emptyEventForm)
   const [eventFormError, setEventFormError] = useState('')
   const [eventSaving, setEventSaving] = useState(false)
+  const [editEventModalOpen, setEditEventModalOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [editEventForm, setEditEventForm] = useState(emptyEditEventForm)
+  const [editEventError, setEditEventError] = useState('')
+  const [editEventSaving, setEditEventSaving] = useState(false)
   const [stadiums, setStadiums] = useState([])
   const [stadiumsLoading, setStadiumsLoading] = useState(false)
   const [sectors, setSectors] = useState([])
@@ -82,10 +98,10 @@ function EncuentrosAdmin({ user }) {
     }
   }
 
-  const loadSectorsByStadium = async (stadiumId) => {
+  const loadSectorsByStadium = async (stadiumId, onError = setEventFormError) => {
     if (!stadiumId) {
       setSectors([])
-      return
+      return []
     }
 
     setSectorsLoading(true)
@@ -101,10 +117,29 @@ function EncuentrosAdmin({ user }) {
 
       const data = await response.json()
       setSectors(data)
+      return data
     } catch {
-      setEventFormError('No se pudieron cargar los sectores del estadio')
+      onError('No se pudieron cargar los sectores del estadio')
+      return []
     } finally {
       setSectorsLoading(false)
+    }
+  }
+
+  const loadCurrentEventSectors = async (eventId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/encuentros/${eventId}/sectores`, {
+        headers: getAuthHeaders(),
+      })
+
+      if (!response.ok) {
+        throw new Error('Current event sectors request failed')
+      }
+
+      return await response.json()
+    } catch {
+      setEditEventError('No se pudieron cargar los precios actuales del encuentro')
+      return []
     }
   }
 
@@ -136,19 +171,26 @@ function EncuentrosAdmin({ user }) {
   }
 
   const toggleSector = (sectorId) => {
-    setSelectedSectors((current) => ({
-      ...current,
-      [sectorId]: {
-        selected: !current[sectorId]?.selected,
-        precio: current[sectorId]?.precio ?? '',
-      },
-    }))
+    setSelectedSectors((current) => {
+      if (current[sectorId]?.locked) {
+        return current
+      }
+
+      return {
+        ...current,
+        [sectorId]: {
+          selected: !current[sectorId]?.selected,
+          precio: current[sectorId]?.precio ?? '',
+        },
+      }
+    })
   }
 
   const updateSectorPrice = (sectorId, price) => {
     setSelectedSectors((current) => ({
       ...current,
       [sectorId]: {
+        locked: current[sectorId]?.locked ?? false,
         selected: true,
         precio: price,
       },
@@ -209,6 +251,88 @@ function EncuentrosAdmin({ user }) {
     }
   }
 
+  const openEditEvent = async (encuentro) => {
+    setSelectedEvent(encuentro)
+    setEditEventForm({
+      estado: encuentro.estado ?? 'programado',
+    })
+    setEditEventError('')
+    setSelectedSectors({})
+    setSectors([])
+    setEditEventModalOpen(true)
+
+    const [stadiumSectors, currentEventSectors] = await Promise.all([
+      loadSectorsByStadium(encuentro.estadio, setEditEventError),
+      loadCurrentEventSectors(encuentro.id),
+    ])
+
+    setSelectedSectors(buildSelectedSectorsFromPrices(stadiumSectors, currentEventSectors))
+  }
+
+  const closeEditEvent = () => {
+    setEditEventModalOpen(false)
+    setSelectedEvent(null)
+    setEditEventForm(emptyEditEventForm)
+    setEditEventError('')
+    setEditEventSaving(false)
+    setSelectedSectors({})
+    setSectors([])
+  }
+
+  const updateEditEventField = (field, value) => {
+    setEditEventForm((current) => ({ ...current, [field]: value }))
+  }
+
+  const submitEditEvent = async (event) => {
+    event.preventDefault()
+
+    if (!selectedEvent) {
+      return
+    }
+
+    setEditEventError('')
+    setEditEventSaving(true)
+
+    const selectedSectorPayload = Object.entries(selectedSectors)
+      .filter(([, sector]) => sector.selected)
+      .map(([sectorId, sector]) => ({
+        sectorId: Number(sectorId),
+        precio: Number(sector.precio),
+      }))
+
+    if (selectedSectorPayload.some((sector) => Number.isNaN(sector.precio))) {
+      setEditEventError('Completa el precio de todos los sectores seleccionados')
+      setEditEventSaving(false)
+      return
+    }
+
+    const payload = {
+      estado: editEventForm.estado,
+      sectores: selectedSectorPayload,
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8080/api/encuentros/${selectedEvent.id}`, {
+        method: 'PUT',
+        headers: getAuthHeaders({
+          'Content-Type': 'application/json',
+        }),
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        throw new Error('Update event failed')
+      }
+
+      await loadEncuentros()
+      closeEditEvent()
+    } catch {
+      setEditEventError('No se pudo modificar el encuentro')
+    } finally {
+      setEditEventSaving(false)
+    }
+  }
+
   return (
     <div className="admin-view">
       <header className="admin-header">
@@ -235,6 +359,7 @@ function EncuentrosAdmin({ user }) {
                 adminCountryId={adminCountryId}
                 encuentro={encuentro}
                 key={encuentro.id}
+                onEdit={() => openEditEvent(encuentro)}
               />
             ))
           )}
@@ -258,15 +383,32 @@ function EncuentrosAdmin({ user }) {
           stadiumsLoading={stadiumsLoading}
         />
       )}
+
+      {editEventModalOpen && selectedEvent && (
+        <EditEventModal
+          encuentro={selectedEvent}
+          error={editEventError}
+          form={editEventForm}
+          isSaving={editEventSaving}
+          onChange={updateEditEventField}
+          onClose={closeEditEvent}
+          onSectorPriceChange={updateSectorPrice}
+          onSectorToggle={toggleSector}
+          onSubmit={submitEditEvent}
+          sectors={sectors}
+          sectorsLoading={sectorsLoading}
+          selectedSectors={selectedSectors}
+        />
+      )}
     </div>
   )
 }
 
-function EncuentroCard({ adminCountryId, encuentro }) {
+function EncuentroCard({ adminCountryId, encuentro, onEdit }) {
   const isOwnCountry = Number(encuentro.pais) === adminCountryId
 
   return (
-    <article className="stadium-card">
+    <article className="stadium-card event-card">
       <header className="stadium-card-header">
         <div className="stadium-card-icon" aria-hidden="true">
           <SidebarIcon name="calendar" />
@@ -290,7 +432,20 @@ function EncuentroCard({ adminCountryId, encuentro }) {
           <span>Pais</span>
           <strong>{isOwnCountry ? `Tu pais (#${encuentro.pais})` : `Pais #${encuentro.pais}`}</strong>
         </p>
+        <p>
+          <span>Estado</span>
+          <strong>{formatStatus(encuentro.estado)}</strong>
+        </p>
       </div>
+
+      {isOwnCountry && (
+        <footer className="stadium-actions event-actions">
+          <button className="details-button" type="button" onClick={onEdit}>
+            <SidebarIcon name="edit" />
+            <span>Modificar Encuentro</span>
+          </button>
+        </footer>
+      )}
     </article>
   )
 }
@@ -438,6 +593,116 @@ function CreateEventModal({
   )
 }
 
+function EditEventModal({
+  encuentro,
+  error,
+  form,
+  isSaving,
+  onChange,
+  onClose,
+  onSectorPriceChange,
+  onSectorToggle,
+  onSubmit,
+  sectors,
+  sectorsLoading,
+  selectedSectors,
+}) {
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="stadium-modal event-modal" aria-labelledby="edit-event-modal-title" role="dialog">
+        <button className="modal-close" type="button" onClick={onClose} aria-label="Cerrar">
+          <SidebarIcon name="close" />
+        </button>
+
+        <h2 id="edit-event-modal-title">Modificar Encuentro</h2>
+
+        <form className="stadium-form" onSubmit={onSubmit}>
+          <div className="event-readonly-grid">
+            <label>
+              <span>Encuentro</span>
+              <input disabled value={`#${encuentro.id}`} />
+            </label>
+
+            <label>
+              <span>Fecha</span>
+              <input disabled value={formatDate(encuentro.fecha)} />
+            </label>
+
+            <label>
+              <span>Equipos</span>
+              <input disabled value={`#${encuentro.equipoLocal} vs #${encuentro.equipoVisitante}`} />
+            </label>
+
+            <label>
+              <span>Estadio</span>
+              <input disabled value={`#${encuentro.estadio}`} />
+            </label>
+          </div>
+
+          <label>
+            <span>Estado</span>
+            <select required value={form.estado} onChange={(event) => onChange('estado', event.target.value)}>
+              {eventStatusOptions.map((status) => (
+                <option key={status.value} value={status.value}>
+                  {status.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <fieldset className="event-sectors-fieldset">
+            <legend>Sectores y precios</legend>
+
+            {sectorsLoading ? (
+              <p className="event-helper">Cargando sectores...</p>
+            ) : sectors.length === 0 ? (
+              <p className="event-helper">No hay sectores disponibles para este estadio.</p>
+            ) : (
+              <div className="event-sector-list">
+                {sectors.map((sector) => {
+                  const selected = Boolean(selectedSectors[sector.id]?.selected)
+                  const locked = Boolean(selectedSectors[sector.id]?.locked)
+
+                  return (
+                    <div className={`event-sector-row ${locked ? 'is-locked' : ''}`} key={sector.id}>
+                      <label className="event-sector-check">
+                        <input
+                          checked={selected}
+                          disabled={locked}
+                          type="checkbox"
+                          onChange={() => onSectorToggle(sector.id)}
+                        />
+                        <span>{sector.nombre}</span>
+                        <small>{sector.capacidad} lugares</small>
+                      </label>
+
+                      {selected && (
+                        <input
+                          required
+                          inputMode="decimal"
+                          placeholder="Precio"
+                          value={selectedSectors[sector.id]?.precio ?? ''}
+                          onChange={(event) => onSectorPriceChange(sector.id, event.target.value)}
+                        />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </fieldset>
+
+          {error && <p className="modal-error">{error}</p>}
+
+          <button className="modal-submit" type="submit" disabled={isSaving}>
+            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+          </button>
+        </form>
+      </section>
+    </div>
+  )
+}
+
 function getAdminCountryId(user) {
   const countryId = user?.paisSede ?? user?.paisSedeId ?? user?.pais_sede
   const parsedCountryId = Number(countryId)
@@ -458,12 +723,59 @@ function sortEncuentrosByPermission(encuentros, adminCountryId) {
   })
 }
 
+function buildSelectedSectorsFromPrices(stadiumSectors, currentEventSectors) {
+  const sectorsByName = new Map(
+    stadiumSectors.map((sector) => [normalizeSectorName(sector.nombre), sector.id])
+  )
+
+  return currentEventSectors.reduce((selected, sectorPrice) => {
+    const sectorId =
+      getSectorIdFromPriceRow(sectorPrice) ?? sectorsByName.get(normalizeSectorName(sectorPrice.sector))
+
+    if (!sectorId) {
+      return selected
+    }
+
+    return {
+      ...selected,
+      [sectorId]: {
+        locked: true,
+        selected: true,
+        precio: String(sectorPrice.precio ?? ''),
+      },
+    }
+  }, {})
+}
+
+function getSectorIdFromPriceRow(sectorPrice) {
+  const possibleId =
+    sectorPrice.sectorId ??
+    sectorPrice.idSector ??
+    sectorPrice.id_sector ??
+    sectorPrice.fkSector ??
+    sectorPrice.fk_sector
+
+  const parsedId = Number(possibleId)
+
+  return Number.isInteger(parsedId) ? parsedId : null
+}
+
+function normalizeSectorName(name) {
+  return String(name ?? '').trim().toLowerCase()
+}
+
 const timeOptions = Array.from({ length: 48 }, (_, index) => {
   const hours = String(Math.floor(index / 2)).padStart(2, '0')
   const minutes = index % 2 === 0 ? '00' : '30'
 
   return `${hours}:${minutes}`
 })
+
+function formatStatus(status) {
+  const option = eventStatusOptions.find((currentStatus) => currentStatus.value === status)
+
+  return option?.label ?? 'Sin estado'
+}
 
 function formatDate(date) {
   if (!date) {

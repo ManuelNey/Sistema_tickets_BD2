@@ -849,6 +849,14 @@
   grid-template-columns: 1fr;
 }
 
+.event-card .stadium-card-body {
+  min-height: 244px;
+}
+
+.event-actions {
+  grid-template-columns: 1fr;
+}
+
 .sector-actions {
   margin-top: auto;
   display: grid;
@@ -1003,6 +1011,12 @@
   gap: 18px;
 }
 
+.event-readonly-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
 .event-sectors-fieldset {
   display: grid;
   gap: 14px;
@@ -1041,6 +1055,15 @@
   border-radius: 12px;
 }
 
+.event-sector-row.is-locked {
+  background: #f3e8ff;
+  border-color: #6b21a8;
+}
+
+.event-sector-row.is-locked .event-sector-check {
+  color: #3b0764;
+}
+
 .event-sector-row > input {
   height: 48px;
   padding: 0 14px;
@@ -1062,6 +1085,10 @@
   height: 18px;
   padding: 0;
   accent-color: #9b2dee;
+}
+
+.event-sector-check input:disabled {
+  cursor: not-allowed;
 }
 
 .event-sector-check span {
@@ -1289,6 +1316,8 @@
   }
 
   .filters-grid,
+  .event-form-grid,
+  .event-readonly-grid,
   .matches-grid {
     grid-template-columns: 1fr;
   }

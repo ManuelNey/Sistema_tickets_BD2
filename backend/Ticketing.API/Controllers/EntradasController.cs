@@ -4,10 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Ticketing.API.DTOs;
 using Ticketing.API.Repositories;
 
-//Token QR
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
-using Microsoft.IdentityModel.Tokens;
 using Ticketing.API.Services;
 
 namespace Ticketing.API.Controllers;

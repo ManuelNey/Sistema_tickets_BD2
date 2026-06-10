@@ -19,7 +19,7 @@ public class EncuentrosController : ControllerBase
     }
 
     [HttpGet("{idEncuentro:int}/sectores")]
-    [Authorize(Roles = "usuario")]
+    [Authorize(Roles = "admin,usuario")]
     // GET /api/encuentros/{idEncuentro}/sectores
     // Devuelve los sectores habilitados del encuentro con precio y cupos disponibles
     public async Task<ActionResult<IReadOnlyCollection<SectorDisponibleDto>>> GetSectores(int idEncuentro)
@@ -65,5 +65,34 @@ public class EncuentrosController : ControllerBase
             new { id = encuentroCreado.Id },
             encuentroCreado
         );
+    }
+
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "admin")]
+    public async Task<ActionResult<EncuentroDto>> UpdateAsync(int id, [FromBody] ActualizarEncuentroDto encuentro)
+    {
+        var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
+
+        if (!int.TryParse(paisSedeClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var mailAdmin = User.FindFirst("mail")?.Value;
+
+        if (string.IsNullOrWhiteSpace(mailAdmin))
+        {
+            return Forbid();
+        }
+
+
+        var encuentroActualizado = await _encuentroRepository.UpdateAsync(id, encuentro, paisSedeId, mailAdmin);
+
+        if (encuentroActualizado == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(encuentroActualizado);
     }
 }
