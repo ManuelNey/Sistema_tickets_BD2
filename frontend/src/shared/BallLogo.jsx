@@ -1,4 +1,4 @@
-import soccerBall from '../assets/soccer-ball.svg'
+import soccerBall from '../assets/pelota.png'
 
 function BallLogo({ className = '' }) {
   return <img className={`ball-logo ${className}`} src={soccerBall} alt="" />
