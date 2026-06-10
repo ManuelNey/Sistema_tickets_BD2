@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
-import "./CodigoQr.css"
+import { useCallback, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
+import './CodigoQr.css'
+import qrIcon from '../assets/qr.png'
 
-function CodigosQr() {
+function CodigoQr() {
   const [entradas, setEntradas] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -13,23 +14,7 @@ function CodigosQr() {
   const [qrLoading, setQrLoading] = useState(false)
   const [qrError, setQrError] = useState('')
 
-  useEffect(() => {
-    obtenerEntradasQr()
-  }, [])
-
-  useEffect(() => {
-    if (!modalAbierto || !entradaSeleccionada) return
-
-    generarQr(entradaSeleccionada.idEntrada)
-
-    const intervalo = setInterval(() => {
-      generarQr(entradaSeleccionada.idEntrada)
-    }, 25000)
-
-    return () => clearInterval(intervalo)
-  }, [modalAbierto, entradaSeleccionada])
-
-  async function obtenerEntradasQr() {
+  const obtenerEntradasQr = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -54,9 +39,9 @@ function CodigosQr() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  async function generarQr(idEntrada) {
+  const generarQr = useCallback(async (idEntrada) => {
     try {
       setQrLoading(true)
       setQrError('')
@@ -83,7 +68,23 @@ function CodigosQr() {
     } finally {
       setQrLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    obtenerEntradasQr()
+  }, [obtenerEntradasQr])
+
+  useEffect(() => {
+    if (!modalAbierto || !entradaSeleccionada) return undefined
+
+    generarQr(entradaSeleccionada.idEntrada)
+
+    const intervalo = setInterval(() => {
+      generarQr(entradaSeleccionada.idEntrada)
+    }, 25000)
+
+    return () => clearInterval(intervalo)
+  }, [modalAbierto, entradaSeleccionada, generarQr])
 
   function abrirModalQr(entrada) {
     setEntradaSeleccionada(entrada)
@@ -148,7 +149,7 @@ function CodigosQr() {
           {entradas.map((entrada) => (
             <article className="qr-card" key={entrada.idEntrada}>
               <div className="qr-icon-circle">
-                <img src="src\assets\qr.png" className='qr-icon' alt="Imagen de un QR" />
+                <img src={qrIcon} className="qr-icon" alt="Imagen de un QR" />
               </div>
 
               <h2>
@@ -221,7 +222,7 @@ function CodigosQr() {
             </div>
 
             <p className="qr-modal-refresh">
-              El QR se actualiza automáticamente cada 30 segundos.
+              El QR se actualiza automáticamente cada 25 segundos.
             </p>
           </div>
         </div>
@@ -230,4 +231,4 @@ function CodigosQr() {
   )
 }
 
-export default CodigosQr
+export default CodigoQr
