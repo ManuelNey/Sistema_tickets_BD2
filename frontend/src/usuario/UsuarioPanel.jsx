@@ -2,6 +2,7 @@ import { useState } from 'react'
 import BallLogo from '../shared/BallLogo'
 import Sidebar from '../shared/Sidebar'
 import ComprarEntradas from './ComprarEntradas'
+import CodigoQr from './CodigoQr'
 
 const userTabs = [
   { id: 'comprar', label: 'Comprar Entradas', icon: 'bag' },
@@ -31,6 +32,8 @@ function UsuarioPanel({ onLogout, user }) {
       <section className="dashboard-content" aria-labelledby="dashboard-title">
         {activeTab === 'comprar' ? (
           <ComprarEntradas />
+        ) : activeTab === 'qr' ? (
+          <CodigoQr />
         ) : (
           <div className="dashboard-card">
             <BallLogo />
