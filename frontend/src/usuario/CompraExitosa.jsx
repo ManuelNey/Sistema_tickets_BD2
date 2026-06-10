@@ -1,5 +1,7 @@
 import { formatDate, formatPrice, formatTime } from './format'
 
+
+// Es la pantalla final cuando la compra se registra correstamente.
 function CompraExitosa({ resumen, onVolver }) {
   const cantidad = resumen.cantidad ?? resumen.idsEntradas?.length ?? 1
 
@@ -32,7 +34,7 @@ function CompraExitosa({ resumen, onVolver }) {
           <DetalleLinea
             icon={<PinIcon />}
             label="Ubicacion"
-            value={`${resumen.estadio}, ${resumen.ciudadEstadio}`}
+            value={resumen.ciudadEstadio ? `${resumen.estadio}, ${resumen.ciudadEstadio}` : resumen.estadio}
           />
 
           <div className="exito-rows">

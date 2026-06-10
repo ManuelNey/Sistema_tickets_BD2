@@ -22,6 +22,7 @@ builder.Services.AddAuthentication("Bearer").AddJwtBearer(opt =>
         RoleClaimType = "rol"
     };
 });
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddCors(options =>
@@ -48,6 +49,7 @@ builder.Services.AddSingleton<IEntradaRepository, EntradaRepository>();
 builder.Services.AddSingleton<IEncuentroRepository, EncuentroRepository>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ISectorRepository, SectorRepository>();
+builder.Services.AddSingleton<ICompraRepository, CompraRepository>();
 
 
 var app = builder.Build();

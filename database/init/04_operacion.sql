@@ -116,77 +116,33 @@ ON CONFLICT (fk_estadio, nombre) DO NOTHING;
 -- Encuentro 3: Canadá vs Bosnia, estadio 2 (BMO Field, Canadá)             → admin1
 -- Encuentro 4: USA vs Paraguay, estadio 11 (SoFi, USA)                     → admin3
 -- Encuentro 5: Catar vs Suiza, estadio 16 (Levi's, USA)                    → admin3
-INSERT INTO habilita (fk_encuentro, fk_sector, fk_sector_estadio, precio, fk_administrador_mail) VALUES
+INSERT INTO habilita (fk_encuentro, fk_sector, precio, fk_administrador_mail) VALUES
 -- Encuentro 1 → sectores 9-12 (estadio 3, Ciudad de México)
-(1, 9,  3, 350, 'admin2@mail.com'),
-(1, 10, 3, 150, 'admin2@mail.com'),
-(1, 11, 3, 80,  'admin2@mail.com'),
-(1, 12, 3, 80,  'admin2@mail.com'),
+(1, 9,  350, 'admin2@mail.com'),
+(1, 10, 150, 'admin2@mail.com'),
+(1, 11, 80,  'admin2@mail.com'),
+(1, 12, 80,  'admin2@mail.com'),
 -- Encuentro 2 → sectores 13-16 (estadio 4, Guadalajara)
-(2, 13, 4, 300, 'admin2@mail.com'),
-(2, 14, 4, 150, 'admin2@mail.com'),
-(2, 15, 4, 80,  'admin2@mail.com'),
-(2, 16, 4, 80,  'admin2@mail.com'),
+(2, 13, 300, 'admin2@mail.com'),
+(2, 14, 150, 'admin2@mail.com'),
+(2, 15, 80,  'admin2@mail.com'),
+(2, 16, 80,  'admin2@mail.com'),
 -- Encuentro 3 → sectores 5-8 (estadio 2, BMO Field)
-(3, 5,  2, 300, 'admin1@mail.com'),
-(3, 6,  2, 150, 'admin1@mail.com'),
-(3, 7,  2, 80,  'admin1@mail.com'),
-(3, 8,  2, 80,  'admin1@mail.com'),
+(3, 5,  300, 'admin1@mail.com'),
+(3, 6,  150, 'admin1@mail.com'),
+(3, 7,  80,  'admin1@mail.com'),
+(3, 8,  80,  'admin1@mail.com'),
 -- Encuentro 4 → sectores 41-44 (estadio 11, SoFi)
-(4, 41, 11, 300, 'admin3@mail.com'),
-(4, 42, 11, 150, 'admin3@mail.com'),
-(4, 43, 11, 80,  'admin3@mail.com'),
-(4, 44, 11, 80,  'admin3@mail.com'),
+(4, 41, 300, 'admin3@mail.com'),
+(4, 42, 150, 'admin3@mail.com'),
+(4, 43, 80,  'admin3@mail.com'),
+(4, 44, 80,  'admin3@mail.com'),
 -- Encuentro 5 → sectores 61-64 (estadio 16, Levi's)
-(5, 61, 16, 300, 'admin3@mail.com'),
-(5, 62, 16, 150, 'admin3@mail.com'),
-(5, 63, 16, 80,  'admin3@mail.com'),
-(5, 64, 16, 80,  'admin3@mail.com')
+(5, 61, 300, 'admin3@mail.com'),
+(5, 62, 150, 'admin3@mail.com'),
+(5, 63, 80,  'admin3@mail.com'),
+(5, 64, 80,  'admin3@mail.com')
 ON CONFLICT (fk_encuentro, fk_sector) DO NOTHING;
 
--- Entradas generadas para compras pagadas (IDs de habilita 1-20 según orden de inserción anterior).
-INSERT INTO entrada (estado, cantidad_transferencias, fk_habilita_id, fk_compra_id, fk_usuario_mail) VALUES
--- Compra 1 (usuario1)
-('activa', 0, 1,  1,  'usuario1@mail.com'),
-('activa', 0, 2,  1,  'usuario1@mail.com'),
--- Compra 2 (usuario2)
-('activa', 0, 1,  2,  'usuario2@mail.com'),
-('activa', 0, 3,  2,  'usuario2@mail.com'),
-('activa', 0, 4,  2,  'usuario2@mail.com'),
--- Compra 3 (usuario3)
-('activa', 0, 5,  3,  'usuario3@mail.com'),
--- Compra 4 (usuario4)
-('activa', 0, 6,  4,  'usuario4@mail.com'),
-('activa', 0, 7,  4,  'usuario4@mail.com'),
--- Compra 5 (usuario5)
-('activa', 0, 9,  5,  'usuario5@mail.com'),
-('activa', 0, 10, 5,  'usuario5@mail.com'),
-('activa', 0, 11, 5,  'usuario5@mail.com'),
-('activa', 0, 12, 5,  'usuario5@mail.com'),
--- Compra 7 (usuario7)
-('activa', 0, 13, 7,  'usuario7@mail.com'),
-('activa', 0, 14, 7,  'usuario7@mail.com'),
--- Compra 8 (usuario8)
-('activa', 0, 13, 8,  'usuario8@mail.com'),
-('activa', 0, 15, 8,  'usuario8@mail.com'),
-('activa', 0, 16, 8,  'usuario8@mail.com'),
--- Compra 10 (usuario10)
-('activa', 0, 17, 10, 'usuario10@mail.com'),
-('activa', 0, 18, 10, 'usuario10@mail.com'),
-('activa', 0, 19, 10, 'usuario10@mail.com'),
-('activa', 0, 20, 10, 'usuario10@mail.com'),
--- Compra 11 (usuario1)
-('activa', 0, 2,  11, 'usuario1@mail.com'),
-('activa', 0, 3,  11, 'usuario1@mail.com'),
--- Compra 12 (usuario2)
-('activa', 0, 5,  12, 'usuario2@mail.com'),
-('activa', 0, 6,  12, 'usuario2@mail.com'),
--- Compra 13 (usuario3)
-('activa', 0, 9,  13, 'usuario3@mail.com'),
-('activa', 0, 10, 13, 'usuario3@mail.com'),
-('activa', 0, 11, 13, 'usuario3@mail.com'),
--- Compra 14 (usuario4)
-('activa', 0, 14, 14, 'usuario4@mail.com'),
--- Compra 16 (usuario6)
-('activa', 0, 17, 16, 'usuario6@mail.com'),
-('activa', 0, 18, 16, 'usuario6@mail.com');
+-- Las entradas sembradas se movieron a 05_negocio.sql: deben insertarse DESPUES de las compras
+-- por la FK entrada.fk_compra_id -> compra.id_compra (si no, falla la inicializacion).

@@ -164,19 +164,16 @@ public class EncuentroRepository : IEncuentroRepository
                 @"INSERT INTO habilita(
                     fk_encuentro,
                     fk_sector,
-                    fk_sector_estadio,
                     precio,
                     fk_administrador_mail)
                     VALUES(
                     @IdEncuentro,
                     @IdSector,
-                    @IdEstadio,
                     @Precio,
                     @MailAdmin);",connection,transaction);
 
             cmdSector.Parameters.AddWithValue("@IdEncuentro", encuentroCreado.Id);
             cmdSector.Parameters.AddWithValue("@IdSector", sector.SectorId);
-            cmdSector.Parameters.AddWithValue("@IdEstadio", encuentroCreado.Estadio);
             cmdSector.Parameters.AddWithValue("@Precio", sector.Precio);
             cmdSector.Parameters.AddWithValue("@MailAdmin", mailAdmin);
 

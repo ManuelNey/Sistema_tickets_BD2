@@ -1,18 +1,22 @@
 import { useEffect, useState } from 'react'
 import MatchCard from './MatchCard'
 import CompraDetalle from './CompraDetalle'
+import ReservaConfirmada from './ReservaConfirmada'
+import PagoEntrada from './PagoEntrada'
 import CompraExitosa from './CompraExitosa'
 import { FilterIcon } from './matchIcons'
+import './reserva.css'
 
 function ComprarEntradas() {
   const [matches, setMatches] = useState([])
   const [matchesError, setMatchesError] = useState('')
   const [matchesLoading, setMatchesLoading] = useState(false)
 
-  // Maquina de estados de la vista: 'list' (menu) -> 'detalle' (compra) -> 'exito'
+  // Maquina de estados: list -> reservar -> confirmada -> pago -> exito
   const [view, setView] = useState('list')
   const [selectedMatch, setSelectedMatch] = useState(null)
-  const [compraResumen, setCompraResumen] = useState(null)
+  const [pedido, setPedido] = useState(null)
+  const [resumen, setResumen] = useState(null)
 
   useEffect(() => {
     const loadMatches = async () => {
@@ -43,40 +47,63 @@ function ComprarEntradas() {
     loadMatches()
   }, [])
 
-  const handleComprar = (match) => {
-    setSelectedMatch(match)
-    setView('detalle')
-  }
 
-  const handleVolverAlMenu = () => {
+  //Funcion para volver a los partidos.
+  const volverAlMenu = () => {
     setSelectedMatch(null)
+    setPedido(null)
+    setResumen(null)
     setView('list')
   }
 
-  const handleCompraExitosa = (resumen) => {
-    setCompraResumen(resumen)
-    setView('exito')
-  }
-
-  if (view === 'detalle' && selectedMatch) {
+  if (view === 'reservar' && selectedMatch) {
     return (
       <CompraDetalle
         match={selectedMatch}
-        onVolver={handleVolverAlMenu}
-        onCompraExitosa={handleCompraExitosa}
+        onVolver={volverAlMenu}
+        onReservaExitosa={(p) => {
+          setPedido(p)
+          setView('confirmada')
+        }}
       />
     )
   }
 
-  if (view === 'exito' && compraResumen) {
-    return <CompraExitosa resumen={compraResumen} onVolver={handleVolverAlMenu} />
+  // Si la reserva sale bien, vamos a la parte de confirmacion
+  if (view === 'confirmada' && pedido) {
+    return (
+      <ReservaConfirmada
+        pedido={pedido}
+        onPagar={() => setView('pago')}
+        onPagarMasTarde={volverAlMenu}
+      />
+    )
+  }
+
+  //Si el usuario decide pagar, vamos a la parte de pago, que al finalizar va a mostrar la pantalla de exito.
+  if (view === 'pago' && pedido) {
+    return (
+      <PagoEntrada
+        pedido={pedido}
+        onVolver={() => setView('confirmada')}
+        onPagoExitoso={(r) => {
+          setResumen(r)
+          setView('exito')
+        }}
+      />
+    )
+  }
+
+  //Si sale todo bien, mostramos la pantalla de exito con el resumen de la compra.
+  if (view === 'exito' && resumen) {
+    return <CompraExitosa resumen={resumen} onVolver={volverAlMenu} />
   }
 
   return (
     <div className="buy-view">
       <header className="buy-header">
         <h1 id="dashboard-title">Proximos Partidos</h1>
-        <p>Selecciona el partido y compra tus entradas</p>
+        <p>Selecciona el partido y reserva tus entradas</p>
       </header>
 
       <section className="filters-card" aria-label="Filtros">
@@ -118,7 +145,10 @@ function ComprarEntradas() {
               <MatchCard
                 key={`${match.localTeam}-${match.visitorTeam}-${index}`}
                 match={match}
-                onComprar={handleComprar}
+                onComprar={(m) => {
+                  setSelectedMatch(m)
+                  setView('reservar')
+                }}
               />
             ))
           )}
