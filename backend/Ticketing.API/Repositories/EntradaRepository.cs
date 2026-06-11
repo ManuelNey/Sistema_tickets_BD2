@@ -67,7 +67,7 @@ public class EntradaRepository : IEntradaRepository
 
 
     
-    public async Task<ObtenerEntradaDto?> ObtenerEntradaDto(int idEntrada, string mail)
+    public async Task<EntradaEstadoDto?> ObtenerEntrada(int idEntrada, string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
@@ -87,7 +87,7 @@ public class EntradaRepository : IEntradaRepository
         if (!await reader.ReadAsync())
             return null;
 
-        return new ObtenerEntradaDto
+        return new EntradaEstadoDto
         {
             IdEntrada = reader.GetInt32(reader.GetOrdinal("id_entrada")),
             Estado = reader.GetString(reader.GetOrdinal("estado"))

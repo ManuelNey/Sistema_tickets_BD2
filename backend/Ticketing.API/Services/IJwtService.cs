@@ -1,4 +1,4 @@
-using Ticketing.API.Dtos;
+using Ticketing.API.DTOs;
 
 namespace Ticketing.API.Services;
 

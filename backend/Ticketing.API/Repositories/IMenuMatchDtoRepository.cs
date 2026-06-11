@@ -4,5 +4,5 @@ namespace Ticketing.API.Repositories;
 
 public interface IMenuMatchDtoRepository
 {
-    Task<IReadOnlyCollection<MenuMatchDto>> GetMenuMatchesAsync();
+    Task<IReadOnlyCollection<EncuentroMenuDto>> GetMenuMatchesAsync();
 }
