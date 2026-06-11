@@ -41,21 +41,5 @@ services:
       CHOKIDAR_USEPOLLING: "true"
     command: npm run dev -- --host 0.0.0.0 --port 5173
 
-  mobile:
-    image: node:20
-    container_name: ticketing-mobile
-    working_dir: /app
-    stdin_open: true
-    tty: true
-    ports:
-      - "8081:8081"
-    volumes:
-      - ./mobile:/app
-      - /app/node_modules
-    environment:
-      CHOKIDAR_USEPOLLING: "true"
-      REACT_NATIVE_PACKAGER_HOSTNAME: "192.168.1.23"
-    command: sh -c "npm install && npx expo start --host lan --clear"
-
 volumes:
   db-data:
