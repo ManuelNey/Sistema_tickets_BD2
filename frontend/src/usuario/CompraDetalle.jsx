@@ -103,11 +103,11 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
         //Los datos despues del idCompra son para mostrar en el countdown, falta el GET de la reserva.
         idCompra: data.idCompra,
         codigoReserva: `RSV-${String(data.idCompra).padStart(6, '0')}`,
-        equipoLocal: match.localTeam,
-        equipoVisitante: match.visitorTeam,
-        fecha: match.date,
-        hora: match.time,
-        estadio: match.stadiumName,
+        equipoLocal: match.equipoLocal,
+        equipoVisitante: match.equipoVisitante,
+        fecha: match.fecha,
+        hora: match.hora,
+        estadio: match.estadio,
         sector: sectorSeleccionado.sector,
         precioUnitario: sectorSeleccionado.precio,
         cantidad,
@@ -133,7 +133,7 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
           <div>
             <strong>Reservar Entradas</strong>
             <span>
-              {match.localTeam} vs {match.visitorTeam}
+              {match.equipoLocal} vs {match.equipoVisitante}
             </span>
           </div>
         </div>
@@ -153,14 +153,14 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
                 Copa Mundial FIFA 2026
               </p>
               <h2>
-                {match.localTeam} vs {match.visitorTeam}
+                {match.equipoLocal} vs {match.equipoVisitante}
               </h2>
             </div>
 
             <div className="compra-match-info">
-              <InfoBlock icon={<CalendarIcon />} label="Fecha" value={formatDate(match.date)} />
-              <InfoBlock icon={<ClockIcon />} label="Hora" value={formatTime(match.time)} />
-              <InfoBlock icon={<PinIcon />} label="Estadio" value={match.stadiumName} />
+              <InfoBlock icon={<CalendarIcon />} label="Fecha" value={formatDate(match.fecha)} />
+              <InfoBlock icon={<ClockIcon />} label="Hora" value={formatTime(match.hora)} />
+              <InfoBlock icon={<PinIcon />} label="Estadio" value={match.estadio} />
             </div>
           </article>
 

@@ -2,10 +2,10 @@ import { InfoLine, TrophyIcon } from './matchIcons'
 import { formatDate, formatPrice, formatTime } from './format'
 
 function MatchCard({ match, onComprar }) {
-  const dateText = formatDate(match.date)
-  const timeText = formatTime(match.time)
-  const minPrice = formatPrice(match.minPrice)
-  const maxPrice = formatPrice(match.maxPrice)
+  const dateText = formatDate(match.fecha)
+  const timeText = formatTime(match.hora)
+  const minPrice = formatPrice(match.precioMinimo)
+  const maxPrice = formatPrice(match.precioMaximo)
 
   return (
     <article className="match-card">
@@ -16,17 +16,17 @@ function MatchCard({ match, onComprar }) {
         </p>
 
         <div className="teams-row">
-          <TeamBadge name={match.localTeam} />
+          <TeamBadge name={match.equipoLocal} />
           <span className="versus">VS</span>
-          <TeamBadge name={match.visitorTeam} />
+          <TeamBadge name={match.equipoVisitante} />
         </div>
       </div>
 
       <div className="match-body">
         <InfoLine icon="calendarLine" text={dateText} />
         <InfoLine icon="clock" text={timeText} />
-        <InfoLine icon="pin" text={match.stadiumName} />
-        <InfoLine icon="users" text={`${match.availableTickets} disponibles`} highlight />
+        <InfoLine icon="pin" text={match.estadio} />
+        <InfoLine icon="users" text={`${match.entradasDisponibles} disponibles`} highlight />
 
         <div className="price-block">
           <div>

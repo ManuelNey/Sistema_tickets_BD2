@@ -48,7 +48,7 @@ public class EntradasController : ControllerBase
         if (mail == null)
             return Unauthorized(new { message = "Usuario no autenticado" });
 
-        var entrada = await _entradaRepository.ObtenerEntradaDto(idEntrada, mail);
+        var entrada = await _entradaRepository.ObtenerEntrada(idEntrada, mail);
 
         if (entrada == null)
             return NotFound(new { message = "Entrada no encontrada para este usuario" });

@@ -143,7 +143,7 @@ function ComprarEntradas() {
           ) : (
             matches.map((match, index) => (
               <MatchCard
-                key={`${match.localTeam}-${match.visitorTeam}-${index}`}
+                key={`${match.equipoLocal}-${match.equipoVisitante}-${index}`}
                 match={match}
                 onComprar={(m) => {
                   setSelectedMatch(m)

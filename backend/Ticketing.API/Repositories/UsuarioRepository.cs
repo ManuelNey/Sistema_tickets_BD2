@@ -1,5 +1,5 @@
 using Ticketing.API.Data;
-using Ticketing.API.Dtos;
+using Ticketing.API.DTOs;
 using Npgsql;
 using Ticketing.API.Services;
 

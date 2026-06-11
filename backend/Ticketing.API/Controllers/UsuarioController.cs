@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Ticketing.API.Dtos;
+using Ticketing.API.DTOs;
 using Ticketing.API.Repositories;
 using Ticketing.API.Services;
 

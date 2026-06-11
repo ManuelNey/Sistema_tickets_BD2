@@ -14,9 +14,9 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
     }
 
     // Obtiene el menú de partidos disponibles, con información de estadio, equipos, fecha, precios y cupos disponibles.
-    public async Task<IReadOnlyCollection<MenuMatchDto>> GetMenuMatchesAsync()
+    public async Task<IReadOnlyCollection<EncuentroMenuDto>> GetMenuMatchesAsync()
     {
-        var menuMatches = new List<MenuMatchDto>();
+        var menuMatches = new List<EncuentroMenuDto>();
 
         try
         {
@@ -97,8 +97,8 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
         }
     }
 
-    // Mapea un registro del resultado de la consulta a un MenuMatchDto
-    private static MenuMatchDto MapMatchDto(NpgsqlDataReader reader)
+    // Mapea un registro del resultado de la consulta a un EncuentroMenuDto
+    private static EncuentroMenuDto MapMatchDto(NpgsqlDataReader reader)
     {
         var ordEncuentro = reader.GetOrdinal("id_encuentro");
         var ordStadium = reader.GetOrdinal("estadio");
@@ -110,17 +110,17 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
         var ordMaxPrice = reader.GetOrdinal("precio_maximo");
         var ordCupos = reader.GetOrdinal("cupos_disponibles");
 
-        return new MenuMatchDto
+        return new EncuentroMenuDto
         {
             IdEncuentro = reader.GetInt32(ordEncuentro),
-            StadiumName = reader.GetString(ordStadium),
-            LocalTeam = reader.GetString(ordLocal),
-            VisitorTeam = reader.GetString(ordVisitor),
-            Time = reader.IsDBNull(ordHora) ? default : reader.GetFieldValue<TimeOnly>(ordHora),
-            Date = reader.IsDBNull(ordFecha) ? default : reader.GetFieldValue<DateOnly>(ordFecha),
-            MinPrice = reader.GetDouble(ordMinPrice),
-            MaxPrice = reader.GetDouble(ordMaxPrice),
-            AvailableTickets = reader.GetInt32(ordCupos),
+            Estadio = reader.GetString(ordStadium),
+            EquipoLocal = reader.GetString(ordLocal),
+            EquipoVisitante = reader.GetString(ordVisitor),
+            Hora = reader.IsDBNull(ordHora) ? default : reader.GetFieldValue<TimeOnly>(ordHora),
+            Fecha = reader.IsDBNull(ordFecha) ? default : reader.GetFieldValue<DateOnly>(ordFecha),
+            PrecioMinimo = reader.GetDouble(ordMinPrice),
+            PrecioMaximo = reader.GetDouble(ordMaxPrice),
+            EntradasDisponibles = reader.GetInt32(ordCupos),
         };
     }
 }

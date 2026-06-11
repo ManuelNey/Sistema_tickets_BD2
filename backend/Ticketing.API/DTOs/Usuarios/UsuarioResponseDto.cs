@@ -1,4 +1,4 @@
-namespace Ticketing.API.Dtos;
+namespace Ticketing.API.DTOs;
 
 public class UsuarioResponseDto
 {
