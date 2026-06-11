@@ -157,7 +157,9 @@ public class EncuentroRepository : IEncuentroRepository
                 Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
                 EquipoLocal = reader.GetInt32(reader.GetOrdinal("fk_equipo_local")),
                 EquipoVisitante = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
-                Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio"))
+                Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio")),
+                Estado = reader.GetString(reader.GetOrdinal("estado")),
+                Pais = reader.GetInt32(reader.GetOrdinal("fk_pais_sede"))
             };
 
             await reader.DisposeAsync();
@@ -239,7 +241,7 @@ public class EncuentroRepository : IEncuentroRepository
                 WHERE e.fk_estadio = s.id_estadio
                 AND e.id_encuentro = @idEncuentro
                 AND s.fk_pais_sede = @paisSedeId
-                AND e.estado = 'programado' OR e.estado='cancelado'
+                AND e.estado IN ('programado', 'cancelado')
                 RETURNING 
                 e.id_encuentro,
                 e.estado,
@@ -268,7 +270,8 @@ public class EncuentroRepository : IEncuentroRepository
                 EquipoLocal = reader.GetInt32(reader.GetOrdinal("fk_equipo_local")),
                 EquipoVisitante = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
                 Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio")),
-                Estado = reader.GetString(reader.GetOrdinal("estado"))
+                Estado = reader.GetString(reader.GetOrdinal("estado")),
+                Pais = reader.GetInt32(reader.GetOrdinal("fk_pais_sede"))
             };
 
             await reader.DisposeAsync();
