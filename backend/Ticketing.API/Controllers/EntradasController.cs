@@ -59,7 +59,7 @@ public class EntradasController : ControllerBase
         var tokenQr = _jwtService.GenerateQrToken(idEntrada, mail);
 
         var qrContenido =
-            $"http://localhost:5173/validarEntrada?token={Uri.EscapeDataString(tokenQr)}";
+            $"http://192.168.1.23:8080/api/Entradas/ScanQr?token={Uri.EscapeDataString(tokenQr)}";
 
         return Ok(new
         {
@@ -83,4 +83,39 @@ public class EntradasController : ControllerBase
         return Ok(entradas);
     }
 
+    [HttpPost("ScanQr")]
+    [Authorize(Roles = "funcionario")]
+    public async Task<IActionResult> ScanQr([FromQuery] string token)
+    {
+        var mailFuncionario = User.FindFirstValue("mail");
+
+        if (string.IsNullOrWhiteSpace(token))
+            return BadRequest(new { message = "Token inválido" });
+
+        var datosQr = _jwtService.GetDataOnQrToken(token);
+
+        if (datosQr == null)
+            return BadRequest(new { message = "Token QR inválido o expirado" });
+
+        var datos = datosQr.Value;
+        var entradaId = datos.entradaId;
+        var mailUsuario = datos.mail;
+
+        var actualizada = await _entradaRepository.MarcarEntradaComoUtilizadaAsync(
+            entradaId,
+            mailUsuario,
+            mailFuncionario
+        );
+
+        if (!actualizada)
+            return BadRequest(new { message = "La entrada no existe, no pertenece al usuario o ya fue utilizada" });
+
+        return Ok(new
+        {
+            mensaje = "Entrada validada correctamente",
+            entradaId,
+            mailUsuario,
+            validadaPor = mailFuncionario
+        });
+    }
 }
