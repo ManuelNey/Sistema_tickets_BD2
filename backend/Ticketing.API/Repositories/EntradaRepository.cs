@@ -65,8 +65,6 @@ public class EntradaRepository : IEntradaRepository
         };
     }
 
-
-    
     public async Task<EntradaEstadoDto?> ObtenerEntrada(int idEntrada, string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
