@@ -130,4 +130,26 @@ public class EntradaRepository : IEntradaRepository
 
     return entradas;
     }
+
+    public async Task<bool> MarcarEntradaComoUtilizadaAsync(int entradaId, string mailUsuario, string? mailFuncionario)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        const string sql = @"
+            UPDATE entrada
+            SET estado = 'utilizada'
+            WHERE id_entrada = @entradaId
+            AND fk_usuario_mail = @mailUsuario
+            AND estado = 'activa';
+        ";
+
+        using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@entradaId", entradaId);
+        command.Parameters.AddWithValue("@mailUsuario", mailUsuario);
+
+        var rowsAffected = await command.ExecuteNonQueryAsync();
+
+        return rowsAffected > 0;
+    }
 }

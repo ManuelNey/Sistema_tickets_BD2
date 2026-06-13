@@ -43,7 +43,7 @@ public class JwtService : IJwtService
         return handler.WriteToken(handler.CreateToken(tokenDescriptor));
     }
 
-        public string GenerateQrToken(int idEntrada, string mailUsuario)
+    public string GenerateQrToken(int idEntrada, string mailUsuario)
     {
         var claims = new List<Claim>
         {
@@ -69,4 +69,35 @@ public class JwtService : IJwtService
 
         return handler.WriteToken(handler.CreateToken(tokenDescriptor));
     }
+
+    public (int entradaId, string mail)? GetDataOnQrToken(string token)
+    {
+        var handler = new JwtSecurityTokenHandler();
+
+    var parameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = _signingKey,
+        ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+
+        var principal = handler.ValidateToken(token, parameters, out _);
+
+        if (principal.FindFirst("tipo")?.Value != "qr_entrada")
+            return null;
+
+        var entradaIdClaim = principal.FindFirst("entradaId")?.Value;
+        var mail = principal.FindFirst("mail")?.Value;
+
+        if (!int.TryParse(entradaIdClaim, out var entradaId))
+            return null;
+
+        if (string.IsNullOrWhiteSpace(mail))
+            return null;
+
+        return (entradaId, mail);
+    }   
 }
