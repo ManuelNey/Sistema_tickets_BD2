@@ -55,6 +55,7 @@ builder.Services.AddSingleton<IEncuentroRepository, EncuentroRepository>();
 builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ISectorRepository, SectorRepository>();
 builder.Services.AddSingleton<ICompraRepository, CompraRepository>();
+builder.Services.AddSingleton<IDispositivoRepository, DispositivoRepository>();
 
 
 var app = builder.Build();
