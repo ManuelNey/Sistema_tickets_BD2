@@ -85,12 +85,17 @@ public class EntradasController : ControllerBase
 
     [HttpPost("ScanQr")]
     [Authorize(Roles = "funcionario")]
-    public async Task<IActionResult> ScanQr([FromQuery] string token)
+    public async Task<IActionResult> ScanQr(
+        [FromQuery] string token,
+        [FromQuery] string deviceId)
     {
         var mailFuncionario = User.FindFirstValue("mail");
 
         if (string.IsNullOrWhiteSpace(token))
             return BadRequest(new { message = "Token inválido" });
+
+        if (string.IsNullOrWhiteSpace(deviceId))
+            return BadRequest(new { message = "Dispositivo no informado" });
 
         var datosQr = _jwtService.GetDataOnQrToken(token);
 
@@ -104,7 +109,9 @@ public class EntradasController : ControllerBase
         var actualizada = await _entradaRepository.MarcarEntradaComoUtilizadaAsync(
             entradaId,
             mailUsuario,
-            mailFuncionario
+            mailFuncionario,
+            token,
+            deviceId
         );
 
         if (!actualizada)
@@ -115,7 +122,9 @@ public class EntradasController : ControllerBase
             mensaje = "Entrada validada correctamente",
             entradaId,
             mailUsuario,
-            validadaPor = mailFuncionario
+            validadaPor = mailFuncionario,
+            dispositivo = deviceId
         });
     }
+
 }
