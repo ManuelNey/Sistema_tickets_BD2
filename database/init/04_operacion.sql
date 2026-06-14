@@ -3,26 +3,26 @@
 --   - Habilita de encuentro 1 usaba sectores del estadio 1 (BC Place) en vez del estadio 3 (Ciudad de México).
 --   - Habilita de encuentro 1 usaba admin3 (USA) en vez de admin2 (México).
 
-INSERT INTO dispositivo (numero_dispositivo, descripcion) VALUES
-('QR001', 'Zebra TC26'),
-('QR002', 'Zebra TC21'),
-('QR003', 'Honeywell CT47'),
-('QR004', 'Honeywell ScanPal EDA52'),
-('QR005', 'Samsung Galaxy Tab Active4 Pro'),
-('QR006', 'Samsung Galaxy Tab Active5'),
-('QR007', 'Zebra TC58'),
-('QR008', 'Datalogic Memor 11'),
-('QR009', 'Chainway C66'),
-('QR010', 'Urovo DT50')
+INSERT INTO dispositivo (numero_dispositivo, descripcion, estado) VALUES
+('I6MFE3', 'Iphone de Martin', 'habilitado'),
+('QR002', 'Zebra TC21', 'habilitado'),
+('QR003', 'Honeywell CT47', 'habilitado'),
+('QR004', 'Honeywell ScanPal EDA52', 'habilitado'),
+('QR005', 'Samsung Galaxy Tab Active4 Pro', 'habilitado'),
+('QR006', 'Samsung Galaxy Tab Active5', 'habilitado'),
+('QR007', 'Zebra TC58', 'habilitado'),
+('QR008', 'Datalogic Memor 11', 'habilitado'),
+('QR009', 'Chainway C66', 'habilitado'),
+('QR010', 'Urovo DT50', 'habilitado')
 ON CONFLICT (numero_dispositivo) DO NOTHING;
 
 INSERT INTO trabaja_con (funcionario_mail, numero_dispositivo) VALUES
-('func1@mail.com', 'QR001'),
+('func1@mail.com', 'I6MFE3'),
 ('func1@mail.com', 'QR005'),
 ('func2@mail.com', 'QR002'),
 ('func3@mail.com', 'QR003'),
 ('func4@mail.com', 'QR004'),
-('func5@mail.com', 'QR001'),
+('func5@mail.com', 'I6MFE3'),
 ('func5@mail.com', 'QR002');
 
 -- Sectores por estadio (4 sectores por estadio: VIP, Platea, Tribuna Norte, Tribuna Sur).

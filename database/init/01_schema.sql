@@ -53,7 +53,9 @@ CREATE TABLE IF NOT EXISTS administrador (
 CREATE TABLE IF NOT EXISTS dispositivo (
   numero_dispositivo VARCHAR(100) PRIMARY KEY,
   descripcion TEXT NOT NULL,
-  CONSTRAINT chk_dispositivo_descripcion CHECK (length(trim(descripcion)) > 0)
+  estado VARCHAR(50) NOT NULL,
+  CONSTRAINT chk_dispositivo_descripcion CHECK (length(trim(descripcion)) > 0),
+  CONSTRAINT chk_dispositivo_estado CHECK (estado IN ('habilitado', 'deshabilitado'))
 );
 
 CREATE TABLE IF NOT EXISTS comision (

@@ -65,8 +65,6 @@ public class EntradaRepository : IEntradaRepository
         };
     }
 
-
-    
     public async Task<EntradaEstadoDto?> ObtenerEntrada(int idEntrada, string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -131,25 +129,45 @@ public class EntradaRepository : IEntradaRepository
     return entradas;
     }
 
-    public async Task<bool> MarcarEntradaComoUtilizadaAsync(int entradaId, string mailUsuario, string? mailFuncionario)
+    public async Task<bool> MarcarEntradaComoUtilizadaAsync(int entradaId, string mailUsuario, string? mailFuncionario, string tokenUtilizado, string numeroDispositivo)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        const string sql = @"
-            UPDATE entrada
-            SET estado = 'utilizada'
-            WHERE id_entrada = @entradaId
-            AND fk_usuario_mail = @mailUsuario
-            AND estado = 'activa';
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        const string updateSql = @"
+            UPDATE entrada SET estado = 'utilizada'
+                WHERE id_entrada = @entradaId AND fk_usuario_mail = @mailUsuario AND estado = 'activa';
         ";
 
-        using var command = new NpgsqlCommand(sql, connection);
-        command.Parameters.AddWithValue("@entradaId", entradaId);
-        command.Parameters.AddWithValue("@mailUsuario", mailUsuario);
+        await using var updateCommand = new NpgsqlCommand(updateSql, connection, transaction);
+        updateCommand.Parameters.AddWithValue("@entradaId", entradaId);
+        updateCommand.Parameters.AddWithValue("@mailUsuario", mailUsuario);
 
-        var rowsAffected = await command.ExecuteNonQueryAsync();
+        var rowsAffected = await updateCommand.ExecuteNonQueryAsync();
 
-        return rowsAffected > 0;
+        if (rowsAffected == 0)
+        {
+            await transaction.RollbackAsync();
+            return false;
+        }
+
+        const string insertSql = @"
+            INSERT INTO validacion (fecha, hora, token_utilizado, funcionario_mail, numero_dispositivo, entrada_id)
+                VALUES (now(), CURRENT_TIME, @tokenUtilizado, @mailFuncionario, @numeroDispositivo, @entradaId);
+        ";
+
+        await using var insertCommand = new NpgsqlCommand(insertSql, connection, transaction);
+        insertCommand.Parameters.AddWithValue("@tokenUtilizado", tokenUtilizado);
+        insertCommand.Parameters.AddWithValue("@mailFuncionario", mailFuncionario ?? "");
+        insertCommand.Parameters.AddWithValue("@numeroDispositivo", numeroDispositivo);
+        insertCommand.Parameters.AddWithValue("@entradaId", entradaId);
+
+        await insertCommand.ExecuteNonQueryAsync();
+
+        await transaction.CommitAsync();
+
+        return true;
     }
 }
