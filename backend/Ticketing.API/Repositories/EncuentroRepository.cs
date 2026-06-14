@@ -135,7 +135,7 @@ public class EncuentroRepository : IEncuentroRepository
                     @EquipoVisitante,
                     @Estadio,
                     'programado')
-                    RETURNING id_encuentro, fecha, fk_equipo_local, fk_equipo_visitante, fk_estadio;", 
+                    RETURNING id_encuentro, fecha, fk_equipo_local, fk_equipo_visitante, fk_estadio, estado;", 
                 connection,
                 transaction);
 
@@ -159,7 +159,7 @@ public class EncuentroRepository : IEncuentroRepository
                 EquipoVisitante = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
                 Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio")),
                 Estado = reader.GetString(reader.GetOrdinal("estado")),
-                Pais = reader.GetInt32(reader.GetOrdinal("fk_pais_sede"))
+                Pais = paisSedeId
             };
 
             await reader.DisposeAsync();
@@ -194,19 +194,16 @@ public class EncuentroRepository : IEncuentroRepository
                     @"INSERT INTO habilita(
                         fk_encuentro,
                         fk_sector,
-                        fk_sector_estadio,
                         precio,
                         fk_administrador_mail)
-                        VALUES(
+                    VALUES(
                         @IdEncuentro,
                         @IdSector,
-                        @IdEstadio,
                         @Precio,
                         @MailAdmin);",connection,transaction);
 
                 cmdSector.Parameters.AddWithValue("@IdEncuentro", encuentroCreado.Id);
                 cmdSector.Parameters.AddWithValue("@IdSector", sector.SectorId);
-                cmdSector.Parameters.AddWithValue("@IdEstadio", encuentroCreado.Estadio);
                 cmdSector.Parameters.AddWithValue("@Precio", sector.Precio);
                 cmdSector.Parameters.AddWithValue("@MailAdmin", mailAdmin);
 
@@ -316,20 +313,17 @@ public class EncuentroRepository : IEncuentroRepository
                         @"INSERT INTO habilita(
                         fk_encuentro,
                         fk_sector,
-                        fk_sector_estadio,
                         precio,
                         fk_administrador_mail)
                         VALUES(
                         @IdEncuentro,
                         @IdSector,
-                        @IdEstadio,
                         @Precio,
                         @MailAdmin);",connection,transaction
                     );
 
                     cmdSector.Parameters.AddWithValue("@IdEncuentro", encuentroActualizado.Id);
                     cmdSector.Parameters.AddWithValue("@IdSector", sector.SectorId);
-                    cmdSector.Parameters.AddWithValue("@IdEstadio", encuentroActualizado.Estadio);
                     cmdSector.Parameters.AddWithValue("@Precio", sector.Precio);
                     cmdSector.Parameters.AddWithValue("@MailAdmin", mailAdmin);
 
@@ -365,5 +359,65 @@ public class EncuentroRepository : IEncuentroRepository
             throw;
         }
         
+    }
+
+    public async Task<EncuentroDetalleDto> GetEncuentroById(int idEncuentro)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(@"
+        SELECT
+            n.id_encuentro,
+            n.fecha,
+            n.estado,
+            n.fk_equipo_local,
+            local.pais AS pais_local,
+            n.fk_equipo_visitante,
+            visitante.pais AS pais_visitante,
+            n.fk_estadio,
+            s.nombre AS estadio_nombre,
+            s.ciudad AS estadio_ciudad,
+            p.nombre AS pais_sede_nombre,
+            p.id_pais_sede
+        FROM encuentro n
+        JOIN estadio s
+            ON n.fk_estadio = s.id_estadio
+        JOIN equipo local
+            ON n.fk_equipo_local = local.id_equipo
+        JOIN equipo visitante
+            ON n.fk_equipo_visitante = visitante.id_equipo
+        JOIN pais_sede p
+            ON s.fk_pais_sede = p.id_pais_sede
+        WHERE n.id_encuentro = @idEncuentro;
+        ", connection);
+
+        cmd.Parameters.AddWithValue("@idEncuentro", idEncuentro);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        return new EncuentroDetalleDto
+        {
+            Id = reader.GetInt32(reader.GetOrdinal("id_encuentro")),
+            Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
+            Estado = reader.GetString(reader.GetOrdinal("estado")),
+            
+            EquipoLocalId = reader.GetInt32(reader.GetOrdinal("fk_equipo_local")),
+            EquipoLocalNombre = reader.GetString(reader.GetOrdinal("pais_local")),
+            EquipoVisitanteId = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
+            EquipoVisitanteNombre = reader.GetString(reader.GetOrdinal("pais_visitante")),
+
+            EstadioId = reader.GetInt32(reader.GetOrdinal("fk_estadio")),
+            EstadioNombre = reader.GetString(reader.GetOrdinal("estadio_nombre")),
+            CiudadEstadio= reader.GetString(reader.GetOrdinal("estadio_ciudad")),
+
+            PaisId= reader.GetInt32(reader.GetOrdinal("id_pais_sede")),
+            PaisNombre= reader.GetString(reader.GetOrdinal("pais_sede_nombre"))
+        };
     }
 }

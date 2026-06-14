@@ -865,6 +865,31 @@
   padding: 0 20px 20px;
 }
 
+.admin-sector-card {
+  min-height: 328px;
+}
+
+.admin-sector-card .stadium-card-header {
+  min-height: 118px;
+  padding: 18px 20px;
+}
+
+.admin-sector-card .stadium-card-body {
+  min-height: auto;
+  gap: 12px;
+  padding: 22px 20px 18px;
+}
+
+.admin-sector-card .stadium-card-body strong {
+  font-size: 25px;
+  font-weight: 650;
+}
+
+.admin-sector-card .sector-actions {
+  margin-top: auto;
+  padding-bottom: 20px;
+}
+
 .details-button,
 .sections-button,
 .delete-button {

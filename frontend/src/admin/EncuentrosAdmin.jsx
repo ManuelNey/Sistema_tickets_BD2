@@ -29,6 +29,22 @@ function getAuthHeaders(extraHeaders = {}) {
   }
 }
 
+async function loadEncounterDetail(encounterId) {
+  try {
+    const response = await fetch(`http://localhost:8080/api/encuentros/${encounterId}`, {
+      headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+      throw new Error('Encounter detail request failed')
+    }
+
+    return await response.json()
+  } catch {
+    return null
+  }
+}
+
 function EncuentrosAdmin({ user }) {
   const [encuentros, setEncuentros] = useState([])
   const [encuentrosError, setEncuentrosError] = useState('')
@@ -37,6 +53,8 @@ function EncuentrosAdmin({ user }) {
   const [eventForm, setEventForm] = useState(emptyEventForm)
   const [eventFormError, setEventFormError] = useState('')
   const [eventSaving, setEventSaving] = useState(false)
+  const [countries, setCountries] = useState([])
+  const [countriesLoading, setCountriesLoading] = useState(false)
   const [editEventModalOpen, setEditEventModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [editEventForm, setEditEventForm] = useState(emptyEditEventForm)
@@ -63,7 +81,12 @@ function EncuentrosAdmin({ user }) {
       }
 
       const data = await response.json()
-      setEncuentros(data)
+      const details = await Promise.all(data.map((encuentro) => loadEncounterDetail(encuentro.id)))
+      const encuentrosConDetalle = data.map((encuentro, index) =>
+        mergeEncounterDetail(encuentro, details[index])
+      )
+
+      setEncuentros(encuentrosConDetalle)
     } catch {
       setEncuentrosError('No se pudieron cargar los encuentros')
     } finally {
@@ -126,6 +149,27 @@ function EncuentrosAdmin({ user }) {
     }
   }
 
+  const loadCountries = async () => {
+    setCountriesLoading(true)
+
+    try {
+      const response = await fetch('http://localhost:8080/api/Paises', {
+        headers: getAuthHeaders(),
+      })
+
+      if (!response.ok) {
+        throw new Error('Countries request failed')
+      }
+
+      const data = await response.json()
+      setCountries(data)
+    } catch {
+      setEventFormError('No se pudieron cargar los paises')
+    } finally {
+      setCountriesLoading(false)
+    }
+  }
+
   const loadCurrentEventSectors = async (eventId) => {
     try {
       const response = await fetch(`http://localhost:8080/api/encuentros/${eventId}/sectores`, {
@@ -150,6 +194,7 @@ function EncuentrosAdmin({ user }) {
     setSectors([])
     setEventModalOpen(true)
     loadAdminStadiums()
+    loadCountries()
   }
 
   const closeCreateEvent = () => {
@@ -157,6 +202,8 @@ function EncuentrosAdmin({ user }) {
     setEventForm(emptyEventForm)
     setEventFormError('')
     setEventSaving(false)
+    setCountries([])
+    setCountriesLoading(false)
     setSelectedSectors({})
     setSectors([])
   }
@@ -370,6 +417,8 @@ function EncuentrosAdmin({ user }) {
         <CreateEventModal
           error={eventFormError}
           form={eventForm}
+          countries={countries}
+          countriesLoading={countriesLoading}
           isSaving={eventSaving}
           onChange={updateEventField}
           onClose={closeCreateEvent}
@@ -406,6 +455,9 @@ function EncuentrosAdmin({ user }) {
 
 function EncuentroCard({ adminCountryId, encuentro, onEdit }) {
   const isOwnCountry = Number(encuentro.pais) === adminCountryId
+  const teamsLabel = getTeamsLabel(encuentro)
+  const stadiumLabel = getStadiumLabel(encuentro)
+  const countryLabel = getCountryLabel(encuentro, isOwnCountry)
 
   return (
     <article className="stadium-card event-card">
@@ -422,15 +474,15 @@ function EncuentroCard({ adminCountryId, encuentro, onEdit }) {
       <div className="stadium-card-body">
         <p>
           <span>Equipos</span>
-          <strong>#{encuentro.equipoLocal} vs #{encuentro.equipoVisitante}</strong>
+          <strong>{teamsLabel}</strong>
         </p>
         <p>
           <span>Estadio</span>
-          <strong>#{encuentro.estadio}</strong>
+          <strong>{stadiumLabel}</strong>
         </p>
         <p>
           <span>Pais</span>
-          <strong>{isOwnCountry ? `Tu pais (#${encuentro.pais})` : `Pais #${encuentro.pais}`}</strong>
+          <strong>{countryLabel}</strong>
         </p>
         <p>
           <span>Estado</span>
@@ -451,6 +503,8 @@ function EncuentroCard({ adminCountryId, encuentro, onEdit }) {
 }
 
 function CreateEventModal({
+  countries,
+  countriesLoading,
   error,
   form,
   isSaving,
@@ -477,25 +531,37 @@ function CreateEventModal({
         <form className="stadium-form" onSubmit={onSubmit}>
           <div className="event-form-grid">
             <label>
-              <span>Equipo Local</span>
-              <input
+              <span>Pais Local</span>
+              <select
                 required
-                inputMode="numeric"
-                placeholder="Ej: 1"
+                disabled={countriesLoading}
                 value={form.equipoLocalId}
                 onChange={(event) => onChange('equipoLocalId', event.target.value)}
-              />
+              >
+                <option value="">{countriesLoading ? 'Cargando paises...' : 'Selecciona un pais'}</option>
+                {countries.map((country) => (
+                  <option key={country.id} value={country.id}>
+                    {country.nombre}
+                  </option>
+                ))}
+              </select>
             </label>
 
             <label>
-              <span>Equipo Visitante</span>
-              <input
+              <span>Pais Visitante</span>
+              <select
                 required
-                inputMode="numeric"
-                placeholder="Ej: 2"
+                disabled={countriesLoading}
                 value={form.equipoVisitanteId}
                 onChange={(event) => onChange('equipoVisitanteId', event.target.value)}
-              />
+              >
+                <option value="">{countriesLoading ? 'Cargando paises...' : 'Selecciona un pais'}</option>
+                {countries.map((country) => (
+                  <option key={country.id} value={country.id}>
+                    {country.nombre}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
 
@@ -607,6 +673,9 @@ function EditEventModal({
   sectorsLoading,
   selectedSectors,
 }) {
+  const teamsLabel = getTeamsLabel(encuentro)
+  const stadiumLabel = getStadiumLabel(encuentro)
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="stadium-modal event-modal" aria-labelledby="edit-event-modal-title" role="dialog">
@@ -630,12 +699,12 @@ function EditEventModal({
 
             <label>
               <span>Equipos</span>
-              <input disabled value={`#${encuentro.equipoLocal} vs #${encuentro.equipoVisitante}`} />
+              <input disabled value={teamsLabel} />
             </label>
 
             <label>
               <span>Estadio</span>
-              <input disabled value={`#${encuentro.estadio}`} />
+              <input disabled value={stadiumLabel} />
             </label>
           </div>
 
@@ -721,6 +790,55 @@ function sortEncuentrosByPermission(encuentros, adminCountryId) {
 
     return firstOwnCountry ? -1 : 1
   })
+}
+
+function mergeEncounterDetail(encuentro, detalle) {
+  if (!detalle) {
+    return encuentro
+  }
+
+  return {
+    ...encuentro,
+    fecha: detalle.fecha ?? encuentro.fecha,
+    estado: detalle.estado ?? encuentro.estado,
+    equipoLocal: detalle.equipoLocalId ?? encuentro.equipoLocal,
+    equipoVisitante: detalle.equipoVisitanteId ?? encuentro.equipoVisitante,
+    estadio: detalle.estadioId ?? encuentro.estadio,
+    pais: detalle.paisId ?? encuentro.pais,
+    equipoLocalNombre: detalle.equipoLocalNombre,
+    equipoVisitanteNombre: detalle.equipoVisitanteNombre,
+    estadioNombre: detalle.estadioNombre,
+    ciudadEstadio: detalle.ciudadEstadio,
+    paisNombre: detalle.paisNombre,
+  }
+}
+
+function getTeamsLabel(encuentro) {
+  if (encuentro.equipoLocalNombre && encuentro.equipoVisitanteNombre) {
+    return `${encuentro.equipoLocalNombre} vs ${encuentro.equipoVisitanteNombre}`
+  }
+
+  return `#${encuentro.equipoLocal} vs #${encuentro.equipoVisitante}`
+}
+
+function getStadiumLabel(encuentro) {
+  if (encuentro.estadioNombre && encuentro.ciudadEstadio) {
+    return `${encuentro.estadioNombre}, ${encuentro.ciudadEstadio}`
+  }
+
+  if (encuentro.estadioNombre) {
+    return encuentro.estadioNombre
+  }
+
+  return `#${encuentro.estadio}`
+}
+
+function getCountryLabel(encuentro, isOwnCountry) {
+  if (encuentro.paisNombre) {
+    return isOwnCountry ? `${encuentro.paisNombre} (tu pais)` : encuentro.paisNombre
+  }
+
+  return isOwnCountry ? `Tu pais (#${encuentro.pais})` : `Pais #${encuentro.pais}`
 }
 
 function buildSelectedSectorsFromPrices(stadiumSectors, currentEventSectors) {

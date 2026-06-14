@@ -161,6 +161,7 @@ function SectoresAdmin({ onBack, stadium, user }) {
   const totalCapacity = sectors.reduce((sum, sector) => sum + Number(sector.capacidad || 0), 0)
   const formattedCapacity = new Intl.NumberFormat('es-UY').format(totalCapacity)
   const canManageSectors = Number(stadium.paisSedeId) === getAdminCountryId(user)
+  const countryName = getStadiumCountryName(stadium)
 
   return (
     <div className="admin-view">
@@ -172,7 +173,7 @@ function SectoresAdmin({ onBack, stadium, user }) {
       <section className="stadium-summary-card" aria-label="Resumen del estadio">
         <div className="stadium-summary-panel">
           <h1 id="dashboard-title">{stadium.nombre}</h1>
-          <p>{stadium.ciudad}, Pais #{stadium.paisSedeId}</p>
+          <p>{stadium.ciudad}, {countryName}</p>
           <span>Capacidad Total: {formattedCapacity} personas</span>
         </div>
       </section>
@@ -238,7 +239,7 @@ function SectoresAdmin({ onBack, stadium, user }) {
 
 function SectorCard({ canManage, onDelete, onDetails, sector }) {
   return (
-    <article className="stadium-card">
+    <article className="stadium-card admin-sector-card">
       <header className="stadium-card-header">
         <div className="stadium-card-icon" aria-hidden="true">
           <SidebarIcon name="sections" />
@@ -253,10 +254,6 @@ function SectorCard({ canManage, onDelete, onDetails, sector }) {
         <p>
           <span>Capacidad</span>
           <strong>{sector.capacidad} personas</strong>
-        </p>
-        <p>
-          <span>Estadio</span>
-          <strong>#{sector.estadio}</strong>
         </p>
       </div>
 
@@ -280,6 +277,10 @@ function getAdminCountryId(user) {
   const parsedCountryId = Number(countryId)
 
   return Number.isInteger(parsedCountryId) ? parsedCountryId : null
+}
+
+function getStadiumCountryName(stadium) {
+  return stadium.paisNombre ?? stadium.nombrePais ?? `Pais #${stadium.paisSedeId}`
 }
 
 function SectorModal({ error, form, isSaving, mode, onChange, onClose, onSubmit, stadium }) {
