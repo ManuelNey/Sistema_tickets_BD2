@@ -24,6 +24,19 @@ function SidebarIcon({ name }) {
         <path d="M12 18h.01" />
       </>
     ),
+    power: (
+      <>
+        <path d="M12 3v9" />
+        <path d="M7.1 7.1a7 7 0 1 0 9.8 0" />
+      </>
+    ),
+    powerOff: (
+      <>
+        <path d="M12 3v5" />
+        <path d="M18.4 6.6A7 7 0 0 1 7.1 15.2" />
+        <path d="M5.6 5.6 18.4 18.4" />
+      </>
+    ),
     bag: (
       <>
         <path d="M7 8.5h10l-.8 11h-8.4L7 8.5Z" />
