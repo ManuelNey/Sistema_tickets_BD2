@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import Countdown from './Countdown'
-import { calcularTotales, formatPrice, getExpiracion } from './format'
+import { formatPrice, getExpiracion } from './format'
 
 // Pantalla  que tiene la Parte de Compra de la reserva. 
 // Tiene el resumen del pedido y el formulario de pago.
@@ -13,7 +13,10 @@ function PagoEntrada({ pedido, onPagoExitoso, onVolver }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const { subtotal, cargo, total } = calcularTotales(pedido.precioUnitario, pedido.cantidad)
+  // El total real (con comisión) lo define el back; el cargo se deriva de ese total.
+  const subtotal = pedido.precioUnitario * pedido.cantidad
+  const total = pedido.montoTotal
+  const cargo = total - subtotal
   const expiraMs = getExpiracion(pedido.fechaReserva)
 
   const handleConfirmarPago = async (event) => {
@@ -163,7 +166,7 @@ function PagoEntrada({ pedido, onPagoExitoso, onVolver }) {
               <dd>{formatPrice(subtotal)}</dd>
             </div>
             <div>
-              <dt>Cargo (10%)</dt>
+              <dt>Cargo por servicio</dt>
               <dd>{formatPrice(cargo)}</dd>
             </div>
           </dl>

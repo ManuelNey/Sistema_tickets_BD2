@@ -53,7 +53,9 @@ CREATE TABLE IF NOT EXISTS administrador (
 CREATE TABLE IF NOT EXISTS dispositivo (
   numero_dispositivo VARCHAR(100) PRIMARY KEY,
   descripcion TEXT NOT NULL,
-  CONSTRAINT chk_dispositivo_descripcion CHECK (length(trim(descripcion)) > 0)
+  estado VARCHAR(50) NOT NULL,
+  CONSTRAINT chk_dispositivo_descripcion CHECK (length(trim(descripcion)) > 0),
+  CONSTRAINT chk_encuentro_estado CHECK (estado IN ('activo', 'inactivo'))
 );
 
 CREATE TABLE IF NOT EXISTS comision (
@@ -133,7 +135,7 @@ CREATE TABLE IF NOT EXISTS entrada (
   fk_habilita_id INTEGER NOT NULL REFERENCES habilita(id),
   fk_compra_id INTEGER NOT NULL REFERENCES compra(id_compra),
   fk_usuario_mail VARCHAR(255) NOT NULL REFERENCES usuario(persona_mail),
-  CONSTRAINT chk_entrada_estado CHECK (estado IN ('reservada', 'activa', 'utilizada')),
+  CONSTRAINT chk_entrada_estado CHECK (estado IN ('reservada', 'activa', 'utilizada', 'transferida')),
   CONSTRAINT chk_entrada_transferencias CHECK (cantidad_transferencias >= 0 AND cantidad_transferencias <= 3)
 );
 
