@@ -40,4 +40,60 @@ public class DispositivoController : ControllerBase
             enable = true,
         });
     }
+
+    [HttpGet]
+    // GET /api/Dispositivos
+    public async Task<ActionResult<IReadOnlyCollection<DispositivoDto>>> GetDispositivos()
+    {
+        var dispositivos = await _dispositivoRepository.GetDispositivos();
+
+        return Ok(dispositivos);
+    }
+
+    [HttpPost("registro")]
+    [Authorize(Roles = "admin")]
+    public async Task<ActionResult<DispositivoDto>> CreateAsync([FromBody] CrearDispositivoDto dispositivo)
+    {
+        var dispositivoCreado = await _dispositivoRepository.CreateAsync(dispositivo);
+
+        if (dispositivoCreado == null)
+        {
+            return Forbid();
+        }
+
+        return dispositivoCreado;
+    }
+
+    [HttpPut("{numeroDispositivo}")]
+    [Authorize(Roles = "admin")]
+    public async Task<ActionResult<DispositivoDto>> UpdateAsync(
+        string numeroDispositivo,
+        [FromBody] ActualizarDispositivoDto dispositivo)
+    {
+        var dispositivoActualizado = await _dispositivoRepository.UpdateAsync(
+            numeroDispositivo,
+            dispositivo
+        );
+
+        if (dispositivoActualizado == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(dispositivoActualizado);
+    }
+
+    [HttpDelete("{numeroDispositivo}")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> DeleteAsync(string numeroDispositivo)
+    {
+        var dispositivoEliminado = await _dispositivoRepository.DeleteAsync(numeroDispositivo);
+
+        if (!dispositivoEliminado)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }

@@ -57,7 +57,7 @@ builder.Services.AddSingleton<ISectorRepository, SectorRepository>();
 builder.Services.AddSingleton<ICompraRepository, CompraRepository>();
 builder.Services.AddSingleton<IPaisRepository, PaisRepository>();
 builder.Services.AddSingleton<IDispositivoRepository, DispositivoRepository>();
-
+builder.Services.AddSingleton<IFuncionarioRepository, FuncionarioRepository>();
 
 var app = builder.Build();
 
