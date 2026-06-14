@@ -8,4 +8,6 @@ public interface IEncuentroRepository
     Task<IReadOnlyCollection<EncuentroDto>> GetAllEncuentros();
     Task<EncuentroDto?> CreateAsync(CrearEncuentroDto encuentro, string mailAdmin, int paisSedeId);
     Task<EncuentroDto?> UpdateAsync(int id, ActualizarEncuentroDto encuentro, int paisSedeId, string mailAdmin);
+
+    Task<EncuentroDetalleDto?> GetEncuentroById(int idEncuentro);
 }

@@ -95,4 +95,18 @@ public class EncuentrosController : ControllerBase
 
         return Ok(encuentroActualizado);
     }
+
+    [HttpGet("{idEncuentro:int}")]
+    // GET /api/encuentros/id
+    public async Task<ActionResult<IReadOnlyCollection<EncuentroDetalleDto>>> GetEncuentroById(int idEncuentro)
+    {
+        var encuentro = await _encuentroRepository.GetEncuentroById(idEncuentro);
+
+        if (encuentro == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(encuentro);
+    }
 }
