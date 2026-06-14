@@ -37,6 +37,8 @@ function DispositivosAdmin() {
   const [editDeviceSaving, setEditDeviceSaving] = useState(false)
   const [funcionarios, setFuncionarios] = useState([])
   const [funcionariosLoading, setFuncionariosLoading] = useState(false)
+  const [deviceToDelete, setDeviceToDelete] = useState(null)
+  const [deviceDeleteSaving, setDeviceDeleteSaving] = useState(false)
 
   const loadDevices = async () => {
     setDevicesError('')
@@ -266,6 +268,46 @@ function DispositivosAdmin() {
     }
   }
 
+  const openDeleteDevice = (device) => {
+    setDevicesError('')
+    setDeviceToDelete(device)
+  }
+
+  const closeDeleteDevice = () => {
+    setDeviceToDelete(null)
+    setDeviceDeleteSaving(false)
+  }
+
+  const confirmDeleteDevice = async () => {
+    if (!deviceToDelete) {
+      return
+    }
+
+    setDevicesError('')
+    setDeviceDeleteSaving(true)
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/Dispositivo/${encodeURIComponent(deviceToDelete.numeroDispositivo)}`,
+        {
+          method: 'DELETE',
+          headers: getAuthHeaders(),
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error('Delete device failed')
+      }
+
+      await loadDevices()
+      closeDeleteDevice()
+    } catch {
+      setDevicesError('No se pudo eliminar el dispositivo')
+    } finally {
+      setDeviceDeleteSaving(false)
+    }
+  }
+
   return (
     <div className="admin-view">
       <header className="admin-header">
@@ -291,6 +333,7 @@ function DispositivosAdmin() {
               <DeviceCard
                 device={device}
                 key={device.numeroDispositivo}
+                onDelete={() => openDeleteDevice(device)}
                 onEdit={() => openEditDevice(device)}
                 onToggleStatus={() => toggleDeviceStatus(device)}
               />
@@ -325,11 +368,20 @@ function DispositivosAdmin() {
           onSubmit={submitEditDevice}
         />
       )}
+
+      {deviceToDelete && (
+        <DeleteDeviceModal
+          device={deviceToDelete}
+          isDeleting={deviceDeleteSaving}
+          onCancel={closeDeleteDevice}
+          onConfirm={confirmDeleteDevice}
+        />
+      )}
     </div>
   )
 }
 
-function DeviceCard({ device, onEdit, onToggleStatus }) {
+function DeviceCard({ device, onDelete, onEdit, onToggleStatus }) {
   const isEnabled = isDeviceEnabled(device.estado)
   const funcionarios = device.funcionarios.length > 0 ? device.funcionarios : ['Sin funcionarios asignados']
 
@@ -382,12 +434,34 @@ function DeviceCard({ device, onEdit, onToggleStatus }) {
             <SidebarIcon name="edit" />
             <span>Modificar</span>
           </button>
-          <button className="delete-button" type="button" aria-label="Borrar dispositivo" title="Endpoint pendiente">
+          <button className="delete-button" type="button" aria-label="Borrar dispositivo" onClick={onDelete}>
             <SidebarIcon name="trash" />
           </button>
         </div>
       </footer>
     </article>
+  )
+}
+
+function DeleteDeviceModal({ device, isDeleting, onCancel, onConfirm }) {
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="stadium-modal delete-confirm-modal" role="dialog" aria-labelledby="delete-device-title">
+        <h2 id="delete-device-title">Eliminar Dispositivo</h2>
+        <p>
+          Estas seguro de eliminar <strong>{device.numeroDispositivo}</strong>
+          {device.descripcion ? ` (${device.descripcion})` : ''}?
+        </p>
+        <div className="delete-confirm-actions">
+          <button className="cancel-delete-button" type="button" onClick={onCancel} disabled={isDeleting}>
+            Cancelar
+          </button>
+          <button className="confirm-delete-button" type="button" onClick={onConfirm} disabled={isDeleting}>
+            {isDeleting ? 'Eliminando...' : 'Eliminar'}
+          </button>
+        </div>
+      </section>
+    </div>
   )
 }
 

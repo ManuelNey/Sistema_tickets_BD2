@@ -8,4 +8,5 @@ public interface IDispositivoRepository
     Task<IReadOnlyCollection<DispositivoDto>> GetDispositivos();
     Task<DispositivoDto?> CreateAsync(CrearDispositivoDto dispositivo);
     Task<DispositivoDto?> UpdateAsync(string numeroDispositivo, ActualizarDispositivoDto dispositivo);
+    Task<bool> DeleteAsync(string numeroDispositivo);
 }

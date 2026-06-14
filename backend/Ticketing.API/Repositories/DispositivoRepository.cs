@@ -217,4 +217,44 @@ public class DispositivoRepository : IDispositivoRepository
     }
 }
 
+    public async Task<bool> DeleteAsync(string numeroDispositivo)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var transaction = await connection.BeginTransactionAsync();
+
+        try
+        {
+            await using var deleteFuncionariosCommand = new NpgsqlCommand(
+                @"DELETE FROM trabaja_con
+                WHERE numero_dispositivo = @numeroDispositivo;",
+                connection,
+                transaction);
+
+            deleteFuncionariosCommand.Parameters.AddWithValue("@numeroDispositivo", numeroDispositivo);
+
+            await deleteFuncionariosCommand.ExecuteNonQueryAsync();
+
+            await using var deleteDispositivoCommand = new NpgsqlCommand(
+                @"DELETE FROM dispositivo
+                WHERE numero_dispositivo = @numeroDispositivo;",
+                connection,
+                transaction);
+
+            deleteDispositivoCommand.Parameters.AddWithValue("@numeroDispositivo", numeroDispositivo);
+
+            var affectedRows = await deleteDispositivoCommand.ExecuteNonQueryAsync();
+
+            await transaction.CommitAsync();
+
+            return affectedRows > 0;
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
 }

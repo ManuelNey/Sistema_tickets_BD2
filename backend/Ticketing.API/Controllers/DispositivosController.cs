@@ -82,4 +82,18 @@ public class DispositivoController : ControllerBase
 
         return Ok(dispositivoActualizado);
     }
+
+    [HttpDelete("{numeroDispositivo}")]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> DeleteAsync(string numeroDispositivo)
+    {
+        var dispositivoEliminado = await _dispositivoRepository.DeleteAsync(numeroDispositivo);
+
+        if (!dispositivoEliminado)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }
