@@ -61,7 +61,17 @@ export default function QrScannerScreen() {
         return
       }
 
-      const response = await fetch(endpoint, {
+      const deviceId = await AsyncStorage.getItem('DeviceId')
+
+      if (!deviceId) {
+        setIsSuccess(false)
+        setResultMessage('No hay dispositivo registrado.')
+        return
+      }
+
+      const url = `${endpoint}&deviceId=${encodeURIComponent(deviceId)}`
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${tokenLogin}`,

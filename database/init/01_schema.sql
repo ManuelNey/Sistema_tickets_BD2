@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS dispositivo (
   descripcion TEXT NOT NULL,
   estado VARCHAR(50) NOT NULL,
   CONSTRAINT chk_dispositivo_descripcion CHECK (length(trim(descripcion)) > 0),
-  CONSTRAINT chk_encuentro_estado CHECK (estado IN ('activo', 'inactivo'))
+  CONSTRAINT chk_dispositivo_estado CHECK (estado IN ('habilitado', 'deshabilitado'))
 );
 
 CREATE TABLE IF NOT EXISTS comision (

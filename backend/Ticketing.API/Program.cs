@@ -56,7 +56,9 @@ builder.Services.AddSingleton<IPasswordService, PasswordService>();
 builder.Services.AddSingleton<ISectorRepository, SectorRepository>();
 builder.Services.AddSingleton<ICompraRepository, CompraRepository>();
 builder.Services.AddSingleton<IComisionRepository, ComisionRepository>();
-
+builder.Services.AddSingleton<IPaisRepository, PaisRepository>();
+builder.Services.AddSingleton<IDispositivoRepository, DispositivoRepository>();
+builder.Services.AddSingleton<IFuncionarioRepository, FuncionarioRepository>();
 
 var app = builder.Build();
 

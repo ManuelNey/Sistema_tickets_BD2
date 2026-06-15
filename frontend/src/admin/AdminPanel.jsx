@@ -2,6 +2,7 @@ import { useState } from 'react'
 import BallLogo from '../shared/BallLogo'
 import Sidebar from '../shared/Sidebar'
 import EncuentrosAdmin from './EncuentrosAdmin'
+import DispositivosAdmin from './DispositivosAdmin'
 import EstadiosAdmin from './EstadiosAdmin'
 import SectoresAdmin from './SectoresAdmin'
 
@@ -45,6 +46,8 @@ function AdminPanel({ onLogout, user }) {
           <EstadiosAdmin onOpenSectors={setSelectedStadiumForSectors} user={user} />
         ) : activeTab === 'eventos' ? (
           <EncuentrosAdmin user={user} />
+        ) : activeTab === 'dispositivos' ? (
+          <DispositivosAdmin />
         ) : (
           <div className="dashboard-card">
             <BallLogo />

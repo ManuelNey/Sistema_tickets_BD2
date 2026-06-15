@@ -17,8 +17,40 @@ function getAuthHeaders(extraHeaders = {}) {
   }
 }
 
+async function loadStadiumSectorStats(stadiumId) {
+  try {
+    const response = await fetch(`http://localhost:8080/api/sectores/${stadiumId}`, {
+      headers: getAuthHeaders(),
+    })
+
+    if (!response.ok) {
+      throw new Error('Sector stats request failed')
+    }
+
+    const sectors = await response.json()
+    const capacity = sectors.reduce((sum, sector) => sum + Number(sector.capacidad || 0), 0)
+
+    return [
+      stadiumId,
+      {
+        capacity,
+        sectorsCount: sectors.length,
+      },
+    ]
+  } catch {
+    return [
+      stadiumId,
+      {
+        capacity: null,
+        sectorsCount: null,
+      },
+    ]
+  }
+}
+
 function EstadiosAdmin({ onOpenSectors, user }) {
   const [stadiums, setStadiums] = useState([])
+  const [stadiumStats, setStadiumStats] = useState({})
   const [stadiumsError, setStadiumsError] = useState('')
   const [stadiumsLoading, setStadiumsLoading] = useState(false)
   const [stadiumModal, setStadiumModal] = useState(null)
@@ -33,6 +65,7 @@ function EstadiosAdmin({ onOpenSectors, user }) {
   const loadStadiums = async () => {
     setStadiumsError('')
     setStadiumsLoading(true)
+    setStadiumStats({})
 
     try {
       const response = await fetch('http://localhost:8080/api/estadios', {
@@ -45,6 +78,8 @@ function EstadiosAdmin({ onOpenSectors, user }) {
 
       const data = await response.json()
       setStadiums(data)
+      const statsEntries = await Promise.all(data.map((stadium) => loadStadiumSectorStats(stadium.id)))
+      setStadiumStats(Object.fromEntries(statsEntries))
     } catch {
       setStadiumsError('No se pudieron cargar los estadios')
     } finally {
@@ -191,6 +226,7 @@ function EstadiosAdmin({ onOpenSectors, user }) {
                 onDetails={() => openEditStadium(stadium)}
                 onOpenSectors={onOpenSectors}
                 stadium={stadium}
+                stats={stadiumStats[stadium.id]}
               />
             ))
           )}
@@ -221,8 +257,11 @@ function EstadiosAdmin({ onOpenSectors, user }) {
   )
 }
 
-function StadiumCard({ adminCountryId, onDelete, onDetails, onOpenSectors, stadium }) {
+function StadiumCard({ adminCountryId, onDelete, onDetails, onOpenSectors, stadium, stats }) {
   const canManageStadium = adminCountryId !== null && Number(stadium.paisSedeId) === adminCountryId
+  const capacity = stats?.capacity ?? null
+  const sectorsCount = stats?.sectorsCount ?? null
+  const countryName = getStadiumCountryName(stadium)
 
   return (
     <article className="stadium-card">
@@ -232,18 +271,18 @@ function StadiumCard({ adminCountryId, onDelete, onDetails, onOpenSectors, stadi
         </div>
         <div>
           <h2>{stadium.nombre}</h2>
-          <p>{stadium.ciudad}, Pais #{stadium.paisSedeId}</p>
+          <p>{stadium.ciudad}, {countryName}</p>
         </div>
       </header>
 
       <div className="stadium-card-body">
         <p>
           <span>Capacidad</span>
-          <strong>Bloqueado</strong>
+          <strong>{capacity === null ? 'Sin datos' : `${formatNumber(capacity)} personas`}</strong>
         </p>
         <p>
-          <span>Secciones</span>
-          <strong>Sin endpoint</strong>
+          <span>Sectores</span>
+          <strong>{sectorsCount === null ? 'Sin datos' : sectorsCount}</strong>
         </p>
       </div>
 
@@ -286,6 +325,14 @@ function sortStadiumsByPermission(stadiums, adminCountryId) {
 
     return firstCanManage ? -1 : 1
   })
+}
+
+function getStadiumCountryName(stadium) {
+  return stadium.paisNombre ?? stadium.nombrePais ?? `Pais #${stadium.paisSedeId}`
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat('es-UY').format(value)
 }
 
 function DeleteStadiumConfirm({ isDeleting, onCancel, onConfirm, stadium }) {

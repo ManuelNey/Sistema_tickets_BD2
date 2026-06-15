@@ -865,6 +865,299 @@
   padding: 0 20px 20px;
 }
 
+.admin-sector-card {
+  min-height: 328px;
+}
+
+.admin-sector-card .stadium-card-header {
+  min-height: 118px;
+  padding: 18px 20px;
+}
+
+.admin-sector-card .stadium-card-body {
+  min-height: auto;
+  gap: 12px;
+  padding: 22px 20px 18px;
+}
+
+.admin-sector-card .stadium-card-body strong {
+  font-size: 25px;
+  font-weight: 650;
+}
+
+.admin-sector-card .sector-actions {
+  margin-top: auto;
+  padding-bottom: 20px;
+}
+
+.device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
+  align-items: stretch;
+  gap: 30px;
+}
+
+.device-card {
+  min-height: 474px;
+  display: flex;
+  flex-direction: column;
+  padding: 30px;
+  background: #ffffff;
+  border: 2px solid #16051f;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.11);
+}
+
+.device-card.is-enabled {
+  border-color: #9b2dee;
+}
+
+.device-card-header {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 16px;
+  min-height: 78px;
+}
+
+.device-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #9b2dee;
+  background: #f3e8ff;
+}
+
+.device-icon.is-disabled {
+  color: #e11d48;
+  background: #ffe4e9;
+}
+
+.device-icon .sidebar-icon,
+.device-power .sidebar-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.device-card-header h2 {
+  min-height: 56px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin: 0;
+  color: #08080b;
+  font-size: 22px;
+  line-height: 1.25;
+  overflow: hidden;
+}
+
+.device-card-header p {
+  margin: 6px 0 0;
+  color: #687083;
+  font-size: 15px;
+}
+
+.device-power {
+  color: #16a34a;
+}
+
+.device-power.is-disabled {
+  color: #e11d48;
+}
+
+.device-card-body {
+  display: grid;
+  gap: 20px;
+  padding: 30px 0 20px;
+}
+
+.device-card-body p,
+.device-workers {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.device-card-body span,
+.device-workers > span {
+  color: #687083;
+  font-size: 15px;
+}
+
+.device-card-body strong {
+  color: #08080b;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.device-workers div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.device-workers small {
+  padding: 5px 10px;
+  color: #8a22e6;
+  background: #f3e8ff;
+  border: 1px solid #d8b4fe;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+.device-status {
+  width: fit-content;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 15px;
+}
+
+.device-status.is-enabled {
+  color: #16a34a;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+}
+
+.device-status.is-disabled {
+  color: #e11d48;
+  background: #ffe4e9;
+  border: 1px solid #fecdd3;
+}
+
+.device-actions {
+  margin-top: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.device-secondary-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px;
+  gap: 10px;
+}
+
+.device-toggle-button {
+  height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 12px;
+  color: #ffffff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.device-toggle-button.is-disable-action {
+  background: #e11d48;
+}
+
+.device-toggle-button.is-enable-action {
+  background: #16a34a;
+}
+
+.device-toggle-button .sidebar-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.device-number-field {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #cfd3dd;
+  border-radius: 14px;
+  background: #f3f4f7;
+}
+
+.device-number-field:focus-within {
+  border-color: #9b2dee;
+  box-shadow: 0 0 0 3px rgba(155, 45, 238, 0.16);
+}
+
+.device-number-field strong {
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: #16051f;
+  font-size: 18px;
+}
+
+.device-number-field input {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.device-assignee-list {
+  display: grid;
+  gap: 10px;
+}
+
+.device-assignee-list > span {
+  color: #242424;
+  font-size: 18px;
+  font-weight: 750;
+}
+
+.device-assignee-list p {
+  margin: 0;
+  padding: 14px 16px;
+  color: #687083;
+  background: #f3f4f7;
+  border: 1px solid #cfd2dc;
+  border-radius: 12px;
+}
+
+.device-assignee-row {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 16px;
+  background: #f3f4f7;
+  border: 1px solid #d8b4fe;
+  border-radius: 12px;
+}
+
+.device-assignee-row strong {
+  min-width: 0;
+  color: #16051f;
+  font-size: 15px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.device-assignee-remove {
+  width: 44px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  color: #ffffff;
+  background: #e11d48;
+  cursor: pointer;
+}
+
+.device-assignee-remove:hover {
+  background: #be123c;
+}
+
+.device-assignee-remove .sidebar-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .details-button,
 .sections-button,
 .delete-button {
@@ -976,7 +1269,8 @@
 }
 
 .stadium-form input,
-.stadium-form select {
+.stadium-form select,
+.stadium-form textarea {
   width: 100%;
   height: 62px;
   padding: 0 20px;
@@ -990,15 +1284,24 @@
 }
 
 .stadium-form input:focus,
-.stadium-form select:focus {
+.stadium-form select:focus,
+.stadium-form textarea:focus {
   border-color: #9b2dee;
   box-shadow: 0 0 0 4px rgba(155, 45, 238, 0.14);
 }
 
 .stadium-form input:disabled,
-.stadium-form select:disabled {
+.stadium-form select:disabled,
+.stadium-form textarea:disabled {
   color: #8b91a0;
   cursor: not-allowed;
+}
+
+.stadium-form textarea {
+  min-height: 132px;
+  padding: 16px 20px;
+  line-height: 1.4;
+  resize: vertical;
 }
 
 .event-modal {

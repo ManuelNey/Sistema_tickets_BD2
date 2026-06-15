@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useRouter } from 'expo-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   View,
+  Image
 } from 'react-native'
 
 const API_URL = 'http://192.168.1.23:8080'
@@ -21,6 +22,23 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [deviceId, setDeviceId] = useState('')
+
+
+  useEffect(() => {
+    const loadDeviceId = async () => {
+      let id = await AsyncStorage.getItem('DeviceId')
+
+      if (!id) {
+        id = Math.random().toString(36).substring(2, 8).toUpperCase()
+        await AsyncStorage.setItem('DeviceId', id)
+      }
+
+      setDeviceId(id)
+    }
+
+    loadDeviceId()
+  }, [])
 
   const handleLogin = async () => {
     try {
@@ -50,6 +68,22 @@ export default function LoginScreen() {
 
       await AsyncStorage.setItem('ticketmatch-token', usuario.token)
 
+      const deviceResponse = await fetch(`${API_URL}/api/dispositivo/check`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${usuario.token}`,
+        },
+        body: JSON.stringify({
+          deviceId: deviceId,
+        }),
+      })
+
+      if (!deviceResponse.ok) {
+        Alert.alert('Dispositivo no habilitado')
+        return
+      }
+
       router.push('/scanner')
     } catch (error) {
       Alert.alert('Error', 'Usuario o contraseña incorrectos')
@@ -65,7 +99,7 @@ export default function LoginScreen() {
     >
       <View style={styles.card}>
         <View style={styles.logoCircle}>
-          <Text style={styles.logoText}>TM</Text>
+          <Image source={require('../assets/ticket.png')} style={styles.logo}/>
         </View>
 
         <Text style={styles.title}>TicketMatch</Text>
@@ -109,6 +143,8 @@ export default function LoginScreen() {
         <Text style={styles.footerText}>
           Solo usuarios con rol funcionario pueden acceder al escáner.
         </Text>
+
+        <Text style={styles.deviceText}>Dispositivo: {deviceId}</Text>
       </View>
     </KeyboardAvoidingView>
   )
@@ -138,10 +174,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 18,
   },
-  logoText: {
-    color: '#ffffff',
-    fontSize: 24,
-    fontWeight: 'bold',
+  logo: {
+    width: 50, 
+    height: 50, 
+    alignSelf: 'center',
   },
   title: {
     color: '#ffffff',
@@ -196,4 +232,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 22,
   },
+  deviceText: {
+  color: '#38bdf8',
+  fontSize: 14,
+  textAlign: 'center',
+  marginTop: 8,
+  marginBottom: 20,
+  fontWeight: '600',
+},
 })

@@ -25,9 +25,9 @@ public class EstadioRepository : IEstadioRepository
 
         // Esta consulta trae los estadios existentes en la tabla estadio.
         await using var command = new NpgsqlCommand(
-            @"SELECT id_estadio, nombre, ciudad, fk_pais_sede
-              FROM estadio
-              ORDER BY nombre;", connection);
+            @"SELECT id_estadio, e.nombre as estadio_nombre, ciudad, fk_pais_sede, p.nombre as pais_nombre
+            FROM estadio e join pais_sede p on e.fk_pais_sede = p.id_pais_sede
+            ORDER BY e.nombre;", connection);
 
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -37,9 +37,10 @@ public class EstadioRepository : IEstadioRepository
             estadios.Add(new EstadioDto
             {
                 Id = reader.GetInt32(reader.GetOrdinal("id_estadio")),
-                Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                Nombre = reader.GetString(reader.GetOrdinal("estadio_nombre")),
                 Ciudad = reader.GetString(reader.GetOrdinal("ciudad")),
-                PaisSedeId = reader.GetInt32(reader.GetOrdinal("fk_pais_sede"))
+                PaisSedeId = reader.GetInt32(reader.GetOrdinal("fk_pais_sede")),
+                PaisNombre = reader.GetString(reader.GetOrdinal("pais_nombre"))
             });
         }
 
@@ -136,10 +137,10 @@ public class EstadioRepository : IEstadioRepository
         await connection.OpenAsync();
 
         await using var command = new NpgsqlCommand(
-            @"SELECT id_estadio, nombre, ciudad, fk_pais_sede
-            FROM estadio
-            WHERE fk_pais_sede=@PaisSedeId
-            ORDER BY nombre;", connection);
+            @"SELECT id_estadio, e.nombre as estadio_nombre, ciudad, fk_pais_sede, p.nombre as pais_nombre
+            FROM estadio e join pais_sede p on e.fk_pais_sede = p.id_pais_sede
+            WHERE fk_pais_sede= @paisSedeId
+            ORDER BY e.nombre;", connection);
 
         command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
         await using var reader = await command.ExecuteReaderAsync();
@@ -149,9 +150,10 @@ public class EstadioRepository : IEstadioRepository
             estadios.Add(new EstadioDto
             {
                 Id = reader.GetInt32(reader.GetOrdinal("id_estadio")),
-                Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                Nombre = reader.GetString(reader.GetOrdinal("estadio_nombre")),
                 Ciudad = reader.GetString(reader.GetOrdinal("ciudad")),
-                PaisSedeId = reader.GetInt32(reader.GetOrdinal("fk_pais_sede"))
+                PaisSedeId = reader.GetInt32(reader.GetOrdinal("fk_pais_sede")),
+                PaisNombre = reader.GetString(reader.GetOrdinal("pais_nombre"))
             });
         }
 
