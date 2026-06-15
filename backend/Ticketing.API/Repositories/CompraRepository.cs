@@ -139,17 +139,42 @@ public class CompraRepository : ICompraRepository
         //Cerramos el reader antes de ejecutar comandos nuevos sobre la misma conexion.
         await reader.CloseAsync();
 
+        //Buscamos la comisión vigente para calcular el monto total de la compra.
+        //Si no hay ninguna vigente, la comisión es 0 y no hay comisión.
+        int? idComision = null;
+        decimal porcentajeComision = 0m;
+
+        await using (var cmdComision = new NpgsqlCommand(@"
+            SELECT id_comision, porcentaje
+            FROM comision
+            WHERE fecha_inicio <= CURRENT_DATE
+              AND (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE)
+            ORDER BY fecha_inicio DESC
+            LIMIT 1;", connection))
+        {
+            await using var comReader = await cmdComision.ExecuteReaderAsync();
+            if (await comReader.ReadAsync())
+            {
+                idComision = comReader.GetInt32(comReader.GetOrdinal("id_comision"));
+                porcentajeComision = comReader.GetDecimal(comReader.GetOrdinal("porcentaje"));
+            }
+        }
+
+        //Precio final = precio unitario * cantidad * (1 + comision%).
+        decimal montoTotal = precioUnitario * request.Cantidad * (1 + porcentajeComision / 100m);
+
         //Transaccion para insertar ambos o ninguno.
 
         await using var transaction = await connection.BeginTransactionAsync();
 
         //Insertamos la compra y nos quedamos con el id
         await using var cmdCompra= new NpgsqlCommand(@"
-            INSERT INTO compra (estado, monto_total, fk_usuario_mail)
-            VALUES ('pendiente',@monto, @mail)
+            INSERT INTO compra (estado, monto_total, fk_comision, fk_usuario_mail)
+            VALUES ('pendiente', @monto, @comision, @mail)
             RETURNING id_compra;", connection, transaction);
-        
-        cmdCompra.Parameters.AddWithValue("@monto", precioUnitario *request.Cantidad);
+
+        cmdCompra.Parameters.AddWithValue("@monto", montoTotal);
+        cmdCompra.Parameters.AddWithValue("@comision", (object?)idComision ?? DBNull.Value);
         cmdCompra.Parameters.AddWithValue("@mail", mail);
 
         object? resultado = await cmdCompra.ExecuteScalarAsync();
@@ -176,7 +201,121 @@ public class CompraRepository : ICompraRepository
         }
         //cerramos la transaccion
         await transaction.CommitAsync();
-        
+
         return idCompra;
+    }
+
+    // Detalle de una compra puntual. Devuelve null si no existe o no es del usuario.
+    // Agrupamos por compra para que la cantidad sea el numero de entradas asociadas a dicha compra.
+    public async Task<CompraDetalleDto?> GetCompraDetalleAsync(int idCompra, string mail)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(@"
+            SELECT
+                c.id_compra,
+                c.estado,
+                c.monto_total,
+                c.fecha,
+                el.nombre  AS equipo_local,
+                ev.nombre  AS equipo_visitante,
+                en.fecha   AS fecha_encuentro,
+                es.nombre  AS estadio,
+                s.nombre   AS sector,
+                COUNT(e.id_entrada) AS cantidad
+            FROM compra c
+            JOIN entrada  e   ON e.fk_compra_id        = c.id_compra
+            JOIN habilita h   ON e.fk_habilita_id      = h.id
+            JOIN encuentro en ON h.fk_encuentro        = en.id_encuentro
+            JOIN equipo   el  ON en.fk_equipo_local    = el.id_equipo
+            JOIN equipo   ev  ON en.fk_equipo_visitante = ev.id_equipo
+            JOIN estadio  es  ON en.fk_estadio         = es.id_estadio
+            JOIN sector   s   ON h.fk_sector           = s.id_sector
+            WHERE c.fk_usuario_mail = @mail AND c.id_compra = @idCompra
+            GROUP BY c.id_compra, c.estado, c.monto_total, c.fecha,
+                     el.nombre, ev.nombre, en.fecha, es.nombre, s.nombre;", connection);
+        cmd.Parameters.AddWithValue("@mail", mail);
+        cmd.Parameters.AddWithValue("@idCompra", idCompra);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+            return null;
+
+        var fechaEncuentro = reader.GetDateTime(reader.GetOrdinal("fecha_encuentro"));
+
+        return new CompraDetalleDto
+        {
+            IdCompra = reader.GetInt32(reader.GetOrdinal("id_compra")),
+            Estado = reader.GetString(reader.GetOrdinal("estado")),
+            MontoTotal = reader.GetDecimal(reader.GetOrdinal("monto_total")),
+            EquipoLocal = reader.GetString(reader.GetOrdinal("equipo_local")),
+            EquipoVisitante = reader.GetString(reader.GetOrdinal("equipo_visitante")),
+            FechaEncuentro = DateOnly.FromDateTime(fechaEncuentro),
+            HoraEncuentro = TimeOnly.FromDateTime(fechaEncuentro),
+            Estadio = reader.GetString(reader.GetOrdinal("estadio")),
+            Sector = reader.GetString(reader.GetOrdinal("sector")),
+            Cantidad = (int)reader.GetInt64(reader.GetOrdinal("cantidad")),
+            FechaReserva = reader.GetDateTime(reader.GetOrdinal("fecha"))
+        };
+    }
+
+    // Listado de todas las compras/reservas del usuario autenticado, de la más reciente a la más vieja.
+    // Agrupamos por compra para que la cantidad sea el numero de entradas asociadas a dicha compra.
+    public async Task<List<CompraDetalleDto>> GetMisReservasAsync(string mail)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(@"
+            SELECT
+                c.id_compra,
+                c.estado,
+                c.monto_total,
+                c.fecha,
+                el.nombre  AS equipo_local,
+                ev.nombre  AS equipo_visitante,
+                en.fecha   AS fecha_encuentro,
+                es.nombre  AS estadio,
+                s.nombre   AS sector,
+                COUNT(e.id_entrada) AS cantidad
+            FROM compra c
+            JOIN entrada  e   ON e.fk_compra_id        = c.id_compra
+            JOIN habilita h   ON e.fk_habilita_id      = h.id
+            JOIN encuentro en ON h.fk_encuentro        = en.id_encuentro
+            JOIN equipo   el  ON en.fk_equipo_local    = el.id_equipo
+            JOIN equipo   ev  ON en.fk_equipo_visitante = ev.id_equipo
+            JOIN estadio  es  ON en.fk_estadio         = es.id_estadio
+            JOIN sector   s   ON h.fk_sector           = s.id_sector
+            WHERE c.fk_usuario_mail = @mail
+            GROUP BY c.id_compra, c.estado, c.monto_total, c.fecha,
+                     el.nombre, ev.nombre, en.fecha, es.nombre, s.nombre
+            ORDER BY c.fecha DESC;", connection);
+        cmd.Parameters.AddWithValue("@mail", mail);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var reservas = new List<CompraDetalleDto>();
+        while (await reader.ReadAsync())
+        {
+            var fechaEncuentro = reader.GetDateTime(reader.GetOrdinal("fecha_encuentro"));
+            reservas.Add(new CompraDetalleDto
+            {
+                IdCompra = reader.GetInt32(reader.GetOrdinal("id_compra")),
+                Estado = reader.GetString(reader.GetOrdinal("estado")),
+                MontoTotal = reader.GetDecimal(reader.GetOrdinal("monto_total")),
+                EquipoLocal = reader.GetString(reader.GetOrdinal("equipo_local")),
+                EquipoVisitante = reader.GetString(reader.GetOrdinal("equipo_visitante")),
+                FechaEncuentro = DateOnly.FromDateTime(fechaEncuentro),
+                HoraEncuentro = TimeOnly.FromDateTime(fechaEncuentro),
+                Estadio = reader.GetString(reader.GetOrdinal("estadio")),
+                Sector = reader.GetString(reader.GetOrdinal("sector")),
+                Cantidad = (int)reader.GetInt64(reader.GetOrdinal("cantidad")),
+                FechaReserva = reader.GetDateTime(reader.GetOrdinal("fecha")),
+            });
+        }
+
+        return reservas;
     }
 }

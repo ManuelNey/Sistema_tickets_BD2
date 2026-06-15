@@ -5,51 +5,25 @@ import CompraExitosa from './CompraExitosa'
 import { formatDate, formatPrice, formatTime, getExpiracion } from './format'
 import './reserva.css'
 
-// MOCK hasta que exista el endpiint de GET /api/compra/mis-reservas. 
-const MOCK_RESERVAS = [
-  {
-    idCompra: 5,
-    codigoReserva: 'RSV-MQ841PCT',
-    estado: 'pendiente',
-    equipoLocal: 'España',
-    equipoVisitante: 'Alemania',
-    fechaEncuentro: '2026-06-19T18:30:00',
-    estadio: 'Old Trafford, Manchester',
-    sector: 'VIP',
-    cantidad: 1,
-    montoTotal: 308,
-    // a esta le quedan 28 minutos para ser pagada
-    fechaReserva: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-  },
-  {
-    idCompra: 2,
-    codigoReserva: 'RSV-MQ840736',
-    estado: 'pagada',
-    equipoLocal: 'Argentina',
-    equipoVisitante: 'Brasil',
-    fechaEncuentro: '2026-06-14T20:00:00',
-    estadio: 'Estadio Santiago Bernabéu, Madrid',
-    sector: 'Tribuna',
-    cantidad: 1,
-    montoTotal: 88,
-    //a esta le quedan los 30
-    fechaReserva: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-  },
-]
+// El back no guarda un codigo de reserva; lo derivamos del id de la compra.
+function codigoReserva(idCompra) {
+  return `RSV-${String(idCompra).padStart(6, '0')}`
+}
 
-// Convierte un item de la reserva (forma del listado) al "pedido" que espera PagoEntrada.
+// Convierte una reserva del backend al "pedido" que espera PagoEntrada.
 function reservaToPedido(r) {
   return {
     idCompra: r.idCompra,
-    codigoReserva: r.codigoReserva,
+    codigoReserva: codigoReserva(r.idCompra),
     equipoLocal: r.equipoLocal,
     equipoVisitante: r.equipoVisitante,
-    fecha: r.fechaEncuentro?.slice(0, 10),
-    hora: r.fechaEncuentro?.slice(11),
+    fecha: r.fechaEncuentro,
+    hora: r.horaEncuentro,
     estadio: r.estadio,
     sector: r.sector,
-    precioUnitario: r.cantidad ? r.montoTotal / r.cantidad : r.montoTotal,
+    precioUnitario: r.precioUnitario,
     cantidad: r.cantidad,
+    montoTotal: r.montoTotal,
     fechaReserva: r.fechaReserva,
   }
 }
@@ -57,24 +31,26 @@ function reservaToPedido(r) {
 function MisReservas() {
   const [reservas, setReservas] = useState([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const [view, setView] = useState('list') // list | pago | exito
   const [pedidoSel, setPedidoSel] = useState(null)
   const [resumen, setResumen] = useState(null)
 
   const cargar = async () => {
-    //Al cargar se le hace un fetch al endpoint del get
+    //Al cargar se le hace un fetch al endpoint real de mis-reservas.
     setLoading(true)
+    setError('')
     try {
       const token = localStorage.getItem('ticketmatch-token')
       const res = await fetch('http://localhost:8080/api/compra/mis-reservas', {
         headers: { Authorization: `Bearer ${token}` },
       })
-      if (!res.ok) throw new Error('no existe aun')
+      if (!res.ok) throw new Error('No se pudieron cargar las reservas')
       setReservas(await res.json())
     } catch {
-      //Se usa el mok de arriba porque en el bakc no existe
-      setReservas(MOCK_RESERVAS)
+      setReservas([])
+      setError('No se pudieron cargar tus reservas. Intenta de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -143,7 +119,9 @@ function MisReservas() {
 
       {loading && <p className="matches-status">Cargando reservas...</p>}
 
-      {!loading && reservas.length === 0 && (
+      {!loading && error && <p className="matches-status is-error">{error}</p>}
+
+      {!loading && !error && reservas.length === 0 && (
         <p className="matches-status">Todavia no tenes reservas.</p>
       )}
 
@@ -176,12 +154,12 @@ function ReservaCard({ reserva, onPagar, onCancelar }) {
             {reserva.equipoLocal} vs {reserva.equipoVisitante}
           </h3>
         </div>
-        <span className="reserva-card-code">{reserva.codigoReserva}</span>
+        <span className="reserva-card-code">{codigoReserva(reserva.idCompra)}</span>
       </div>
 
       <div className="reserva-card-body">
         <div className="reserva-card-info">
-          <span>📅 {formatDate(reserva.fechaEncuentro?.slice(0, 10))} · 🕒 {formatTime(reserva.fechaEncuentro?.slice(11))}</span>
+          <span>📅 {formatDate(reserva.fechaEncuentro)} · 🕒 {formatTime(reserva.horaEncuentro)}</span>
           <span>📍 {reserva.estadio}</span>
           <span>{reserva.sector} · {reserva.cantidad} {reserva.cantidad === 1 ? 'entrada' : 'entradas'}</span>
           <span className="reserva-card-precio">{formatPrice(reserva.montoTotal)}</span>

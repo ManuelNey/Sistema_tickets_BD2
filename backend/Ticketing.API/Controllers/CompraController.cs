@@ -93,4 +93,33 @@ public class CompraController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    // Listado de todas las reservas/compras del usuario autenticado.
+    [HttpGet("mis-reservas")]
+    [Authorize(Roles = "usuario")]
+    public async Task<ActionResult> MisReservas()
+    {
+        var mail = User.FindFirstValue("mail");
+        if (mail == null)
+            return Unauthorized(new { message = "Usuario no autenticado" });
+
+        var reservas = await _compraRepository.GetMisReservasAsync(mail);
+        return Ok(reservas);
+    }
+
+    // Detalle de una reserva/compra puntual (valida que sea del usuario autenticado).
+    [HttpGet("{idCompra:int}")]
+    [Authorize(Roles = "usuario")]
+    public async Task<ActionResult> Detalle(int idCompra)
+    {
+        var mail = User.FindFirstValue("mail");
+        if (mail == null)
+            return Unauthorized(new { message = "Usuario no autenticado" });
+
+        var compra = await _compraRepository.GetCompraDetalleAsync(idCompra, mail);
+        if (compra == null)
+            return NotFound(new { message = "La compra no existe" });
+
+        return Ok(compra);
+    }
 }

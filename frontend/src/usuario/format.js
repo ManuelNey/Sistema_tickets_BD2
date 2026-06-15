@@ -29,14 +29,28 @@ export function formatPrice(price) {
   return `$${Math.round(price)}`
 }
 
-// Cargo por servicio (10%): es solo visual del front, el back NO lo guarda.
-export const CARGO_SERVICIO = 0.1
-
-// Calcula subtotal / cargo / total a partir del precio unitario y la cantidad.
-export function calcularTotales(precioUnitario, cantidad) {
+// Calcula subtotal / cargo / total a partir del precio unitario, la cantidad y la
+// tasa de comisión vigente (fracción, ej: 0.075 = 7,5%). La tasa la define el back.
+export function calcularTotales(precioUnitario, cantidad, comisionRate = 0) {
   const subtotal = (precioUnitario || 0) * (cantidad || 0)
-  const cargo = subtotal * CARGO_SERVICIO
+  const cargo = subtotal * (comisionRate || 0)
   return { subtotal, cargo, total: subtotal + cargo }
+}
+
+// Trae la comisión vigente del back y la devuelve como fracción (ej: 7.50 -> 0.075).
+// Si falla, devuelve 0 para no romper la pantalla (se muestra sin cargo).
+export async function fetchComisionVigente() {
+  try {
+    const token = localStorage.getItem('ticketmatch-token')
+    const res = await fetch('http://localhost:8080/api/comision/vigente', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) return 0
+    const data = await res.json()
+    return (data.porcentaje ?? 0) / 100
+  } catch {
+    return 0
+  }
 }
 
 // La reserva expira 30 minutos despues de creada. Devuelve el timestamp (ms) de expiracion.

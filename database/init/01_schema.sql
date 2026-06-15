@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS entrada (
   fk_habilita_id INTEGER NOT NULL REFERENCES habilita(id),
   fk_compra_id INTEGER NOT NULL REFERENCES compra(id_compra),
   fk_usuario_mail VARCHAR(255) NOT NULL REFERENCES usuario(persona_mail),
-  CONSTRAINT chk_entrada_estado CHECK (estado IN ('reservada', 'activa', 'utilizada')),
+  CONSTRAINT chk_entrada_estado CHECK (estado IN ('reservada', 'activa', 'utilizada', 'transferida')),
   CONSTRAINT chk_entrada_transferencias CHECK (cantidad_transferencias >= 0 AND cantidad_transferencias <= 3)
 );
 

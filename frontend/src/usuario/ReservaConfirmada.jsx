@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import Countdown from './Countdown'
-import { calcularTotales, formatDate, formatPrice, formatTime, getExpiracion } from './format'
+import { formatDate, formatPrice, formatTime, getExpiracion } from './format'
 
 // Pantalla "Reserva Confirmada": resumen + cuenta regresiva de 30 min para pagar.
 function ReservaConfirmada({ pedido, onPagar, onPagarMasTarde }) {
   const [expirada, setExpirada] = useState(false)
-  const { subtotal, cargo, total } = calcularTotales(pedido.precioUnitario, pedido.cantidad)
+  // El total real (con comisión) lo define el back; el cargo se deriva de ese total.
+  const subtotal = pedido.precioUnitario * pedido.cantidad
+  const total = pedido.montoTotal
+  const cargo = total - subtotal
   const expiraMs = getExpiracion(pedido.fechaReserva)
 
   return (
@@ -63,7 +66,7 @@ function ReservaConfirmada({ pedido, onPagar, onPagarMasTarde }) {
             <dd>{formatPrice(subtotal)}</dd>
           </div>
           <div>
-            <dt>Cargo por servicio (10%)</dt>
+            <dt>Cargo por servicio</dt>
             <dd>{formatPrice(cargo)}</dd>
           </div>
         </dl>

@@ -35,50 +35,52 @@ INSERT INTO compra (fecha, hora, estado, monto_total, fk_comision, fk_usuario_ma
 -- Entradas generadas para compras pagadas (IDs de habilita 1-20 segun orden de insercion en 04_operacion.sql).
 -- Van aca, DESPUES de las compras, por la FK entrada.fk_compra_id -> compra.id_compra.
 INSERT INTO entrada (estado, cantidad_transferencias, fk_habilita_id, fk_compra_id, fk_usuario_mail) VALUES
--- Compra 1 (usuario1)
+-- Cada compra usa una sola habilita (un unico sector), respetando el encuentro original.
+-- Se mantiene la cantidad y el orden de entradas para no alterar los id_entrada (1-31).
+-- Compra 1 (usuario1) → habilita 1
 ('activa', 0, 1,  1,  'usuario1@mail.com'),
-('activa', 0, 2,  1,  'usuario1@mail.com'),
--- Compra 2 (usuario2)
+('activa', 0, 1,  1,  'usuario1@mail.com'),
+-- Compra 2 (usuario2) → habilita 1
 ('activa', 0, 1,  2,  'usuario2@mail.com'),
-('activa', 0, 3,  2,  'usuario2@mail.com'),
-('activa', 0, 4,  2,  'usuario2@mail.com'),
--- Compra 3 (usuario3)
+('activa', 0, 1,  2,  'usuario2@mail.com'),
+('activa', 0, 1,  2,  'usuario2@mail.com'),
+-- Compra 3 (usuario3) → habilita 5
 ('activa', 0, 5,  3,  'usuario3@mail.com'),
--- Compra 4 (usuario4)
+-- Compra 4 (usuario4) → habilita 6
 ('activa', 0, 6,  4,  'usuario4@mail.com'),
-('activa', 0, 7,  4,  'usuario4@mail.com'),
--- Compra 5 (usuario5)
+('activa', 0, 6,  4,  'usuario4@mail.com'),
+-- Compra 5 (usuario5) → habilita 9
 ('activa', 0, 9,  5,  'usuario5@mail.com'),
-('activa', 0, 10, 5,  'usuario5@mail.com'),
-('activa', 0, 11, 5,  'usuario5@mail.com'),
-('activa', 0, 12, 5,  'usuario5@mail.com'),
--- Compra 7 (usuario7)
+('activa', 0, 9,  5,  'usuario5@mail.com'),
+('activa', 0, 9,  5,  'usuario5@mail.com'),
+('activa', 0, 9,  5,  'usuario5@mail.com'),
+-- Compra 7 (usuario7) → habilita 13
 ('activa', 0, 13, 7,  'usuario7@mail.com'),
-('activa', 0, 14, 7,  'usuario7@mail.com'),
--- Compra 8 (usuario8)
+('activa', 0, 13, 7,  'usuario7@mail.com'),
+-- Compra 8 (usuario8) → habilita 13
 ('activa', 0, 13, 8,  'usuario8@mail.com'),
-('activa', 0, 15, 8,  'usuario8@mail.com'),
-('activa', 0, 16, 8,  'usuario8@mail.com'),
--- Compra 10 (usuario10)
+('activa', 0, 13, 8,  'usuario8@mail.com'),
+('activa', 0, 13, 8,  'usuario8@mail.com'),
+-- Compra 10 (usuario10) → habilita 17
 ('activa', 0, 17, 10, 'usuario10@mail.com'),
-('activa', 0, 18, 10, 'usuario10@mail.com'),
-('activa', 0, 19, 10, 'usuario10@mail.com'),
-('activa', 0, 20, 10, 'usuario10@mail.com'),
--- Compra 11 (usuario1)
+('activa', 0, 17, 10, 'usuario10@mail.com'),
+('activa', 0, 17, 10, 'usuario10@mail.com'),
+('activa', 0, 17, 10, 'usuario10@mail.com'),
+-- Compra 11 (usuario1) → habilita 2
 ('activa', 0, 2,  11, 'usuario1@mail.com'),
-('activa', 0, 3,  11, 'usuario1@mail.com'),
--- Compra 12 (usuario2)
+('activa', 0, 2,  11, 'usuario1@mail.com'),
+-- Compra 12 (usuario2) → habilita 5
 ('activa', 0, 5,  12, 'usuario2@mail.com'),
-('activa', 0, 6,  12, 'usuario2@mail.com'),
--- Compra 13 (usuario3)
+('activa', 0, 5,  12, 'usuario2@mail.com'),
+-- Compra 13 (usuario3) → habilita 9
 ('activa', 0, 9,  13, 'usuario3@mail.com'),
-('activa', 0, 10, 13, 'usuario3@mail.com'),
-('activa', 0, 11, 13, 'usuario3@mail.com'),
--- Compra 14 (usuario4)
+('activa', 0, 9,  13, 'usuario3@mail.com'),
+('activa', 0, 9,  13, 'usuario3@mail.com'),
+-- Compra 14 (usuario4) → habilita 14
 ('activa', 0, 14, 14, 'usuario4@mail.com'),
--- Compra 16 (usuario6)
+-- Compra 16 (usuario6) → habilita 17
 ('activa', 0, 17, 16, 'usuario6@mail.com'),
-('activa', 0, 18, 16, 'usuario6@mail.com');
+('activa', 0, 17, 16, 'usuario6@mail.com');
 
 INSERT INTO transferencia (fecha, estado, fk_usuario_mail_emisor, fk_usuario_mail_receptor, fk_entrada_id) VALUES
 ('2026-04-01 10:15:00', 'aceptada',  'usuario1@mail.com',  'usuario2@mail.com',  1),

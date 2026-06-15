@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { TrophyIcon } from './matchIcons'
-import { calcularTotales, formatDate, formatPrice, formatTime } from './format'
+import { calcularTotales, fetchComisionVigente, formatDate, formatPrice, formatTime } from './format'
 
 const MAX_ENTRADAS = 5
 
@@ -16,6 +16,12 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
+  // Tasa de comisión vigente (fracción) que define el back; se usa para estimar el total.
+  const [comisionRate, setComisionRate] = useState(0)
+
+  useEffect(() => {
+    fetchComisionVigente().then(setComisionRate)
+  }, [])
 
   useEffect(() => {
     const loadSectores = async () => {
@@ -65,7 +71,7 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
     setSubmitError('')
   }
 
-  const { subtotal, cargo, total } = calcularTotales(sectorSeleccionado?.precio, cantidad)
+  const { subtotal, cargo, total } = calcularTotales(sectorSeleccionado?.precio, cantidad, comisionRate)
 
   const handleReservar = async () => {
     if (!sectorSeleccionado) {
@@ -94,25 +100,32 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
         throw new Error(body?.message ?? 'Reserva fallida')
       }
 
-      const data = await response.json()  // 
-      // En este punto la reserva ya se hizo, y el back devuelve el idCompra.
-      // Aún no tenemos un GET para traer el detalle de una reserva, asi que hacemos un mock.
+      const data = await response.json()
+      // La reserva ya se creó y el back devuelve el idCompra.
+      // Traemos el detalle real de la reserva (incluye su fecha de creación para el countdown).
+      const detalleRes = await fetch(`http://localhost:8080/api/compra/${data.idCompra}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
 
-      //Armamos la reserva exitasa y vamos a larte del countdown, pasando toda la info que tenemos a mano (y un codigo de reserva generado a partir del idCompra).
+      if (!detalleRes.ok) {
+        throw new Error('La reserva se creó pero no se pudo obtener su detalle.')
+      }
+
+      const reserva = await detalleRes.json()
+
       onReservaExitosa({
-        //Los datos despues del idCompra son para mostrar en el countdown, falta el GET de la reserva.
-        idCompra: data.idCompra,
-        codigoReserva: `RSV-${String(data.idCompra).padStart(6, '0')}`,
-        equipoLocal: match.equipoLocal,
-        equipoVisitante: match.equipoVisitante,
-        fecha: match.fecha,
-        hora: match.hora,
-        estadio: match.estadio,
-        sector: sectorSeleccionado.sector,
-        precioUnitario: sectorSeleccionado.precio,
-        cantidad,
-        // Usamos el momento actual para el countdown (cuando exista el GET, vendra del back).
-        fechaReserva: new Date().toISOString(),
+        idCompra: reserva.idCompra,
+        codigoReserva: `RSV-${String(reserva.idCompra).padStart(6, '0')}`,
+        equipoLocal: reserva.equipoLocal,
+        equipoVisitante: reserva.equipoVisitante,
+        fecha: reserva.fechaEncuentro,
+        hora: reserva.horaEncuentro,
+        estadio: reserva.estadio,
+        sector: reserva.sector,
+        precioUnitario: reserva.precioUnitario,
+        cantidad: reserva.cantidad,
+        montoTotal: reserva.montoTotal,
+        fechaReserva: reserva.fechaReserva,
       })
     } catch (err) {
       setSubmitError(err.message || 'No se pudo completar la reserva. Intenta nuevamente.')
@@ -267,7 +280,7 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
                   <dd>{formatPrice(subtotal)}</dd>
                 </div>
                 <div>
-                  <dt>Cargo por servicio (10%)</dt>
+                  <dt>Cargo por servicio ({Math.round(comisionRate * 100)}%)</dt>
                   <dd>{formatPrice(cargo)}</dd>
                 </div>
               </dl>
