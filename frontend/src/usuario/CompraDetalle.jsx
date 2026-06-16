@@ -16,7 +16,7 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  // Tasa de comisión vigente (fracción) que define el back; se usa para estimar el total.
+  // Tasa de comisión actual vigente, se la pedimos al back para calcular el total a pagar en el resumen de la compra.
   const [comisionRate, setComisionRate] = useState(0)
 
   useEffect(() => {

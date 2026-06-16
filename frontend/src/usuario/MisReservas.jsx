@@ -33,17 +33,20 @@ function MisReservas() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // Solapa activa: 'pendientes' (por defecto, pendientes de pago) | 'pagadas' (ya pagadas).
+  const [tab, setTab] = useState('pendientes')
+
   const [view, setView] = useState('list') // list | pago | exito
   const [pedidoSel, setPedidoSel] = useState(null)
   const [resumen, setResumen] = useState(null)
 
   const cargar = async () => {
-    //Al cargar se le hace un fetch al endpoint real de mis-reservas.
+    //Al cargar se le hace un fetch al endpoint de mis-reservas segun la solapa activa.
     setLoading(true)
     setError('')
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const res = await fetch('http://localhost:8080/api/compra/mis-reservas', {
+      const res = await fetch(`http://localhost:8080/api/compra/mis-reservas/${tab}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error('No se pudieron cargar las reservas')
@@ -59,8 +62,10 @@ function MisReservas() {
   useEffect(() => {
     // Diferimos la carga fuera del render sincrono para no disparar
     // setState de forma sincrona dentro del effect (react-hooks/set-state-in-effect).
+    // Se recarga cada vez que cambia la solapa activa.
     Promise.resolve().then(cargar)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab])
 
   const handlePagar = (reserva) => {
     setPedidoSel(reservaToPedido(reserva))
@@ -117,12 +122,37 @@ function MisReservas() {
         <p>Historial de reservas y estado de pago</p>
       </header>
 
+      <div className="reservas-tabs" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'pendientes'}
+          className={`reservas-tab ${tab === 'pendientes' ? 'is-active' : ''}`}
+          onClick={() => setTab('pendientes')}
+        >
+          Pendientes de pago
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'pagadas'}
+          className={`reservas-tab ${tab === 'pagadas' ? 'is-active' : ''}`}
+          onClick={() => setTab('pagadas')}
+        >
+          Pagadas
+        </button>
+      </div>
+
       {loading && <p className="matches-status">Cargando reservas...</p>}
 
       {!loading && error && <p className="matches-status is-error">{error}</p>}
 
       {!loading && !error && reservas.length === 0 && (
-        <p className="matches-status">Todavia no tenes reservas.</p>
+        <p className="matches-status">
+          {tab === 'pendientes'
+            ? 'No tenes reservas pendientes de pago.'
+            : 'Todavia no tenes compras pagadas.'}
+        </p>
       )}
 
       <div className="reservas-list">

@@ -127,6 +127,31 @@
 
 /* --- Mis Reservas --- */
 .reservas-view { padding: 1.5rem; max-width: 900px; }
+
+/* Solapas Pendientes / Pagadas */
+.reservas-tabs {
+  display: inline-flex;
+  gap: 0.25rem;
+  margin: 0.5rem 0 1.25rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+}
+.reservas-tab {
+  border: none;
+  background: transparent;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+.reservas-tab.is-active {
+  background: #7c3aed;
+  color: #fff;
+}
+
 .reservas-list { display: flex; flex-direction: column; gap: 1rem; }
 .reserva-card { border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; background: #fff; }
 .reserva-card-head {
