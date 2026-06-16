@@ -1,5 +1,6 @@
 import { InfoLine, TrophyIcon } from './matchIcons'
 import { formatDate, formatPrice, formatTime } from './format'
+import TeamBadge from './TeamBadge'
 
 function MatchCard({ match, onComprar }) {
   const dateText = formatDate(match.fecha)
@@ -45,25 +46,6 @@ function MatchCard({ match, onComprar }) {
       </div>
     </article>
   )
-}
-
-function TeamBadge({ name }) {
-  return (
-    <div className="team">
-      <div className="team-avatar">{getInitials(name)}</div>
-      <span>{name}</span>
-    </div>
-  )
-}
-
-function getInitials(name) {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase()
 }
 
 export default MatchCard

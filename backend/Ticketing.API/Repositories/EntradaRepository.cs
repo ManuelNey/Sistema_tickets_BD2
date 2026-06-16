@@ -129,6 +129,63 @@ public class EntradaRepository : IEntradaRepository
     return entradas;
     }
 
+    // "Mis Entradas": entradas que el usuario posee ahora (fk_usuario_mail = mail),
+    // agrupadas por partido + sector (habilita). Solo estados 'activa' (disponible) y
+    // 'transferida' (enviada, pendiente de aceptación); las 'utilizada'/'reservada' quedan afuera.
+    public async Task<List<MisEntradasGrupoDto>> GetMisEntradasAsync(string mail)
+    {
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        // FILTER (WHERE ...) nos deja contar por estado en una sola pasada.
+        await using var cmd = new NpgsqlCommand(@"
+            SELECT
+                h.id        AS id_habilita,
+                el.pais     AS equipo_local,
+                ev.pais     AS equipo_visitante,
+                en.fecha    AS fecha_encuentro,
+                es.nombre   AS estadio,
+                es.ciudad   AS ciudad,
+                s.nombre    AS sector,
+                COUNT(*) FILTER (WHERE e.estado = 'activa')        AS disponibles,
+                COUNT(*) FILTER (WHERE e.estado = 'transferida')   AS transferidas
+            FROM entrada e
+            JOIN habilita h   ON e.fk_habilita_id       = h.id
+            JOIN encuentro en ON h.fk_encuentro         = en.id_encuentro
+            JOIN equipo   el  ON en.fk_equipo_local     = el.id_equipo
+            JOIN equipo   ev  ON en.fk_equipo_visitante = ev.id_equipo
+            JOIN estadio  es  ON en.fk_estadio          = es.id_estadio
+            JOIN sector   s   ON h.fk_sector            = s.id_sector
+            WHERE e.fk_usuario_mail = @mail
+              AND e.estado IN ('activa', 'transferida')
+            GROUP BY h.id, el.pais, ev.pais, en.fecha, es.nombre, es.ciudad, s.nombre
+            ORDER BY en.fecha;", connection);
+        cmd.Parameters.AddWithValue("@mail", mail);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var grupos = new List<MisEntradasGrupoDto>();
+        while (await reader.ReadAsync())
+        {
+            var fechaEncuentro = reader.GetDateTime(reader.GetOrdinal("fecha_encuentro"));
+            grupos.Add(new MisEntradasGrupoDto
+            {
+                IdHabilita      = reader.GetInt32(reader.GetOrdinal("id_habilita")),
+                EquipoLocal     = reader.GetString(reader.GetOrdinal("equipo_local")),
+                EquipoVisitante = reader.GetString(reader.GetOrdinal("equipo_visitante")),
+                FechaEncuentro  = DateOnly.FromDateTime(fechaEncuentro),
+                HoraEncuentro   = TimeOnly.FromDateTime(fechaEncuentro),
+                Estadio         = reader.GetString(reader.GetOrdinal("estadio")),
+                Ciudad          = reader.GetString(reader.GetOrdinal("ciudad")),
+                Sector          = reader.GetString(reader.GetOrdinal("sector")),
+                Disponibles     = (int)reader.GetInt64(reader.GetOrdinal("disponibles")),
+                Transferidas    = (int)reader.GetInt64(reader.GetOrdinal("transferidas")),
+            });
+        }
+
+        return grupos;
+    }
+
     public async Task<bool> MarcarEntradaComoUtilizadaAsync(int entradaId, string mailUsuario, string? mailFuncionario, string tokenUtilizado, string numeroDispositivo)
     {
         await using var connection = _connectionFactory.CreateConnection();

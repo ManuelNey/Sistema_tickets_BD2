@@ -19,6 +19,8 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100svh;
+  /* Corta el rebote elastico (overscroll) del navegador para que el sidebar fijo no se mueva. */
+  overscroll-behavior: none;
 }
 
 button,
