@@ -13,9 +13,9 @@ public class MisEntradasGrupoDto
     public string Ciudad { get; set; } = string.Empty;
     public string Sector { get; set; } = string.Empty;
 
-    // Entradas en estado 'activa' (las que se pueden usar o enviar).
+    // Cantidad de entradas en estado 'activa' (las que se pueden usar o enviar).
     public int Disponibles { get; set; }
 
-    // Entradas en estado 'transferida' (enviadas, pendientes de que el receptor acepte).
+    // Cantidad de entradas en estado 'transferida' (enviadas, pendientes de que el receptor acepte).
     public int Transferidas { get; set; }
 }

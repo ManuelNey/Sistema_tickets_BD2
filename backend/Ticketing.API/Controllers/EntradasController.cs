@@ -53,6 +53,32 @@ public class EntradasController : ControllerBase
         return Ok(entradas);
     }
 
+    [HttpPost("transferir")]
+    [Authorize(Roles = "usuario")]
+    // POST /api/entradas/transferir
+    // Envía 'cantidad' entradas de un grupo (habilita) al receptor. El back elige las entradas.
+    public async Task<ActionResult> Transferir([FromBody] TransferirEntradaRequest request)
+    {
+        var mail = User.FindFirstValue("mail");
+        if (mail == null)
+            return Unauthorized(new { message = "Usuario no autenticado" });
+
+        try
+        {
+            var enviadas = await _entradaRepository.TransferirAsync(
+                request.IdHabilita, request.Cantidad, mail, request.ReceptorMail);
+            return Ok(new { enviadas });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("{idEntrada:int}/Qr")]
     [Authorize(Roles = "usuario")]
     public async Task<ActionResult> GenerarQr(int idEntrada)
