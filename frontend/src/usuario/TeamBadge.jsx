@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { flagUrl } from './teamFlags'
 
 // Avatar del equipo: muestra la banderita del país. Si el país no está mapeado o la
-// imagen falla al cargar, cae a las iniciales del nombre.
+// imagen falla al cargar, se ponen las iniciales del nombre.
 function TeamBadge({ name }) {
   const [imgError, setImgError] = useState(false)
   const src = flagUrl(name)
