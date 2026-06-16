@@ -186,6 +186,106 @@ public class EntradaRepository : IEntradaRepository
         return grupos;
     }
 
+    // Realiza la solicitud de transferencia con la cantidad de entradas de una habilitacioón
+    // El back selecciona las ids de las entradas y bloquea la cantidad de entradas disponibles
+    // luego se inserta una transferencia 'pendiente' por cada entrada. 
+    // El trigger pasa cada entrada a 'transferida'.
+    // Devuelve cuántas entradas se enviaron por si el front quiere mostrar la cantidad
+    public async Task<int> TransferirAsync(int idHabilita, int cantidad, string emisorMail, string receptorMail)
+{
+    if (cantidad < 1)
+        throw new InvalidOperationException("La cantidad a transferir debe ser de al menos 1");
+
+    if (string.Equals(receptorMail, emisorMail, StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException("No podés enviarte una entrada a vos mismo");
+
+    await using var connection = _connectionFactory.CreateConnection();
+    await connection.OpenAsync();
+
+    await using var transaction = await connection.BeginTransactionAsync();
+
+    try
+    {
+        // Verificar que el receptor exista
+        await using var cmdReceptor = new NpgsqlCommand(
+            @"SELECT 1
+              FROM usuario
+              WHERE persona_mail = @receptor;",
+            connection,
+            transaction);
+
+        cmdReceptor.Parameters.AddWithValue("receptor", receptorMail);
+
+        if (await cmdReceptor.ExecuteScalarAsync() == null)
+            throw new KeyNotFoundException("El destinatario no es un usuario registrado");
+
+        // Obtener las entradas disponibles
+        var listaIds = new List<int>();
+
+        await using (var cmdSel = new NpgsqlCommand(@"
+            SELECT id_entrada
+            FROM entrada
+            WHERE fk_habilita_id = @idHabilita
+              AND fk_usuario_mail = @emisor
+              AND estado = 'activa'
+              AND cantidad_transferencias < 3
+            ORDER BY id_entrada
+            LIMIT @cantidad
+            FOR UPDATE;",
+            connection,
+            transaction))
+        {
+            cmdSel.Parameters.AddWithValue("idHabilita", idHabilita);
+            cmdSel.Parameters.AddWithValue("emisor", emisorMail);
+            cmdSel.Parameters.AddWithValue("cantidad", cantidad);
+
+            await using var reader = await cmdSel.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                listaIds.Add(reader.GetInt32(0));
+            }
+        }
+
+        if (listaIds.Count < cantidad)
+            throw new InvalidOperationException(
+                "No tenés suficientes entradas disponibles para enviar");
+
+        // Crear transferencias pendientes
+        foreach (var idEntrada in listaIds)
+        {
+            await using var cmdIns = new NpgsqlCommand(@"
+                INSERT INTO transferencia
+                    (estado,
+                     fk_usuario_mail_emisor,
+                     fk_usuario_mail_receptor,
+                     fk_entrada_id)
+                VALUES
+                    ('pendiente',
+                     @emisor,
+                     @receptor,
+                     @idEntrada);",
+                connection,
+                transaction);
+
+            cmdIns.Parameters.AddWithValue("emisor", emisorMail);
+            cmdIns.Parameters.AddWithValue("receptor", receptorMail);
+            cmdIns.Parameters.AddWithValue("idEntrada", idEntrada);
+
+            await cmdIns.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+
+        return listaIds.Count;
+    }
+    catch
+    {
+        await transaction.RollbackAsync();
+        throw;
+    }
+}
+
     public async Task<bool> MarcarEntradaComoUtilizadaAsync(int entradaId, string mailUsuario, string? mailFuncionario, string tokenUtilizado, string numeroDispositivo)
     {
         await using var connection = _connectionFactory.CreateConnection();

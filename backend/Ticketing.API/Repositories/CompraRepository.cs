@@ -164,6 +164,8 @@ public class CompraRepository : ICompraRepository
         decimal montoTotal = precioUnitario * request.Cantidad * (1 + porcentajeComision / 100m);
 
         //Transaccion para insertar ambos o ninguno.
+        //Aunque aca se pudieron implementar triggers preferimos hacerlo con una trasferencia para probar métodos distintos.
+
 
         await using var transaction = await connection.BeginTransactionAsync();
 

@@ -9,5 +9,6 @@ public interface IEntradaRepository
     Task<IReadOnlyCollection<EntradaCodigoQrDto>>ObtenerEntradasQr(string mail);
     Task<bool> MarcarEntradaComoUtilizadaAsync(int entradaId, string mailUsuario, string? mailFuncionario, string tokenUtilizado, string numeroDispositivo);
     Task<List<MisEntradasGrupoDto>> GetMisEntradasAsync(string mail);
+    Task<int> TransferirAsync(int idHabilita, int cantidad, string emisorMail, string receptorMail);
 
 }
