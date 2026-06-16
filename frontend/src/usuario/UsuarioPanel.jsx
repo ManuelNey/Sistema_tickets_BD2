@@ -4,6 +4,7 @@ import Sidebar from '../shared/Sidebar'
 import ComprarEntradas from './ComprarEntradas'
 
 import MisReservas from './MisReservas'
+import MisEntradas from './MisEntradas'
 import CodigoQr from './CodigoQr'
 
 // Panel del costadito, no es side bar pero es maso así.
@@ -36,6 +37,8 @@ function UsuarioPanel({ onLogout, user }) {
       <section className="dashboard-content" aria-labelledby="dashboard-title">
         {activeTab === 'comprar' ? (
           <ComprarEntradas />
+        ) : activeTab === 'entradas' ? (
+          <MisEntradas />
         ) : activeTab === 'reservas' ? (
           <MisReservas />
         ) : activeTab === 'qr' ? (

@@ -39,6 +39,20 @@ public class EntradasController : ControllerBase
         return Ok(disponibilidad);
     }
 
+    [HttpGet("mis-entradas")]
+    [Authorize(Roles = "usuario")]
+    // GET /api/entradas/mis-entradas
+    // Entradas que el usuario posee (disponibles + enviadas pendientes), agrupadas por partido+sector.
+    public async Task<ActionResult<List<MisEntradasGrupoDto>>> MisEntradas()
+    {
+        var mail = User.FindFirstValue("mail");
+        if (mail == null)
+            return Unauthorized(new { message = "Usuario no autenticado" });
+
+        var entradas = await _entradaRepository.GetMisEntradasAsync(mail);
+        return Ok(entradas);
+    }
+
     [HttpPost("{idEntrada:int}/Qr")]
     [Authorize(Roles = "usuario")]
     public async Task<ActionResult> GenerarQr(int idEntrada)

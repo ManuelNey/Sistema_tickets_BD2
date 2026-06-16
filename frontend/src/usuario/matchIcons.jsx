@@ -17,6 +17,27 @@ export function TrophyIcon() {
   )
 }
 
+// Avioncito de papel para el boton "Enviar Entrada" (mismo trazo que el icono del sidebar).
+// Estilos inline para que herede el color del texto del boton sin depender de CSS externo.
+export function SendIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 4 3 12l7 2 2 7 9-17Z" />
+      <path d="m10 14 5-5" />
+    </svg>
+  )
+}
+
 export function InfoLine({ icon, text, highlight = false }) {
   return (
     <p className={`match-info ${highlight ? 'is-highlight' : ''}`}>
