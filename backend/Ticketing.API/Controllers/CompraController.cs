@@ -94,7 +94,7 @@ public class CompraController : ControllerBase
         }
     }
 
-    // Listado de todas las reservas/compras del usuario autenticado.
+    // Listado de todas las reservas/compras del usuario autenticado (cualquier estado).
     [HttpGet("mis-reservas")]
     [Authorize(Roles = "usuario")]
     public async Task<ActionResult> MisReservas()
@@ -104,6 +104,32 @@ public class CompraController : ControllerBase
             return Unauthorized(new { message = "Usuario no autenticado" });
 
         var reservas = await _compraRepository.GetMisReservasAsync(mail);
+        return Ok(reservas);
+    }
+
+    // Reservas pendientes de pago del usuario (las que se muestran por defecto en el front).
+    [HttpGet("mis-reservas/pendientes")]
+    [Authorize(Roles = "usuario")]
+    public async Task<ActionResult> MisReservasPendientes()
+    {
+        var mail = User.FindFirstValue("mail");
+        if (mail == null)
+            return Unauthorized(new { message = "Usuario no autenticado" });
+
+        var reservas = await _compraRepository.GetMisReservasAsync(mail, "pendiente");
+        return Ok(reservas);
+    }
+
+    // Compras ya pagadas del usuario (segunda solapa del front).
+    [HttpGet("mis-reservas/pagadas")]
+    [Authorize(Roles = "usuario")]
+    public async Task<ActionResult> MisReservasPagadas()
+    {
+        var mail = User.FindFirstValue("mail");
+        if (mail == null)
+            return Unauthorized(new { message = "Usuario no autenticado" });
+
+        var reservas = await _compraRepository.GetMisReservasAsync(mail, "pagada");
         return Ok(reservas);
     }
 

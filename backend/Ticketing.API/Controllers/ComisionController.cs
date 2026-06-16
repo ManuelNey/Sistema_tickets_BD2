@@ -17,7 +17,7 @@ public class ComisionController : ControllerBase
         _comisionRepository = comisionRepository;
     }
 
-    // Comisión vigente hoy. Si no hay ninguna, devuelve porcentaje 0 (sin cargo).
+    // Comisión vigente hoy. Si no hay ninguna, devuelve porcentaje 0, solo precio base
     [HttpGet("vigente")]
     [Authorize(Roles = "admin,usuario")]
     public async Task<ActionResult> Vigente()

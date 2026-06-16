@@ -13,5 +13,6 @@ public class CompraDetalleDto
     public string Estadio { get; set; } = "";
     public string Sector { get; set; } = "";
     public int Cantidad { get; set; }
-    public DateTime FechaReserva { get; set; }   // compra.fecha, la usa el front para el countdown de los 30 min
+    public DateTime FechaReserva { get; set; }   // compra.fecha, la usa el front para el countdown de los 30 min. 
+    // Después vamos a hacer que la bd la cancele automáticamente, pero por ahora el front la cancela cuando se cumple el tiempo.
 }
