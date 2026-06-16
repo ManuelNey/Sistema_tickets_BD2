@@ -100,7 +100,8 @@
 }
 .pago-field { margin-bottom: 1rem; }
 .pago-field label { display: block; font-size: 0.85rem; color: #374151; margin-bottom: 0.35rem; }
-.pago-field input {
+.pago-field input,
+.pago-field select {
   width: 100%;
   padding: 0.7rem 0.8rem;
   border: 1px solid #d1d5db;
@@ -272,3 +273,57 @@
 .stock-badge.is-disponible { color: #ddd6fe; background: #5b21b6; }
 
 .entrada-card-body .btn-primary { margin-top: 0.25rem; }
+
+/* --- Enviar Entrada --- */
+.enviar-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+.enviar-row span {
+  display: block;
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-bottom: 0.15rem;
+}
+.enviar-row strong { font-weight: 600; color: #111827; }
+
+.enviar-resumen {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.enviar-resumen > div { display: flex; justify-content: space-between; }
+.enviar-resumen span { color: #6b7280; font-size: 0.9rem; }
+.enviar-resumen strong { color: #111827; }
+
+.enviar-nota {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.82rem;
+  color: #166534;
+  margin: 0 0 1rem;
+}
+
+/* Modal de confirmación de envío */
+.enviar-exito { text-align: center; }
+.enviar-exito h2 { margin: 0 0 0.5rem; font-size: 1.5rem; color: #111827; }
+.enviar-exito p { color: #6b7280; margin: 0 0 1.5rem; line-height: 1.5; }
+.enviar-exito strong { color: #111827; }
+.enviar-exito-check {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  font-weight: 700;
+}

@@ -2,12 +2,17 @@ import { useEffect, useState } from 'react'
 import { InfoLine, TrophyIcon, SendIcon } from './matchIcons'
 import { formatDate, formatTime } from './format'
 import TeamBadge from './TeamBadge'
+import EnviarEntrada from './EnviarEntrada'
 import './reserva.css'
 
 function MisEntradas() {
   const [grupos, setGrupos] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Maquina de estados simple: list -> enviar.
+  const [view, setView] = useState('list')
+  const [grupoSel, setGrupoSel] = useState(null)
 
   const cargar = async () => {
     setLoading(true)
@@ -28,13 +33,31 @@ function MisEntradas() {
   }
 
   useEffect(() => {
-    // Diferimos la carga fuera del render sincrono (mismo criterio que Mis Reservas).
+    // Diferimos la carga fuera del render sincrono igual que con misReservas.jsx 
     Promise.resolve().then(cargar)
   }, [])
 
-  // El flujo de envío/transferencia se implementa en una etapa posterior.
-  const handleEnviar = () => {
-    // TODO: abrir el flujo de envío de entrada (transferencias).
+  // Abre la pantalla de envío con el grupo elegido.
+  const handleEnviar = (grupo) => {
+    setGrupoSel(grupo)
+    setView('enviar')
+  }
+
+  // Vuelve al listado tras enviar con éxito y recarga (el modal ya confirmó el envío).
+  const handleEnviado = () => {
+    setView('list')
+    setGrupoSel(null)
+    cargar()
+  }
+
+  if (view === 'enviar' && grupoSel) {
+    return (
+      <EnviarEntrada
+        grupo={grupoSel}
+        onVolver={() => { setView('list'); setGrupoSel(null) }}
+        onEnviado={handleEnviado}
+      />
+    )
   }
 
   return (
