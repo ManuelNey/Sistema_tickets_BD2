@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import BallLogo from '../shared/BallLogo'
 import Sidebar from '../shared/Sidebar'
+import SidebarIcon from '../shared/SidebarIcon'
 import ComprarEntradas from './ComprarEntradas'
-
 import MisReservas from './MisReservas'
 import MisEntradas from './MisEntradas'
 import CodigoQr from './CodigoQr'
+import Ticket from '../assets/ticket.png'
 
 // Panel del costadito, no es side bar pero es maso así.
 const userTabs = [
@@ -18,19 +19,44 @@ const userTabs = [
   { id: 'recibidas', label: 'Recibidas', icon: 'inbox' },
 ]
 
-//Panel principal del usuario, con el sidebar y el contenido de cada sección. 
+//Panel principal del usuario, con el sidebar y el contenido de cada sección.
 function UsuarioPanel({ onLogout, user }) {
   const [activeTab, setActiveTab] = useState('comprar')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const selectedTab = userTabs.find((tab) => tab.id === activeTab)
+
+  // Cambia tab y cierra el drawer en mobile.
+  const handleTabChange = (id) => {
+    setActiveTab(id)
+    setSidebarOpen(false)
+  }
 
   return (
     <main className="dashboard-shell">
+      {/* Header móvil — oculto en desktop vía CSS */}
+      <header className="mobile-header">
+        <div className="mobile-header-brand">
+          <img src={Ticket} alt="TicketMatch" className="mobile-header-logo" />
+          <span>TicketMatch</span>
+        </div>
+        <button
+          className="mobile-menu-btn"
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menú"
+        >
+          <SidebarIcon name="menu" />
+        </button>
+      </header>
+
       <Sidebar
         activeTab={activeTab}
         brandSubtitle="Portal de Usuario"
+        isOpen={sidebarOpen}
         label="Opciones de usuario"
+        onClose={() => setSidebarOpen(false)}
         onLogout={onLogout}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         tabs={userTabs}
       />
 
