@@ -63,5 +63,38 @@ public class EstadisticasRepository : IEstadisticasRepository
         return encuentros;
     }
 
+    public async Task<IReadOnlyCollection<TopUsuariosMasEntradasCompradasDto>> GetAllUsers()
+    {
+        var usuarios = new List<TopUsuariosMasEntradasCompradasDto>();
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            @"SELECT
+                c.fk_usuario_mail as mail,
+                COUNT(e.id_entrada) AS cantidad_entradas
+            FROM compra c
+            JOIN entrada e ON e.fk_compra_id = c.id_compra
+            WHERE c.estado = 'pagada'
+            GROUP BY c.fk_usuario_mail
+            ORDER BY cantidad_entradas DESC
+            LIMIT 5;", connection);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+
+        while (await reader.ReadAsync())
+        {
+            usuarios.Add(new TopUsuariosMasEntradasCompradasDto
+            {
+                Cantidad = reader.GetInt32(reader.GetOrdinal("cantidad_entradas")),
+                Mail = reader.GetString(reader.GetOrdinal("mail")),
+            });
+        }
+
+        return usuarios;
+    }
+
     
 }

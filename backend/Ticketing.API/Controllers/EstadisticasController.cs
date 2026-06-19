@@ -27,4 +27,12 @@ public class EstadisticasController : ControllerBase
         return Ok(encuentros);
     }
 
+    [HttpGet("TopUsuarios")]
+    [Authorize (Roles = "admin")]
+    public async Task<ActionResult<IReadOnlyCollection<TopUsuariosMasEntradasCompradasDto>>> GetAllUsers()
+    {
+        var usuarios = await _estadisticasRepository.GetAllUsers();
+        return Ok(usuarios);
+    }
+
 }
