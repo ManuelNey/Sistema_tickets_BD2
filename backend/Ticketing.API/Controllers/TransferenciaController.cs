@@ -18,6 +18,8 @@ public class TransferenciaController : ControllerBase
     {
         _transferenciaRepository = transferenciaRepository;
     }
+
+
     [HttpGet]
     [Authorize (Roles = "usuario")]
 
@@ -32,6 +34,49 @@ public class TransferenciaController : ControllerBase
 
         var transferencias = await _transferenciaRepository.GetAllAsync(mailEmisorClaim);
         return Ok(transferencias);
+    }
+
+    [HttpGet("recibidas")]
+    [Authorize (Roles = "usuario")]
+
+    public async Task<ActionResult<IReadOnlyCollection<TransferenciasRecibidasDto>>> GetAllRecibidas()
+    {
+        var mailReceptorClaim = User.FindFirst("mail")?.Value;
+
+        if (string.IsNullOrWhiteSpace(mailReceptorClaim))
+        {
+            return Unauthorized();
+        }
+
+        var transferencias = await _transferenciaRepository.GetAllReceived(mailReceptorClaim);
+        return Ok(transferencias);
+    }
+
+    [HttpPut("{id:int}/resolver")]
+    [Authorize(Roles = "usuario")]
+    public async Task<ActionResult<ResolverTransferenciaDto>> ResolverTransferencia(
+        int id,
+        [FromBody] ResolverTransferenciaDto transferencia)
+    {
+        var mailReceptorClaim = User.FindFirst("mail")?.Value;
+
+        if (string.IsNullOrWhiteSpace(mailReceptorClaim))
+        {
+            return Unauthorized();
+        }
+
+        var transferenciaResuelta = await _transferenciaRepository.ResolverTransferencia(
+            id,
+            transferencia,
+            mailReceptorClaim
+        );
+
+        if (transferenciaResuelta == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(transferenciaResuelta);
     }
 
 }
