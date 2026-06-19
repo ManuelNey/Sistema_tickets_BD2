@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import BallLogo from '../shared/BallLogo'
 import Sidebar from '../shared/Sidebar'
+import SidebarIcon from '../shared/SidebarIcon'
 import EncuentrosAdmin from './EncuentrosAdmin'
 import DispositivosAdmin from './DispositivosAdmin'
 import EstadiosAdmin from './EstadiosAdmin'
 import SectoresAdmin from './SectoresAdmin'
+import Ticket from '../assets/ticket.png'
 
 const adminTabs = [
   { id: 'dashboard', label: 'Dashboard', icon: 'chart' },
@@ -16,20 +18,39 @@ const adminTabs = [
 function AdminPanel({ onLogout, user }) {
   const [activeTab, setActiveTab] = useState('estadios')
   const [selectedStadiumForSectors, setSelectedStadiumForSectors] = useState(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const selectedTab = adminTabs.find((tab) => tab.id === activeTab)
 
   const changeTab = (tabId) => {
     setSelectedStadiumForSectors(null)
     setActiveTab(tabId)
+    setSidebarOpen(false)
   }
 
   return (
     <main className="dashboard-shell">
+      {/* Header móvil — oculto en desktop vía CSS */}
+      <header className="mobile-header">
+        <div className="mobile-header-brand">
+          <img src={Ticket} alt="TicketMatch" className="mobile-header-logo" />
+          <span>TicketMatch</span>
+        </div>
+        <button
+          className="mobile-menu-btn"
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menú"
+        >
+          <SidebarIcon name="menu" />
+        </button>
+      </header>
+
       <Sidebar
         activeTab={activeTab}
-        brandIcon="chart"
         brandSubtitle="Panel Admin"
+        isOpen={sidebarOpen}
         label="Opciones de administrador"
+        onClose={() => setSidebarOpen(false)}
         onLogout={onLogout}
         onTabChange={changeTab}
         tabs={adminTabs}
