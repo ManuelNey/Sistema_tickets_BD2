@@ -121,6 +121,11 @@ function SidebarIcon({ name }) {
         <path d="M6 4h12v16l-6-4-6 4V4Z" />
       </>
     ),
+    menu: (
+      <>
+        <path d="M3 6h18M3 12h18M3 18h18" />
+      </>
+    ),
   }
 
   return (
