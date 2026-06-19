@@ -59,6 +59,7 @@ builder.Services.AddSingleton<IComisionRepository, ComisionRepository>();
 builder.Services.AddSingleton<IPaisRepository, PaisRepository>();
 builder.Services.AddSingleton<IDispositivoRepository, DispositivoRepository>();
 builder.Services.AddSingleton<IFuncionarioRepository, FuncionarioRepository>();
+builder.Services.AddSingleton<ITransferenciaRepository, TransferenciaRepository>();
 
 var app = builder.Build();
 
