@@ -80,7 +80,10 @@ function DispositivosAdmin() {
   }
 
   const updateDeviceField = (field, value) => {
-    const nextValue = field === 'numero' ? value.replace(/\D/g, '').slice(0, 4) : value
+    const nextValue = field === 'numero'
+      ? value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase()
+      : value
+
     setDeviceForm((current) => ({ ...current, [field]: nextValue }))
   }
 
@@ -88,15 +91,15 @@ function DispositivosAdmin() {
     event.preventDefault()
     setDeviceFormError('')
 
-    if (!/^\d{4}$/.test(deviceForm.numero)) {
-      setDeviceFormError('El numero debe tener exactamente 4 digitos')
+    if (!/^[a-zA-Z0-9]{6}$/.test(deviceForm.numero)) {
+      setDeviceFormError('El numero debe tener exactamente 6 caracteres alfanumericos')
       return
     }
 
     setDeviceSaving(true)
 
     const payload = {
-      numeroDispositivo: `QR${deviceForm.numero}`,
+      numeroDispositivo: deviceForm.numero,
       descripcion: deviceForm.descripcion,
     }
 
@@ -570,18 +573,15 @@ function DeviceModal({ error, form, isSaving, onChange, onClose, onSubmit }) {
         <form className="stadium-form" onSubmit={onSubmit}>
           <label>
             <span>Numero del Dispositivo</span>
-            <div className="device-number-field">
-              <strong>QR</strong>
-              <input
-                required
-                inputMode="numeric"
-                maxLength={4}
-                pattern="\d{4}"
-                placeholder="0001"
-                value={form.numero}
-                onChange={(event) => onChange('numero', event.target.value)}
-              />
-            </div>
+            <input
+              required
+              inputMode="text"
+              maxLength={6}
+              pattern="[A-Za-z0-9]{6}"
+              placeholder="AB1203"
+              value={form.numero}
+              onChange={(event) => onChange('numero', event.target.value)}
+            />
           </label>
 
           <label>
