@@ -65,7 +65,8 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
                         ON c.fk_encuentro = ex.id_encuentro
                     LEFT JOIN ventas v
                         ON v.fk_encuentro = ex.id_encuentro
-                    WHERE ex.estado = 'programado'
+                    WHERE ex.estado = 'programado' and
+                    
                     GROUP BY
                         ex.id_encuentro,
                         ex.fecha,
