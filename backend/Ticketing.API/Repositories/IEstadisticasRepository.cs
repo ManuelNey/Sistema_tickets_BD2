@@ -5,4 +5,5 @@ namespace Ticketing.API.Repositories;
 public interface IEstadisticasRepository
 {
     Task<IReadOnlyCollection<TopEncuentrosMasVendidosDto>> GetAllAsync();
+    Task<IReadOnlyCollection<TopUsuariosMasEntradasCompradasDto>> GetAllUsers();
 }
