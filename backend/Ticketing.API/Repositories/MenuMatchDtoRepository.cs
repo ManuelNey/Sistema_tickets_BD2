@@ -14,7 +14,8 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
     }
 
     // Obtiene el menú de partidos disponibles, con información de estadio, equipos, fecha, precios y cupos disponibles.
-    public async Task<IReadOnlyCollection<EncuentroMenuDto>> GetMenuMatchesAsync()
+    // Admite filtros opcionales por equipo (local o visitante) y por estadio.
+    public async Task<IReadOnlyCollection<EncuentroMenuDto>> GetMenuMatchesAsync(int? equipoId = null, int? estadioId = null)
     {
         var menuMatches = new List<EncuentroMenuDto>();
 
@@ -23,8 +24,16 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
             await using var connection = _connectionFactory.CreateConnection();
             await connection.OpenAsync();
 
+            var whereExtras = new System.Text.StringBuilder();
+            if (equipoId.HasValue)
+                whereExtras.Append(" AND (ex.fk_equipo_local = @equipoId OR ex.fk_equipo_visitante = @equipoId)");
+                // Posibilidad de filtrar por equipo
+            if (estadioId.HasValue)
+                whereExtras.Append(" AND ex.fk_estadio = @estadioId");
+                // Posibilidad de filtrar por estadio
+
             await using var command = new NpgsqlCommand(
-            @"WITH capacidad AS (
+            $@"WITH capacidad AS (
                         SELECT
                             h.fk_encuentro,
                             SUM(s.capacidad_maxima) AS capacidad_total
@@ -44,10 +53,13 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
                     )
                     SELECT
                         ex.id_encuentro AS id_encuentro,
+                        est.id_estadio AS id_estadio,
                         ex.fecha::DATE AS fecha,
                         ex.fecha::TIME AS hora,
                         est.nombre AS estadio,
+                        local.id_equipo AS id_equipo_local,
                         local.pais AS equipo_local,
+                        visitante.id_equipo AS id_equipo_visitante,
                         visitante.pais AS equipo_visitante,
                         MIN(h.precio) AS precio_minimo,
                         MAX(h.precio) AS precio_maximo,
@@ -65,17 +77,26 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
                         ON c.fk_encuentro = ex.id_encuentro
                     LEFT JOIN ventas v
                         ON v.fk_encuentro = ex.id_encuentro
-                    WHERE ex.estado = 'programado'
-                    
+                    WHERE ex.estado = 'programado'{whereExtras}
                     GROUP BY
                         ex.id_encuentro,
+                        est.id_estadio,
                         ex.fecha,
                         est.nombre,
+                        local.id_equipo,
                         local.pais,
+                        visitante.id_equipo,
                         visitante.pais,
                         c.capacidad_total,
                         v.entradas_vendidas
                     ORDER BY ex.fecha;", connection);
+
+            if (equipoId.HasValue)
+                command.Parameters.AddWithValue("equipoId", equipoId.Value);
+                // Agrega el parámetro del equipo si se proporcionó
+            if (estadioId.HasValue)
+                command.Parameters.AddWithValue("estadioId", estadioId.Value);
+                // Agrega el parámetro del estadio si se proporcionó
 
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())
@@ -102,8 +123,11 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
     private static EncuentroMenuDto MapMatchDto(NpgsqlDataReader reader)
     {
         var ordEncuentro = reader.GetOrdinal("id_encuentro");
+        var ordIdEstadio = reader.GetOrdinal("id_estadio");
         var ordStadium = reader.GetOrdinal("estadio");
+        var ordIdLocal = reader.GetOrdinal("id_equipo_local");
         var ordLocal = reader.GetOrdinal("equipo_local");
+        var ordIdVisitor = reader.GetOrdinal("id_equipo_visitante");
         var ordVisitor = reader.GetOrdinal("equipo_visitante");
         var ordHora = reader.GetOrdinal("hora");
         var ordFecha = reader.GetOrdinal("fecha");
@@ -114,8 +138,11 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
         return new EncuentroMenuDto
         {
             IdEncuentro = reader.GetInt32(ordEncuentro),
+            IdEstadio = reader.GetInt32(ordIdEstadio),
             Estadio = reader.GetString(ordStadium),
+            IdEquipoLocal = reader.GetInt32(ordIdLocal),
             EquipoLocal = reader.GetString(ordLocal),
+            IdEquipoVisitante = reader.GetInt32(ordIdVisitor),
             EquipoVisitante = reader.GetString(ordVisitor),
             Hora = reader.IsDBNull(ordHora) ? default : reader.GetFieldValue<TimeOnly>(ordHora),
             Fecha = reader.IsDBNull(ordFecha) ? default : reader.GetFieldValue<DateOnly>(ordFecha),

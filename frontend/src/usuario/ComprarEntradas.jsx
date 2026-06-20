@@ -9,6 +9,10 @@ import './reserva.css'
 
 function ComprarEntradas() {
   const [matches, setMatches] = useState([])
+  const [allTeams, setAllTeams] = useState([])
+  const [estadios, setEstadios] = useState([])
+  const [equipoId, setEquipoId] = useState('')
+  const [estadioId, setEstadioId] = useState('')
   const [matchesError, setMatchesError] = useState('')
   const [matchesLoading, setMatchesLoading] = useState(false)
 
@@ -18,33 +22,61 @@ function ComprarEntradas() {
   const [pedido, setPedido] = useState(null)
   const [resumen, setResumen] = useState(null)
 
-  useEffect(() => {
-    const loadMatches = async () => {
-      setMatchesError('')
-      setMatchesLoading(true)
+  const fetchMatches = async (eqId, estId) => {
+    setMatchesError('')
+    setMatchesLoading(true)
+    try {
+      const token = localStorage.getItem('ticketmatch-token')
+      const params = new URLSearchParams()
+      if (eqId) params.append('equipoId', eqId)
+      if (estId) params.append('estadioId', estId)
+      const qs = params.toString()
+      const res = await fetch(
+        `http://localhost:8080/api/menumatch/matches${qs ? '?' + qs : ''}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (!res.ok) throw new Error()
+      setMatches(await res.json())
+    } catch {
+      setMatchesError('No se pudieron cargar los partidos')
+    } finally {
+      setMatchesLoading(false)
+    }
+  }
 
+  useEffect(() => {
+    const init = async () => {
+      setMatchesLoading(true)
+      setMatchesError('')
       try {
         const token = localStorage.getItem('ticketmatch-token')
-        const response = await fetch('http://localhost:8080/api/menumatch/matches', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const headers = { Authorization: `Bearer ${token}` }
+        const [matchRes, estadiosRes] = await Promise.all([
+          fetch('http://localhost:8080/api/menumatch/matches', { headers }),
+          fetch('http://localhost:8080/api/estadios', { headers }),
+        ])
+        if (!matchRes.ok || !estadiosRes.ok) throw new Error()
+        const [matchData, estadiosData] = await Promise.all([matchRes.json(), estadiosRes.json()])
+
+        // Extraer equipos únicos para el select
+        const teamsMap = new Map()
+        matchData.forEach(m => {
+          if (!teamsMap.has(m.idEquipoLocal)) teamsMap.set(m.idEquipoLocal, m.equipoLocal)
+          if (!teamsMap.has(m.idEquipoVisitante)) teamsMap.set(m.idEquipoVisitante, m.equipoVisitante)
         })
-
-        if (!response.ok) {
-          throw new Error('Matches request failed')
-        }
-
-        const data = await response.json()
-        setMatches(data)
+        setAllTeams(
+          Array.from(teamsMap, ([id, nombre]) => ({ id, nombre }))
+            .sort((a, b) => a.nombre.localeCompare(b.nombre))
+        )
+        setEstadios(estadiosData)
+        setMatches(matchData)
       } catch {
         setMatchesError('No se pudieron cargar los partidos')
       } finally {
         setMatchesLoading(false)
       }
     }
-
-    loadMatches()
+    init()
   }, [])
 
 
@@ -115,19 +147,33 @@ function ComprarEntradas() {
         <div className="filters-grid">
           <label>
             <span>Filtrar por equipo</span>
-            <select defaultValue="todos">
-              <option value="todos">Todos los equipos</option>
-              <option value="local">Equipo local</option>
-              <option value="visitante">Equipo visitante</option>
+            <select
+              value={equipoId}
+              onChange={e => {
+                setEquipoId(e.target.value)
+                fetchMatches(e.target.value, estadioId)
+              }}
+            >
+              <option value="">Todos los equipos</option>
+              {allTeams.map(t => (
+                <option key={t.id} value={t.id}>{t.nombre}</option>
+              ))}
             </select>
           </label>
 
           <label>
             <span>Filtrar por estadio</span>
-            <select defaultValue="todos">
-              <option value="todos">Todos los estadios</option>
-              <option value="montevideo">Montevideo</option>
-              <option value="otros">Otros estadios</option>
+            <select
+              value={estadioId}
+              onChange={e => {
+                setEstadioId(e.target.value)
+                fetchMatches(equipoId, e.target.value)
+              }}
+            >
+              <option value="">Todos los estadios</option>
+              {estadios.map(e => (
+                <option key={e.id} value={e.id}>{e.nombre}</option>
+              ))}
             </select>
           </label>
         </div>
