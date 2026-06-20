@@ -24,11 +24,13 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
             await using var connection = _connectionFactory.CreateConnection();
             await connection.OpenAsync();
 
-            var extraWhere = new System.Text.StringBuilder();
+            var whereExtras = new System.Text.StringBuilder();
             if (equipoId.HasValue)
-                extraWhere.Append(" AND (ex.fk_equipo_local = @equipoId OR ex.fk_equipo_visitante = @equipoId)");
+                whereExtras.Append(" AND (ex.fk_equipo_local = @equipoId OR ex.fk_equipo_visitante = @equipoId)");
+                // Posibilidad de filtrar por equipo
             if (estadioId.HasValue)
-                extraWhere.Append(" AND ex.fk_estadio = @estadioId");
+                whereExtras.Append(" AND ex.fk_estadio = @estadioId");
+                // Posibilidad de filtrar por estadio
 
             await using var command = new NpgsqlCommand(
             $@"WITH capacidad AS (
@@ -75,7 +77,7 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
                         ON c.fk_encuentro = ex.id_encuentro
                     LEFT JOIN ventas v
                         ON v.fk_encuentro = ex.id_encuentro
-                    WHERE ex.estado = 'programado'{extraWhere}
+                    WHERE ex.estado = 'programado'{whereExtras}
                     GROUP BY
                         ex.id_encuentro,
                         est.id_estadio,
@@ -91,8 +93,10 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
 
             if (equipoId.HasValue)
                 command.Parameters.AddWithValue("equipoId", equipoId.Value);
+                // Agrega el parámetro del equipo si se proporcionó
             if (estadioId.HasValue)
                 command.Parameters.AddWithValue("estadioId", estadioId.Value);
+                // Agrega el parámetro del estadio si se proporcionó
 
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync())

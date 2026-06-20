@@ -21,9 +21,7 @@ public class MenuMatchController : ControllerBase
     // GET /api/MenuMatch/matches?equipoId=5&estadioId=3
     // Muestra el menú de partidos disponibles, con información de estadio, equipos y fecha.
     // Parámetros opcionales: equipoId (filtra partidos donde el equipo juega de local o visitante), estadioId.
-    public async Task<ActionResult<IReadOnlyCollection<EncuentroMenuDto>>> GetMenuMatches(
-        [FromQuery] int? equipoId = null,
-        [FromQuery] int? estadioId = null)
+    public async Task<ActionResult<IReadOnlyCollection<EncuentroMenuDto>>> GetMenuMatches(int? equipoId = null, int? estadioId = null)
     {
         var matches = await _menuMatchRepo.GetMenuMatchesAsync(equipoId, estadioId);
         return Ok(matches);
