@@ -185,6 +185,86 @@ public class UsuarioRepository : IUsuarioRepository
             return MapDto(reader);
     }
 
+    public async Task<bool> UpdateProfileAsync(
+    string mail,
+    ActualizarPerfilDto perfil
+)
+{
+    await using var connection = _connectionFactory.CreateConnection();
+    await connection.OpenAsync();
+
+    using var updatePersonaCmd = connection.CreateCommand();
+
+    updatePersonaCmd.CommandText = @"
+        UPDATE persona
+        SET
+            nombre = @nombre,
+            apellido = @apellido,
+            fecha_nacimiento = @fechaNacimiento,
+            tipo_documento = @tipoDocumento,
+            numero_documento = @numeroDocumento,
+            pais_documento = @paisDocumento,
+            pais_casa = @paisCasa,
+            localidad = @localidad,
+            calle = @calle,
+            numero_casa = @numeroCasa,
+            codigo_postal = @codigoPostal
+        WHERE mail = @mail;";
+
+    updatePersonaCmd.Parameters.AddWithValue("@mail", mail);
+    updatePersonaCmd.Parameters.AddWithValue("@nombre", perfil.Nombre);
+    updatePersonaCmd.Parameters.AddWithValue("@apellido", perfil.Apellido);
+    updatePersonaCmd.Parameters.AddWithValue(
+        "@fechaNacimiento",
+        (object?)perfil.FechaNacimiento ?? DBNull.Value
+    );
+    updatePersonaCmd.Parameters.AddWithValue("@tipoDocumento", perfil.TipoDocumento);
+    updatePersonaCmd.Parameters.AddWithValue("@numeroDocumento", perfil.NumeroDocumento);
+    updatePersonaCmd.Parameters.AddWithValue("@paisDocumento", perfil.PaisDocumento);
+    updatePersonaCmd.Parameters.AddWithValue("@paisCasa", perfil.PaisCasa);
+    updatePersonaCmd.Parameters.AddWithValue("@localidad", perfil.Localidad);
+    updatePersonaCmd.Parameters.AddWithValue("@calle", perfil.Calle);
+    updatePersonaCmd.Parameters.AddWithValue("@numeroCasa", perfil.NumeroCasa);
+    updatePersonaCmd.Parameters.AddWithValue("@codigoPostal", perfil.CodigoPostal);
+
+    var filasActualizadas = await updatePersonaCmd.ExecuteNonQueryAsync();
+
+    if (filasActualizadas == 0)
+    {
+        return false;
+    }
+
+    using var deleteTelefonosCmd = connection.CreateCommand();
+
+    deleteTelefonosCmd.CommandText = @"
+        DELETE FROM telefonos
+        WHERE persona_mail = @mail;";
+
+    deleteTelefonosCmd.Parameters.AddWithValue("@mail", mail);
+
+    await deleteTelefonosCmd.ExecuteNonQueryAsync();
+
+    foreach (var telefono in perfil.Telefonos)
+    {
+        if (string.IsNullOrWhiteSpace(telefono))
+        {
+            continue;
+        }
+
+        using var insertTelefonoCmd = connection.CreateCommand();
+
+        insertTelefonoCmd.CommandText = @"
+            INSERT INTO telefonos (persona_mail, telefono)
+            VALUES (@mail, @telefono);";
+
+        insertTelefonoCmd.Parameters.AddWithValue("@mail", mail);
+        insertTelefonoCmd.Parameters.AddWithValue("@telefono", telefono.Trim());
+
+        await insertTelefonoCmd.ExecuteNonQueryAsync();
+    }
+
+    return true;
+}
 
     // Mapea lo renderizado de la consulta SQL a un DTO, manejando posibles valores nulos
     private static UsuarioResponseDto MapDto(NpgsqlDataReader reader)
