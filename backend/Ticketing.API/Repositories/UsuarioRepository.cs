@@ -124,59 +124,199 @@ public class UsuarioRepository : IUsuarioRepository
         using var cmd = connection.CreateCommand();
 
         cmd.CommandText = @"
-            SELECT
+               SELECT
                 p.mail,
                 p.nombre,
                 p.apellido,
+                p.fecha_nacimiento,
+                p.tipo_documento,
+                p.numero_documento,
+                p.pais_documento,
+                p.pais_casa,
+                p.localidad,
+                p.calle,
+                p.numero_casa,
+                p.codigo_postal,
+                p.contrasena,
+
                 CASE
                     WHEN a.persona_mail IS NOT NULL THEN 'admin'
                     WHEN f.persona_mail IS NOT NULL THEN 'funcionario'
                     WHEN u.persona_mail IS NOT NULL THEN 'usuario'
+                    ELSE ''
                 END AS rol,
+
                 u.identidad_verificada,
                 u.fecha_registro,
                 a.fk_pais_sede,
-                p.contrasena
+
+                COALESCE(
+                    (
+                        SELECT array_agg(t.telefono)
+                        FROM telefonos t
+                        WHERE t.persona_mail = p.mail
+                    ),
+                    ARRAY[]::text[]
+                ) AS telefonos
+
             FROM persona p
-            LEFT JOIN usuario u       ON p.mail = u.persona_mail
-            LEFT JOIN administrador a ON p.mail = a.persona_mail
-            LEFT JOIN funcionario f   ON p.mail = f.persona_mail
-            WHERE p.mail = @mail";
+            LEFT JOIN usuario u
+                ON p.mail = u.persona_mail
+            LEFT JOIN administrador a
+                ON p.mail = a.persona_mail
+            LEFT JOIN funcionario f
+                ON p.mail = f.persona_mail
+            WHERE p.mail = @mail;";
 
-        cmd.Parameters.AddWithValue("@mail", mail);
+            cmd.Parameters.AddWithValue("@mail", mail);
 
-        using var reader = await cmd.ExecuteReaderAsync();
-        if (!await reader.ReadAsync())
-            return null;
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return null;
 
 
-        var hashedPassword = reader.GetString(reader.GetOrdinal("contrasena"));
+            var hashedPassword = reader.GetString(reader.GetOrdinal("contrasena"));
 
-        if (!_passwordService.VerifyPassword(hashedPassword,contrasena))
-        {
-            return null;
-        }
+            if (!_passwordService.VerifyPassword(hashedPassword,contrasena))
+            {
+                return null;
+            }
 
-        return MapDto(reader);
+            return MapDto(reader);
     }
+
+
+   public async Task<UsuarioResponseDto?> AuthenticateAsync(
+    string mail,
+    string contrasena
+)
+{
+    await using var connection = _connectionFactory.CreateConnection();
+    await connection.OpenAsync();
+
+    using var cmd = connection.CreateCommand();
+
+    cmd.CommandText = @"
+        SELECT
+            p.mail,
+            p.nombre,
+            p.apellido,
+            p.contrasena,
+            CASE
+                WHEN a.persona_mail IS NOT NULL THEN 'admin'
+                WHEN f.persona_mail IS NOT NULL THEN 'funcionario'
+                WHEN u.persona_mail IS NOT NULL THEN 'usuario'
+            END AS rol,
+            u.identidad_verificada,
+            u.fecha_registro,
+            a.fk_pais_sede,
+            p.tipo_documento,
+            p.numero_documento,
+            p.pais_documento,
+            p.pais_casa,
+            p.localidad,
+            p.calle,
+            p.numero_casa,
+            p.codigo_postal,
+            p.fecha_nacimiento,
+            ARRAY(
+                SELECT t.telefono
+                FROM telefonos t
+                WHERE t.persona_mail = p.mail
+            ) AS telefonos
+        FROM persona p
+        LEFT JOIN usuario u ON p.mail = u.persona_mail
+        LEFT JOIN administrador a ON p.mail = a.persona_mail
+        LEFT JOIN funcionario f ON p.mail = f.persona_mail
+        WHERE p.mail = @mail;";
+
+    cmd.Parameters.AddWithValue("@mail", mail);
+
+    await using var reader = await cmd.ExecuteReaderAsync();
+
+    if (!await reader.ReadAsync())
+        return null;
+
+    var hashGuardado = reader.GetString(reader.GetOrdinal("contrasena"));
+
+    if (!_passwordService.VerifyPassword(contrasena, hashGuardado))
+        return null;
+
+    return MapDto(reader);
+}
+
 
     // Mapea lo renderizado de la consulta SQL a un DTO, manejando posibles valores nulos
     private static UsuarioResponseDto MapDto(NpgsqlDataReader reader)
     {
-        var ordRol     = reader.GetOrdinal("rol");
-        var ordIdV     = reader.GetOrdinal("identidad_verificada");
-        var ordFR      = reader.GetOrdinal("fecha_registro");
-        var ordPais    = reader.GetOrdinal("fk_pais_sede");
+        var ordRol = reader.GetOrdinal("rol");
+        var ordIdV = reader.GetOrdinal("identidad_verificada");
+        var ordFR = reader.GetOrdinal("fecha_registro");
+        var ordPais = reader.GetOrdinal("fk_pais_sede");
+        var ordTelefonos = reader.GetOrdinal("telefonos");
+        var ordFechaNacimiento = reader.GetOrdinal("fecha_nacimiento");
 
         return new UsuarioResponseDto
         {
-            Mail                = reader.GetString(reader.GetOrdinal("mail")),
-            Nombre              = reader.GetString(reader.GetOrdinal("nombre")),
-            Apellido            = reader.GetString(reader.GetOrdinal("apellido")),
-            Rol                 = reader.IsDBNull(ordRol)  ? string.Empty          : reader.GetString(ordRol),
-            IdentidadVerificada = reader.IsDBNull(ordIdV)  ? null                  : reader.GetBoolean(ordIdV),
-            FechaRegistro       = reader.IsDBNull(ordFR)   ? null                  : reader.GetDateTime(ordFR),
-            PaisSede            = reader.IsDBNull(ordPais) ? null                  : reader.GetInt32(ordPais)
+            Mail = reader.GetString(reader.GetOrdinal("mail")),
+            Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+            Apellido = reader.GetString(reader.GetOrdinal("apellido")),
+
+            Rol = reader.IsDBNull(ordRol)
+                ? string.Empty
+                : reader.GetString(ordRol),
+
+            IdentidadVerificada = reader.IsDBNull(ordIdV)
+                ? null
+                : reader.GetBoolean(ordIdV),
+
+            FechaRegistro = reader.IsDBNull(ordFR)
+                ? null
+                : reader.GetDateTime(ordFR),
+
+            PaisSede = reader.IsDBNull(ordPais)
+                ? null
+                : reader.GetInt32(ordPais),
+
+            TipoDocumento = reader.IsDBNull(reader.GetOrdinal("tipo_documento"))
+                ? string.Empty
+                : reader.GetString(reader.GetOrdinal("tipo_documento")),
+
+            NumeroDocumento = reader.IsDBNull(reader.GetOrdinal("numero_documento"))
+                ? string.Empty
+                : reader.GetString(reader.GetOrdinal("numero_documento")),
+
+            PaisDocumento = reader.IsDBNull(reader.GetOrdinal("pais_documento"))
+                ? string.Empty
+                : reader.GetString(reader.GetOrdinal("pais_documento")),
+
+            PaisCasa = reader.IsDBNull(reader.GetOrdinal("pais_casa"))
+                ? string.Empty
+                : reader.GetString(reader.GetOrdinal("pais_casa")),
+
+            Localidad = reader.IsDBNull(reader.GetOrdinal("localidad"))
+                ? string.Empty
+                : reader.GetString(reader.GetOrdinal("localidad")),
+
+            Calle = reader.IsDBNull(reader.GetOrdinal("calle"))
+                ? string.Empty
+                : reader.GetString(reader.GetOrdinal("calle")),
+
+            NumeroCasa = reader.IsDBNull(reader.GetOrdinal("numero_casa"))
+                ? string.Empty
+                : reader.GetString(reader.GetOrdinal("numero_casa")),
+
+            CodigoPostal = reader.IsDBNull(reader.GetOrdinal("codigo_postal"))
+                ? string.Empty
+                : reader.GetString(reader.GetOrdinal("codigo_postal")),
+
+            Telefonos = reader.IsDBNull(ordTelefonos)
+                ? new List<string>()
+                : reader.GetFieldValue<string[]>(ordTelefonos).ToList(),
+
+            FechaNacimiento = reader.IsDBNull(ordFechaNacimiento)
+                ? null
+                : reader.GetFieldValue<DateOnly>(ordFechaNacimiento)
         };
     }
 }

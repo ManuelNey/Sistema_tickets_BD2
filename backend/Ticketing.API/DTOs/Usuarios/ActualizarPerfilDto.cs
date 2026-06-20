@@ -1,15 +1,11 @@
 namespace Ticketing.API.DTOs;
 
-public class UsuarioResponseDto
+public class ActualizarPerfilDto
 {
-    public string Mail { get; set; } = string.Empty;
     public string Nombre { get; set; } = string.Empty;
     public string Apellido { get; set; } = string.Empty;
-    public string Rol { get; set; } = string.Empty;
 
-    public bool? IdentidadVerificada { get; set; }
-    public DateTime? FechaRegistro { get; set; }
-    public int? PaisSede { get; set; }
+    public DateOnly? FechaNacimiento { get; set; }
 
     public string TipoDocumento { get; set; } = string.Empty;
     public string NumeroDocumento { get; set; } = string.Empty;
@@ -22,7 +18,4 @@ public class UsuarioResponseDto
     public string CodigoPostal { get; set; } = string.Empty;
 
     public List<string> Telefonos { get; set; } = new();
-    public DateOnly? FechaNacimiento { get; set; }
-
-    public string Token { get; set; } = string.Empty;
 }
