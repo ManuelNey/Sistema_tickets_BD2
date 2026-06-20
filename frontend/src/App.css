@@ -201,7 +201,7 @@
   height: 100svh;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: 240px minmax(0, 1fr);
   background: #f3f4f7;
   color: #111111;
 }
@@ -220,16 +220,17 @@
 .sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 30px 28px 28px;
+  gap: 12px;
+  padding: 18px 16px;
   border-bottom: 1px solid #2b2b2b;
 }
 
 .sidebar-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   overflow: hidden;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -244,37 +245,39 @@
 .sidebar-brand strong {
   display: block;
   color: #ffffff;
-  font-size: 25px;
+  font-size: 16px;
   line-height: 1.1;
 }
 
 .sidebar-brand span {
   display: block;
-  margin-top: 6px;
+  margin-top: 3px;
   color: #bfd1e8;
-  font-size: 14px;
+  font-size: 11px;
 }
 
 .sidebar-nav {
   display: grid;
   gap: 0;
-  padding: 26px 0;
+  padding: 10px 0;
 }
 
 .sidebar-tab,
 .logout-button {
-  width: 100%;
-  min-height: 60px;
+  width: calc(100% - 16px);
+  min-height: 42px;
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 0 30px;
+  gap: 10px;
+  padding: 0 12px;
+  margin: 1px 8px;
   border: 0;
-  color: #e9e9ee;
+  border-radius: 8px;
+  color: #9ca3af;
   background: transparent;
   font: inherit;
-  font-size: 19px;
-  font-weight: 760;
+  font-size: 13.5px;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
   transition: background 150ms ease, color 150ms ease;
@@ -283,6 +286,7 @@
 .sidebar-tab:hover,
 .logout-button:hover {
   background: #272727;
+  color: #e9e9ee;
 }
 
 .sidebar-tab.is-active {
@@ -291,8 +295,8 @@
 }
 
 .sidebar-icon {
-  width: 24px;
-  height: 24px;
+  width: 17px;
+  height: 17px;
   flex: 0 0 auto;
   fill: none;
   stroke: currentColor;
@@ -302,10 +306,10 @@
 }
 
 .logout-button {
-  width: calc(100% - 34px);
-  min-height: 60px;
-  margin: auto 17px 18px;
-  border-radius: 12px;
+  width: calc(100% - 16px);
+  min-height: 42px;
+  margin: auto 8px 14px;
+  border-radius: 8px;
   background: #303030;
   color: #ffffff;
 }
@@ -357,21 +361,21 @@
 }
 
 .buy-header {
-  margin-bottom: 28px;
+  margin-bottom: 18px;
 }
 
 .buy-header h1 {
   margin: 0;
   color: #08080b;
-  font-size: 38px;
+  font-size: 24px;
   line-height: 1.1;
   font-weight: 800;
 }
 
 .buy-header p {
-  margin: 12px 0 0;
+  margin: 6px 0 0;
   color: #5f6a7e;
-  font-size: 20px;
+  font-size: 14px;
 }
 
 .filters-card {
@@ -446,10 +450,16 @@
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
-  border: 1px solid #d7d9e2;
+  background: #f8f7ff;
+  border: 1px solid #e2d9f3;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.11);
+  box-shadow: 0 4px 12px rgba(100, 60, 180, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.match-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 44px rgba(100, 60, 180, 0.18);
 }
 
 .match-hero {
@@ -568,7 +578,7 @@
   gap: 18px;
   margin-top: 18px;
   padding-top: 18px;
-  border-top: 1px solid #d7d9e2;
+  border-top: 1px solid #e2d9f3;
 }
 
 .price-block span {
@@ -598,7 +608,8 @@
   font-size: 18px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 10px 22px rgba(155, 45, 238, 0.24);
+  box-shadow: 0 10px 28px rgba(155, 45, 238, 0.4);
+  transition: background 0.15s ease;
 }
 
 .buy-button:hover {
@@ -608,9 +619,9 @@
 .matches-status {
   margin: 0;
   padding: 20px;
-  color: #5f6a7e;
-  background: #ffffff;
-  border: 1px solid #d7d9e2;
+  color: #687083;
+  background: #f8f7ff;
+  border: 1px solid #e2d9f3;
   border-radius: 12px;
   font-size: 17px;
 }
