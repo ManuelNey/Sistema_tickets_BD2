@@ -7,4 +7,5 @@ public interface IEstadisticasRepository
     Task<IReadOnlyCollection<TopEncuentrosMasVendidosDto>> GetAllAsync();
     Task<IReadOnlyCollection<TopUsuariosMasEntradasCompradasDto>> GetAllUsers();
     Task<PorcentajeCanceladasDto> GetPorcentajeCanceladas();
+    Task<IReadOnlyCollection<EstadioEntradasDto>> GetEstadioEntradas();
 }

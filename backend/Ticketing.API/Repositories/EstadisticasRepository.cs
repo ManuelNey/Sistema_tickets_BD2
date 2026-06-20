@@ -145,5 +145,36 @@ public class EstadisticasRepository : IEstadisticasRepository
         };
     }
 
+    public async Task<IReadOnlyCollection<EstadioEntradasDto>> GetEstadioEntradas()
+    {
+        var estadios = new List<EstadioEntradasDto>();
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            @"SELECT count(e.id_entrada) as cantidad, est.nombre
+            FROM compra c JOIN usuario u on c.fk_usuario_mail = u.persona_mail
+            JOIN entrada e on c.id_compra = e.fk_compra_id
+            JOIN habilita h on e.fk_habilita_id = h.id
+            JOIN sector s on h.fk_sector = s.id_sector
+            JOIN estadio est on s.fk_estadio = est.id_estadio
+            WHERE c.estado='pagada'
+            GROUP BY est.nombre;", connection);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+
+        while (await reader.ReadAsync())
+        {
+            estadios.Add(new EstadioEntradasDto
+            {
+                CantidadEntradas = reader.GetInt32(reader.GetOrdinal("cantidad")),
+                NombreEstadio = reader.GetString(reader.GetOrdinal("nombre")),
+            });
+        }
+
+        return estadios;
+    }
     
 }

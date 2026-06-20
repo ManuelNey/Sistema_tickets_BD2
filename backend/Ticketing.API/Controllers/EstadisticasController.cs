@@ -42,5 +42,12 @@ public class EstadisticasController : ControllerBase
         var porcentaje = await _estadisticasRepository.GetPorcentajeCanceladas();
         return Ok(porcentaje);
     }
+    [HttpGet("EntradasPorEstadio")]
+    [Authorize (Roles = "admin")]
+    public async Task<ActionResult<IReadOnlyCollection<EstadioEntradasDto>>> GetEstadiosEntradas()
+    {
+        var estadios = await _estadisticasRepository.GetEstadioEntradas();
+        return Ok(estadios);
+    }
 
 }
