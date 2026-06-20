@@ -13,6 +13,8 @@ public class RegistroDto
     public string Calle { get; set; } = string.Empty;
     public string NumeroCasa { get; set; } = string.Empty;
     public string CodigoPostal { get; set; } = string.Empty;
+    public string Telefono {get; set;} = string.Empty;
     public string Contrasena { get; set; } = string.Empty;
     public DateOnly? FechaNacimiento { get; set; }
+    public string Token {get; set;} = string.Empty;
 }
