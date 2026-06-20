@@ -2,8 +2,9 @@ import { formatDate, formatPrice, formatTime } from './format'
 
 
 // Es la pantalla final cuando la compra se registra correstamente.
-function CompraExitosa({ resumen, onVolver }) {
+function CompraExitosa({ resumen, onIrAMisEntradas, onVolver }) {
   const cantidad = resumen.cantidad ?? resumen.idsEntradas?.length ?? 1
+  const handleIrAMisEntradas = onIrAMisEntradas ?? onVolver
 
   return (
     <div className="exito-view">
@@ -62,13 +63,9 @@ function CompraExitosa({ resumen, onVolver }) {
         </p>
 
         <div className="exito-actions">
-          <button className="exito-download" type="button" disabled>
-            <DownloadIcon />
-            Descargar Entradas
-          </button>
-          <button className="exito-home" type="button" onClick={onVolver}>
-            <HomeIcon />
-            Volver al Inicio
+          <button className="exito-home" type="button" onClick={handleIrAMisEntradas}>
+            <TicketIcon />
+            Ir a Mis Entradas
           </button>
         </div>
       </article>
@@ -118,22 +115,6 @@ function PinIcon() {
     <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true">
       <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" />
       <path d="M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
-    </svg>
-  )
-}
-
-function DownloadIcon() {
-  return (
-    <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 4v10M8 11l4 4 4-4M5 19h14" />
-    </svg>
-  )
-}
-
-function HomeIcon() {
-  return (
-    <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M4 11l8-6 8 6M6 10v9h12v-9" />
     </svg>
   )
 }

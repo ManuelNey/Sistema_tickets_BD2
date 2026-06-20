@@ -226,6 +226,68 @@ public class EncuentroRepository : IEncuentroRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        await using var estadoCommand = new NpgsqlCommand(
+            @"SELECT estado
+            FROM encuentro
+            WHERE id_encuentro = @idEncuentro;",
+            connection);
+
+        estadoCommand.Parameters.AddWithValue("@idEncuentro", id);
+
+        var estadoActual = (string?)await estadoCommand.ExecuteScalarAsync();
+
+        if (estadoActual == null)
+        {
+            return null;
+        }
+
+        if (estadoActual == "finalizado")
+        {
+            return null;
+        }
+
+        if (estadoActual == "en_juego" && encuentro.Estado != "finalizado")
+        {
+            return null;
+        }
+
+        if (estadoActual == "programado" &&
+            encuentro.Estado != "programado" &&
+            encuentro.Estado != "en_juego")
+        {
+            return null;
+        }
+
+        if (estadoActual == "en_juego")
+        {
+            await using var command = new NpgsqlCommand(
+                @"UPDATE encuentro
+                SET estado = @nuevoEstado
+                WHERE id_encuentro = @idEncuentro
+                RETURNING id_encuentro, fecha, fk_equipo_local, fk_equipo_visitante, fk_estadio, estado;",
+                connection);
+
+            command.Parameters.AddWithValue("@nuevoEstado", encuentro.Estado);
+            command.Parameters.AddWithValue("@idEncuentro", id);
+
+            await using var reader = await command.ExecuteReaderAsync();
+
+            if (!await reader.ReadAsync())
+            {
+                return null;
+            }
+
+            return new EncuentroDto
+            {
+                Id = reader.GetInt32(reader.GetOrdinal("id_encuentro")),
+                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
+                EquipoLocal = reader.GetInt32(reader.GetOrdinal("fk_equipo_local")),
+                EquipoVisitante = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
+                Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio")),
+                Estado = reader.GetString(reader.GetOrdinal("estado"))
+            };
+        }
+
         await using var transaction = await connection.BeginTransactionAsync();
 
         try

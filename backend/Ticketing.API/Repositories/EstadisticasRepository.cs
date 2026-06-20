@@ -96,5 +96,54 @@ public class EstadisticasRepository : IEstadisticasRepository
         return usuarios;
     }
 
+    public async Task<PorcentajeCanceladasDto> GetPorcentajeCanceladas()
+    {
+        int canceladas= -1;
+        int totales = -1;
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var command = new NpgsqlCommand(
+            @"SELECT count(id_compra) as canceladas
+            FROM compra
+            WHERE  estado='cancelada';", connection);
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        await reader.ReadAsync();
+
+        canceladas = reader.GetInt32(reader.GetOrdinal("canceladas"));
+        
+
+        await using var connection2 = _connectionFactory.CreateConnection();
+        await connection2.OpenAsync();
+
+        await using var command2 = new NpgsqlCommand(
+            @"SELECT count(id_compra) as total
+            FROM compra;", connection2);
+
+        await using var reader2 = await command2.ExecuteReaderAsync();
+
+        await reader2.ReadAsync();
+
+        totales = reader2.GetInt32(reader2.GetOrdinal("total"));
+        
+        if (canceladas==-1 || totales == -1)
+        {
+            return null;
+        }
+
+        if (totales == 0)
+        {
+            return new PorcentajeCanceladasDto { Porcentaje = 0 };
+        }
+
+        return new PorcentajeCanceladasDto
+        {
+            Porcentaje = ((float)canceladas / totales) * 100
+        };
+    }
+
     
 }

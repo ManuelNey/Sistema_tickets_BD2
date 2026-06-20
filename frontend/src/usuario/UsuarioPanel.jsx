@@ -35,6 +35,10 @@ function UsuarioPanel({ onLogout, user }) {
     setSidebarOpen(false)
   }
 
+  const goToMisEntradas = () => {
+    handleTabChange('entradas')
+  }
+
   return (
     <main className="dashboard-shell">
       {/* Header móvil — oculto en desktop vía CSS */}
@@ -68,11 +72,11 @@ function UsuarioPanel({ onLogout, user }) {
         { activeTab === 'perfil' ? (
           <MiPerfil user={user} />
         ) : activeTab === 'comprar' ? (
-          <ComprarEntradas />
+          <ComprarEntradas onIrAMisEntradas={goToMisEntradas} />
         ) : activeTab === 'entradas' ? (
           <MisEntradas />
         ) : activeTab === 'reservas' ? (
-          <MisReservas />
+          <MisReservas onIrAMisEntradas={goToMisEntradas} />
         ) : activeTab === 'qr' ? (
           <CodigoQr />
         ) : activeTab === 'enviadas' ? (
