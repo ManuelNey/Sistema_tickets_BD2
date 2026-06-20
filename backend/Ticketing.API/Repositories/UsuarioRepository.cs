@@ -186,66 +186,6 @@ public class UsuarioRepository : IUsuarioRepository
     }
 
 
-   public async Task<UsuarioResponseDto?> AuthenticateAsync(
-    string mail,
-    string contrasena
-)
-{
-    await using var connection = _connectionFactory.CreateConnection();
-    await connection.OpenAsync();
-
-    using var cmd = connection.CreateCommand();
-
-    cmd.CommandText = @"
-        SELECT
-            p.mail,
-            p.nombre,
-            p.apellido,
-            p.contrasena,
-            CASE
-                WHEN a.persona_mail IS NOT NULL THEN 'admin'
-                WHEN f.persona_mail IS NOT NULL THEN 'funcionario'
-                WHEN u.persona_mail IS NOT NULL THEN 'usuario'
-            END AS rol,
-            u.identidad_verificada,
-            u.fecha_registro,
-            a.fk_pais_sede,
-            p.tipo_documento,
-            p.numero_documento,
-            p.pais_documento,
-            p.pais_casa,
-            p.localidad,
-            p.calle,
-            p.numero_casa,
-            p.codigo_postal,
-            p.fecha_nacimiento,
-            ARRAY(
-                SELECT t.telefono
-                FROM telefonos t
-                WHERE t.persona_mail = p.mail
-            ) AS telefonos
-        FROM persona p
-        LEFT JOIN usuario u ON p.mail = u.persona_mail
-        LEFT JOIN administrador a ON p.mail = a.persona_mail
-        LEFT JOIN funcionario f ON p.mail = f.persona_mail
-        WHERE p.mail = @mail;";
-
-    cmd.Parameters.AddWithValue("@mail", mail);
-
-    await using var reader = await cmd.ExecuteReaderAsync();
-
-    if (!await reader.ReadAsync())
-        return null;
-
-    var hashGuardado = reader.GetString(reader.GetOrdinal("contrasena"));
-
-    if (!_passwordService.VerifyPassword(contrasena, hashGuardado))
-        return null;
-
-    return MapDto(reader);
-}
-
-
     // Mapea lo renderizado de la consulta SQL a un DTO, manejando posibles valores nulos
     private static UsuarioResponseDto MapDto(NpgsqlDataReader reader)
     {

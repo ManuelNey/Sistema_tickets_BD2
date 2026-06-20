@@ -1,24 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import SidebarIcon from '../shared/SidebarIcon'
 import './MiPerfil.css'
 
 const API_URL = 'http://localhost:8080/api/usuario'
 
 function MiPerfil({ user }) {
-  const [perfil, setPerfil] = useState(user || {})
+  const [perfil, setPerfil] = useState(() => user || {})
   const [editandoSeccion, setEditandoSeccion] = useState(null)
 
-  const [telefonos, setTelefonos] = useState(user?.telefonos || [])
+  const [telefonos, setTelefonos] = useState(() => user?.telefonos || [])
   const [nuevoTelefono, setNuevoTelefono] = useState('')
 
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [mensajeExito, setMensajeExito] = useState('')
-
-  useEffect(() => {
-    setPerfil(user || {})
-    setTelefonos(user?.telefonos || [])
-  }, [user])
 
   const estaEditando = (seccion) => editandoSeccion === seccion
 
@@ -119,17 +114,14 @@ function MiPerfil({ user }) {
             nombre: perfil.nombre || '',
             apellido: perfil.apellido || '',
             fechaNacimiento: perfil.fechaNacimiento || null,
-
             tipoDocumento: perfil.tipoDocumento || '',
             numeroDocumento: perfil.numeroDocumento || '',
             paisDocumento: perfil.paisDocumento || '',
-
             paisCasa: perfil.paisCasa || '',
             localidad: perfil.localidad || '',
             calle: perfil.calle || '',
             numeroCasa: perfil.numeroCasa || '',
             codigoPostal: perfil.codigoPostal || '',
-
             telefonos,
           }),
         }
@@ -143,10 +135,6 @@ function MiPerfil({ user }) {
         )
       }
 
-      // No usamos response.json().
-      // No actualizamos Context.
-      // No actualizamos Local Storage.
-      // Los cambios se verán al cerrar sesión e iniciar sesión nuevamente.
       setMensajeExito(
         'Cambios guardados correctamente. Se verán al volver a iniciar sesión.'
       )
