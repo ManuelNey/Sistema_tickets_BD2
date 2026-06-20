@@ -77,7 +77,7 @@ public class MenuMatchDtoRepository : IMenuMatchDtoRepository
                         ON c.fk_encuentro = ex.id_encuentro
                     LEFT JOIN ventas v
                         ON v.fk_encuentro = ex.id_encuentro
-                    WHERE ex.estado = 'programado'{whereExtras}
+                    WHERE ex.estado = 'programado'{whereExtras} and ex.fecha >= CURRENT_TIMESTAMP
                     GROUP BY
                         ex.id_encuentro,
                         est.id_estadio,
