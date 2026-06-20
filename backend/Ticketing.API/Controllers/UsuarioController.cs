@@ -62,4 +62,29 @@ public class UsuarioController : ControllerBase
 
         return Ok(usuario);
     }
+
+
+    [HttpPut("perfil/{mail}")]
+    public async Task<IActionResult> ActualizarPerfil(
+        string mail,
+        [FromBody] ActualizarPerfilDto perfil
+    )
+    {
+        var actualizado = await _usuarioRepository.UpdateProfileAsync(
+            mail,
+            perfil
+        );
+
+        if (!actualizado)
+        {
+            return NotFound(new
+            {
+                message = "No se encontró el usuario."
+            });
+        }
+
+        return NoContent();
+    }
+
+
 }

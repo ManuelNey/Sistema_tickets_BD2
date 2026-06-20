@@ -8,4 +8,5 @@ public interface IUsuarioRepository
     Task<bool> ExistsAsync(string mail);
     Task CreateAsync(RegistroDto registro);
     Task<UsuarioResponseDto?> AuthenticateAsync(string mail, string contrasena);
+    Task<bool> UpdateProfileAsync(string mail,ActualizarPerfilDto perfil);
 }

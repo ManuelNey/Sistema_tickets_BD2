@@ -1,0 +1,337 @@
+.perfil-page {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 28px;
+  color: #0f172a;
+}
+
+.perfil-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.perfil-avatar {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #9333ea;
+  border-radius: 50%;
+  background: #f3e8ff;
+  color: #9333ea;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.perfil-user-info h1 {
+  margin: 0 0 5px;
+  font-size: 22px;
+}
+
+.perfil-user-info p {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 4px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.perfil-user-info p svg {
+  width: 14px;
+  height: 14px;
+}
+
+.perfil-user-info small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.perfil-verificacion {
+  margin-left: 4px;
+  color: #d4a300;
+  font-size: 12px;
+}
+
+.perfil-card {
+  overflow: hidden;
+  margin-bottom: 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 11px;
+  background: white;
+  box-shadow: 0 2px 3px rgba(15, 23, 42, 0.06);
+}
+
+.perfil-card-header {
+  min-height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.perfil-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #111827;
+}
+
+.perfil-card-title svg {
+  width: 15px;
+  height: 15px;
+  color: #9333ea;
+}
+
+.perfil-card-title h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.perfil-card-content {
+  padding: 16px;
+}
+
+.perfil-info-row {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  margin-bottom: 11px;
+  font-size: 13px;
+}
+
+.perfil-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.perfil-info-row span {
+  color: #64748b;
+}
+
+.perfil-info-row strong {
+  font-weight: 500;
+}
+
+.editar-perfil,
+.guardar-contacto,
+.cancelar-contacto,
+.agregar-telefono,
+.eliminar-telefono {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.editar-perfil {
+  padding: 4px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.editar-perfil:hover {
+  color: #9333ea;
+}
+
+.perfil-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guardar-contacto {
+  padding: 4px;
+  color: #00b75a;
+  font-size: 12px;
+}
+
+.cancelar-contacto {
+  padding: 4px;
+  color: #ef4444;
+  font-size: 12px;
+}
+
+.perfil-help-text {
+  margin: 0 0 9px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.perfil-email {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 11px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.perfil-email svg {
+  width: 15px;
+  height: 15px;
+}
+
+.perfil-telefonos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.perfil-telefono,
+.perfil-telefono-item {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+}
+
+.eliminar-telefono {
+  padding: 3px 6px;
+  color: #ef4444;
+  font-size: 15px;
+}
+
+.agregar-telefono-container {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.telefono-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 11px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  outline: none;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+}
+
+.telefono-input:focus {
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.12);
+}
+
+.agregar-telefono {
+  margin-top: 8px;
+  padding: 0;
+  color: #9333ea;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.agregar-telefono-container .agregar-telefono {
+  margin-top: 0;
+  padding: 0 8px;
+}
+
+.perfil-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.perfil-edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.perfil-edit-field input,
+.perfil-edit-field select {
+  width: 100%;
+  min-height: 39px;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  outline: none;
+  background: #f8fafc;
+  color: #0f172a;
+  font: inherit;
+}
+
+.perfil-edit-field input:focus,
+.perfil-edit-field select:focus {
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.12);
+}
+
+.perfil-alert {
+  margin-bottom: 15px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.perfil-alert-success {
+  border: 1px solid #86efac;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.perfil-alert-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.guardar-contacto:disabled,
+.cancelar-contacto:disabled,
+.editar-perfil:disabled,
+.agregar-telefono:disabled,
+.eliminar-telefono:disabled,
+.telefono-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+@media (max-width: 650px) {
+  .perfil-page {
+    padding: 18px;
+  }
+
+  .perfil-info-row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
+  .perfil-card-header {
+    padding: 0 12px;
+  }
+
+  .perfil-card-content {
+    padding: 14px 12px;
+  }
+
+  .perfil-user-info h1 {
+    font-size: 19px;
+  }
+
+  .perfil-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agregar-telefono-container {
+    flex-direction: column;
+  }
+
+  .agregar-telefono-container .agregar-telefono {
+    min-height: 36px;
+  }
+}

@@ -8,10 +8,12 @@ import MisEntradas from './MisEntradas'
 import CodigoQr from './CodigoQr'
 import TransferenciasEnviadas from './TransferenciasEnviadas'
 import TransferenciasRecibidas from './TransferenciasRecibidas'
+import MiPerfil from './MiPerfil'
 import Ticket from '../assets/ticket.png'
 
 // Panel del costadito, no es side bar pero es maso así.
 const userTabs = [
+  { id: 'perfil', label: 'Mi perfil', icon: 'profile' },
   { id: 'comprar', label: 'Comprar Entradas', icon: 'bag' },
   { id: 'entradas', label: 'Mis Entradas', icon: 'ticket' },
   { id: 'reservas', label: 'Mis Reservas', icon: 'bookmark' },
@@ -63,7 +65,9 @@ function UsuarioPanel({ onLogout, user }) {
       />
 
       <section className="dashboard-content" aria-labelledby="dashboard-title">
-        {activeTab === 'comprar' ? (
+        { activeTab === 'perfil' ? (
+          <MiPerfil user={user} />
+        ) : activeTab === 'comprar' ? (
           <ComprarEntradas />
         ) : activeTab === 'entradas' ? (
           <MisEntradas />

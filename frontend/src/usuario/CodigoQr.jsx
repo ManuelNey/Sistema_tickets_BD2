@@ -139,7 +139,7 @@ useEffect(() => {
   if (error) {
     return (
       <div className="qr-page">
-        <h1>Códigos QR</h1>
+        <h1>Códigos QRs</h1>
         <p className="qr-subtitle">Accede a los códigos QR de tus entradas</p>
         <p className="qr-error">{error}</p>
       </div>
