@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import Countdown from './Countdown'
 import PagoEntrada from './PagoEntrada'
 import CompraExitosa from './CompraExitosa'
@@ -190,9 +190,19 @@ function ReservaCard({ reserva, onPagar, onCancelar }) {
 
       <div className="reserva-card-body">
         <div className="reserva-card-info">
-          <span>📅 {formatDate(reserva.fechaEncuentro)} · 🕒 {formatTime(reserva.horaEncuentro)}</span>
-          <span>📍 {reserva.estadio}</span>
-          <span>{reserva.sector} · {reserva.cantidad} {reserva.cantidad === 1 ? 'entrada' : 'entradas'}</span>
+          <span className="reserva-info-row">
+            <CalendarIcon />
+            {formatDate(reserva.fechaEncuentro)}
+          </span>
+          <span className="reserva-info-row">
+            <ClockIcon />
+            {formatTime(reserva.horaEncuentro)}
+          </span>
+          <span className="reserva-info-row">
+            <PinIcon />
+            {reserva.estadio}
+          </span>
+          <span>{reserva.sector} - {reserva.cantidad} {reserva.cantidad === 1 ? 'entrada' : 'entradas'}</span>
           <span className="reserva-card-precio">{formatPrice(reserva.montoTotal)}</span>
         </div>
 
@@ -229,6 +239,33 @@ function EstadoBadge({ estado }) {
   }
   const { cls, label } = map[estado] ?? { cls: '', label: estado }
   return <span className={`estado-badge ${cls}`}>{label}</span>
+}
+
+function CalendarIcon() {
+  return (
+    <svg className="reserva-line-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 5h12v14H6z" />
+      <path d="M8 3v4M16 3v4M6 9h12" />
+    </svg>
+  )
+}
+
+function ClockIcon() {
+  return (
+    <svg className="reserva-line-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  )
+}
+
+function PinIcon() {
+  return (
+    <svg className="reserva-line-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" />
+      <path d="M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+    </svg>
+  )
 }
 
 export default MisReservas
