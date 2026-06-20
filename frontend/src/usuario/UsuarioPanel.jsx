@@ -6,6 +6,8 @@ import ComprarEntradas from './ComprarEntradas'
 import MisReservas from './MisReservas'
 import MisEntradas from './MisEntradas'
 import CodigoQr from './CodigoQr'
+import TransferenciasEnviadas from './TransferenciasEnviadas'
+import TransferenciasRecibidas from './TransferenciasRecibidas'
 import Ticket from '../assets/ticket.png'
 
 // Panel del costadito, no es side bar pero es maso así.
@@ -69,6 +71,10 @@ function UsuarioPanel({ onLogout, user }) {
           <MisReservas />
         ) : activeTab === 'qr' ? (
           <CodigoQr />
+        ) : activeTab === 'enviadas' ? (
+          <TransferenciasEnviadas />
+        ) : activeTab === 'recibidas' ? (
+          <TransferenciasRecibidas />
         ) : (
           <div className="dashboard-card">
             <BallLogo />

@@ -1,15 +1,31 @@
 import AdminPanel from './admin/AdminPanel'
 import FuncionarioPanel from './funcionario/FuncionarioPanel'
 import LoginPage from './LoginPage'
+import RegistroPage from './RegisterPage'
 import UsuarioPanel from './usuario/UsuarioPanel'
 import { useAuth } from './context/useAuth'
 import './App.css'
+import { useState } from 'react'
 
 function App() {
   const { user, logout } = useAuth()
 
+  const [pantallaPublica, setPantallaPublica] = useState('login')
+
   if (!user) {
-    return <LoginPage />
+    if (pantallaPublica === 'registro') {
+      return (
+        <RegistroPage
+          onVolverLogin={() => setPantallaPublica('login')}
+        />
+      )
+    }
+
+    return (
+      <LoginPage
+        onRegister={() => setPantallaPublica('registro')}
+      />
+    )
   }
 
   if (user.rol === 'admin') {

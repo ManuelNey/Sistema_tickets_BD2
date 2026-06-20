@@ -263,9 +263,10 @@ public class CompraRepository : ICompraRepository
         };
     }
 
-    // Listado de todas las compras/reservas del usuario autenticado, de la más reciente a la más vieja.
+    // Listado de las compras/reservas del usuario autenticado, de la más reciente a la más vieja.
     // Agrupamos por compra para que la cantidad sea el numero de entradas asociadas a dicha compra.
-    public async Task<List<CompraDetalleDto>> GetMisReservasAsync(string mail)
+    // Si llega un 'estado' (pendiente/pagada/cancelada) filtra solo ese estado; si llega null devuelve todas.
+    public async Task<List<CompraDetalleDto>> GetMisReservasAsync(string mail, string? estado = null)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
@@ -291,10 +292,12 @@ public class CompraRepository : ICompraRepository
             JOIN estadio  es  ON en.fk_estadio         = es.id_estadio
             JOIN sector   s   ON h.fk_sector           = s.id_sector
             WHERE c.fk_usuario_mail = @mail
+              AND (@estado IS NULL OR c.estado = @estado)
             GROUP BY c.id_compra, c.estado, c.monto_total, c.fecha,
                      el.nombre, ev.nombre, en.fecha, es.nombre, s.nombre
             ORDER BY c.fecha DESC;", connection);
         cmd.Parameters.AddWithValue("@mail", mail);
+        cmd.Parameters.AddWithValue("@estado", (object?)estado ?? DBNull.Value);
 
         await using var reader = await cmd.ExecuteReaderAsync();
 

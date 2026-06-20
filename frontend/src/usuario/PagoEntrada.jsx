@@ -27,8 +27,8 @@ function PagoEntrada({ pedido, onPagoExitoso, onVolver }) {
     try {
       const token = localStorage.getItem('ticketmatch-token')
       // Los datos de tarjeta son simulados.
-      // No los enviamos al backend porque no hay integración real con pasarela de pagos.
-      //Si se hace en un futuro correspondería implementar un endpoint específico para procesar el pago
+      // No los enviamos al backend porque no tenemos una pasarela de pagos real ni queremos guardar datos sensibles en el backend.
+      // Si se hace en un futuro correspondería implementar un endpoint específico para procesar el pago
       // que a su vez se integraría con la pasarela real.
       const response = await fetch(
         `http://localhost:8080/api/compra/${pedido.idCompra}/confirmar`,

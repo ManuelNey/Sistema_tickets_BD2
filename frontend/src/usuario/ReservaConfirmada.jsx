@@ -5,7 +5,7 @@ import { formatDate, formatPrice, formatTime, getExpiracion } from './format'
 // Pantalla "Reserva Confirmada": resumen + cuenta regresiva de 30 min para pagar.
 function ReservaConfirmada({ pedido, onPagar, onPagarMasTarde }) {
   const [expirada, setExpirada] = useState(false)
-  // El total real (con comisión) lo define el back; el cargo se deriva de ese total.
+  // El total real (con comisión) lo define el back.
   const subtotal = pedido.precioUnitario * pedido.cantidad
   const total = pedido.montoTotal
   const cargo = total - subtotal

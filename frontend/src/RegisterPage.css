@@ -1,0 +1,267 @@
+* {
+  box-sizing: border-box;
+}
+
+.registro-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 45px 20px;
+  background: #f8fafc;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111827;
+}
+
+.registro-contenedor {
+  width: 100%;
+  max-width: 570px;
+}
+
+.registro-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  margin-bottom: 24px;
+}
+.ball-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+}
+
+.logo-cuadro {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  background: white;
+}
+
+.logo-cuadro svg,
+.logo-cuadro img {
+  width: 34px;
+  height: 34px;
+}
+
+.registro-logo h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.registro-card {
+  overflow: hidden;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12);
+}
+
+.pasos-registro {
+  display: flex;
+  border-bottom: 1px solid #d1d5db;
+}
+
+.paso {
+  flex: 1;
+  min-height: 61px;
+  border: none;
+  background: white;
+  color: #64748b;
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.paso-icono {
+  font-size: 19px;
+  line-height: 18px;
+}
+
+.paso-activo {
+  color: #9333ea;
+  background: #f3e8ff;
+}
+
+.paso-completado {
+  color: #00bd61;
+}
+
+.registro-body {
+  padding: 28px 25px 24px;
+}
+
+.registro-body h2 {
+  margin: 0 0 21px;
+  font-size: 18px;
+}
+
+.campo {
+  width: 100%;
+  margin-bottom: 17px;
+}
+
+.campo label {
+  display: block;
+  margin-bottom: 7px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.campo input,
+.campo select {
+  width: 100%;
+  height: 50px;
+  padding: 0 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 13px;
+  outline: none;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.campo input:focus,
+.campo select:focus {
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.13);
+}
+
+.fila-doble,
+.fila-calle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.fila-calle {
+  grid-template-columns: 2fr 1fr;
+}
+
+.input-icono {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 13px;
+  background: #f8fafc;
+}
+
+.input-icono span {
+  color: #64748b;
+  font-size: 18px;
+}
+
+.input-icono input {
+  height: 100%;
+  padding-left: 0;
+  border: none;
+  background: transparent;
+}
+
+.input-icono:focus-within {
+  border-color: #9333ea;
+  box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.13);
+}
+
+.mensaje-error {
+  display: block;
+  margin-top: 5px;
+  color: #ff4d5c;
+  font-size: 12px;
+}
+
+.error-api {
+  margin: 4px 0 17px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  background: #fff1f2;
+  color: #e11d48;
+  font-size: 14px;
+}
+
+.acciones-registro {
+  display: flex;
+  gap: 13px;
+  margin-top: 25px;
+}
+
+.btn-atras,
+.btn-principal {
+  height: 49px;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-atras {
+  min-width: 105px;
+  padding: 0 17px;
+  background: #292929;
+}
+
+.btn-principal {
+  flex: 1;
+  background: #9633ed;
+}
+
+.btn-principal:hover {
+  background: #8425d7;
+}
+
+.btn-principal:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.texto-login {
+  margin: 21px 0 0;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.texto-login button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #9333ea;
+  font-size: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 540px) {
+  .registro-page {
+    padding: 25px 12px;
+  }
+
+  .registro-body {
+    padding: 23px 17px;
+  }
+
+  .fila-doble,
+  .fila-calle {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .paso {
+    font-size: 10px;
+  }
+
+  .paso-icono {
+    font-size: 16px;
+  }
+}
