@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS equipo (
 
 CREATE TABLE IF NOT EXISTS encuentro (
   id_encuentro SERIAL PRIMARY KEY,
-  fecha TIMESTAMP WITH TIME ZONE NOT NULL,
+  fecha TIMESTAMP NOT NULL,
   fk_equipo_local INTEGER NOT NULL REFERENCES equipo(id_equipo),
   fk_equipo_visitante INTEGER NOT NULL REFERENCES equipo(id_equipo),
   fk_estadio INTEGER NOT NULL REFERENCES estadio(id_estadio),

@@ -108,40 +108,35 @@ INSERT INTO sector (nombre, capacidad_maxima, fk_estadio) VALUES
 ('Platea',        17000, 16),
 ('Tribuna Norte', 23800, 16),
 ('Tribuna Sur',   23800, 16)
-ON CONFLICT (fk_estadio, nombre) DO NOTHING;
 
--- Habilitación de sectores para los primeros 5 encuentros.
--- Encuentro 1: México vs Sudáfrica, estadio 3 (Ciudad de México, México) → admin2
--- Encuentro 2: Rep. Corea vs Rep. Checa, estadio 4 (Guadalajara, México)  → admin2
--- Encuentro 3: Canadá vs Bosnia, estadio 2 (BMO Field, Canadá)             → admin1
--- Encuentro 4: USA vs Paraguay, estadio 11 (SoFi, USA)                     → admin3
--- Encuentro 5: Catar vs Suiza, estadio 16 (Levi's, USA)                    → admin3
-INSERT INTO habilita (fk_encuentro, fk_sector, precio, fk_administrador_mail) VALUES
--- Encuentro 1 → sectores 9-12 (estadio 3, Ciudad de México)
-(1, 9,  350, 'admin2@mail.com'),
-(1, 10, 150, 'admin2@mail.com'),
-(1, 11, 80,  'admin2@mail.com'),
-(1, 12, 80,  'admin2@mail.com'),
--- Encuentro 2 → sectores 13-16 (estadio 4, Guadalajara)
-(2, 13, 300, 'admin2@mail.com'),
-(2, 14, 150, 'admin2@mail.com'),
-(2, 15, 80,  'admin2@mail.com'),
-(2, 16, 80,  'admin2@mail.com'),
--- Encuentro 3 → sectores 5-8 (estadio 2, BMO Field)
-(3, 5,  300, 'admin1@mail.com'),
-(3, 6,  150, 'admin1@mail.com'),
-(3, 7,  80,  'admin1@mail.com'),
-(3, 8,  80,  'admin1@mail.com'),
--- Encuentro 4 → sectores 41-44 (estadio 11, SoFi)
-(4, 41, 300, 'admin3@mail.com'),
-(4, 42, 150, 'admin3@mail.com'),
-(4, 43, 80,  'admin3@mail.com'),
-(4, 44, 80,  'admin3@mail.com'),
--- Encuentro 5 → sectores 61-64 (estadio 16, Levi's)
-(5, 61, 300, 'admin3@mail.com'),
-(5, 62, 150, 'admin3@mail.com'),
-(5, 63, 80,  'admin3@mail.com'),
-(5, 64, 80,  'admin3@mail.com')
+-- En este punto ya se han insertado los sectores para los 16 estadios, con IDs 1-64. 
+-- Las habilitaciones de sectores por encuentro se insertan a continuación, en la tabla habilita,
+-- usando esos IDs de sector y los IDs de encuentro (1-48) que se insertaron en 02_tablasMundial.sql.
+ON CONFLICT (fk_estadio, nombre) DO NOTHING;
+INSERT INTO habilita
+(fk_encuentro, fk_sector, precio, fk_administrador_mail)
+-- Armamos habilitaciones para cada encuentro, usando los sectores del estadio correspondiente al encuentro.
+-- Esto nos permite arma cada fila de la tabla habilita sin escribir manualmente cada combinación encuentro-sector,
+-- sino usando un SELECT que relacione encuentro, estadio y sector.
+
+SELECT
+    e.id_encuentro,
+    s.id_sector,
+    CASE
+        WHEN s.nombre = 'VIP' THEN 300
+        WHEN s.nombre = 'Platea' THEN 150
+        ELSE 80 --Para los otros 2 sectores (Tribuna Norte y Tribuna Sur)
+    END,
+    CASE est.fk_pais_sede -- Asignamos el administrador según el país sede del estadio del encuentro:
+        WHEN 1 THEN 'admin1@mail.com'
+        WHEN 2 THEN 'admin2@mail.com'
+        WHEN 3 THEN 'admin3@mail.com'
+    END
+FROM encuentro e
+JOIN estadio est
+    ON est.id_estadio = e.fk_estadio
+JOIN sector s
+    ON s.fk_estadio = est.id_estadio
 ON CONFLICT (fk_encuentro, fk_sector) DO NOTHING;
 
 -- Las entradas sembradas se movieron a 05_negocio.sql: deben insertarse DESPUES de las compras
