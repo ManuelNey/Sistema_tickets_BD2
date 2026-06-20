@@ -39,7 +39,7 @@
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: #a3ff25;
+  background: #ede9fe;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -83,16 +83,16 @@
   border: none;
   border-radius: 14px;
   padding: 14px 20px;
-  background: #a3ff25;
-  color: #020617;
+  background: #7c3aed;
+  color: #ffffff;
   font-size: 20px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .qr-button:hover {
-  filter: brightness(0.95);
+  background: #6d28d9;
   transform: translateY(-1px);
 }
 
@@ -157,7 +157,7 @@
 }
 
 .qr-modal-code-box {
-  border: 5px solid #a3ff25;
+  border: 2px solid #c4b5fd;
   border-radius: 14px;
   padding: 28px;
   width: fit-content;
