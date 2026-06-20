@@ -28,7 +28,7 @@ function reservaToPedido(r) {
   }
 }
 
-function MisReservas() {
+function MisReservas({ onIrAMisEntradas }) {
   const [reservas, setReservas] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -105,6 +105,7 @@ function MisReservas() {
     return (
       <CompraExitosa
         resumen={resumen}
+        onIrAMisEntradas={onIrAMisEntradas}
         onVolver={() => {
           setResumen(null)
           setView('list')

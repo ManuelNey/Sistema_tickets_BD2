@@ -7,7 +7,7 @@ import CompraExitosa from './CompraExitosa'
 import { FilterIcon } from './matchIcons'
 import './reserva.css'
 
-function ComprarEntradas() {
+function ComprarEntradas({ onIrAMisEntradas }) {
   const [matches, setMatches] = useState([])
   const [allTeams, setAllTeams] = useState([])
   const [estadios, setEstadios] = useState([])
@@ -128,7 +128,7 @@ function ComprarEntradas() {
 
   //Si sale todo bien, mostramos la pantalla de exito con el resumen de la compra.
   if (view === 'exito' && resumen) {
-    return <CompraExitosa resumen={resumen} onVolver={volverAlMenu} />
+    return <CompraExitosa resumen={resumen} onIrAMisEntradas={onIrAMisEntradas} onVolver={volverAlMenu} />
   }
 
   return (

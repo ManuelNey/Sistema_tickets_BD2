@@ -35,4 +35,12 @@ public class EstadisticasController : ControllerBase
         return Ok(usuarios);
     }
 
+    [HttpGet("Canceladas")]
+    [Authorize (Roles = "admin")]
+    public async Task<ActionResult<PorcentajeCanceladasDto>> GetPorcentajeCanceladas()
+    {
+        var porcentaje = await _estadisticasRepository.GetPorcentajeCanceladas();
+        return Ok(porcentaje);
+    }
+
 }
