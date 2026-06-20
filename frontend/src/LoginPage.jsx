@@ -2,7 +2,7 @@ import { useState } from 'react'
 import BallLogo from './shared/BallLogo'
 import { useAuth } from './context/useAuth'
 
-function LoginPage() {
+function LoginPage({ onRegister }) {
   const { login } = useAuth()
 
   const [email, setEmail] = useState('')
@@ -41,7 +41,7 @@ function LoginPage() {
 
       login(data)
     } catch {
-      setError('No se pudo iniciar sesion')
+      setError('No se pudo iniciar sesión')
     } finally {
       setIsLoading(false)
     }
@@ -56,17 +56,19 @@ function LoginPage() {
 
         <header className="login-header">
           <h1 id="login-title">TicketMatch</h1>
-          <p>Ingresa a tu cuenta</p>
+          <p>Ingresá a tu cuenta</p>
         </header>
 
         <form className="login-form" onSubmit={handleSubmit}>
           <label className="field">
             <span>Email</span>
+
             <span className="input-shell">
               <svg aria-hidden="true" viewBox="0 0 24 24">
                 <path d="M4 6.5h16v11H4z" />
                 <path d="m4.5 7 7.5 6 7.5-6" />
               </svg>
+
               <input
                 type="email"
                 name="email"
@@ -79,12 +81,14 @@ function LoginPage() {
           </label>
 
           <label className="field">
-            <span>Contrasena</span>
+            <span>Contraseña</span>
+
             <span className="input-shell">
               <svg aria-hidden="true" viewBox="0 0 24 24">
                 <path d="M6.5 10.5h11v9h-11z" />
                 <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
               </svg>
+
               <input
                 type="password"
                 name="password"
@@ -99,13 +103,20 @@ function LoginPage() {
           {error && <p className="login-error">{error}</p>}
 
           <button className="login-button" type="submit" disabled={isLoading}>
-            {isLoading ? 'Ingresando...' : 'Iniciar Sesion'}
+            {isLoading ? 'Ingresando...' : 'Iniciar sesión'}
           </button>
         </form>
       </section>
 
       <p className="register-link">
-        No tienes cuenta? <a href="#registro">Registrate</a>
+        ¿No tenés cuenta?{' '}
+        <button
+          type="button"
+          className="register-button-link"
+          onClick={onRegister}
+        >
+          Registrate
+        </button>
       </p>
     </main>
   )
