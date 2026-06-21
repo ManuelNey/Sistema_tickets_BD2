@@ -6,6 +6,14 @@ function DashboardAdmin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hoveredId, setHoveredId] = useState(null)
+  const [periodo, setPeriodo] = useState('mes')
+  const [desdePersonalizado, setDesdePersonalizado] = useState('')
+  const [hastaPersonalizado, setHastaPersonalizado] = useState('')
+
+  const rangoFechas = useMemo(
+    () => getDateRange(periodo, desdePersonalizado, hastaPersonalizado),
+    [periodo, desdePersonalizado, hastaPersonalizado]
+  )
 
   const loadTopEncuentros = async () => {
     setLoading(true)
@@ -13,7 +21,7 @@ function DashboardAdmin() {
 
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const response = await fetch('http://localhost:8080/api/Estadisticas/TopEncuentros', {
+      const response = await fetch(buildStatsUrl('TopEncuentros', rangoFechas), {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -32,7 +40,8 @@ function DashboardAdmin() {
 
   useEffect(() => {
     Promise.resolve().then(loadTopEncuentros)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rangoFechas])
 
   const maxEntradas = useMemo(
     () => Math.max(...topEncuentros.map((encuentro) => getEntradasVendidas(encuentro)), 1),
@@ -50,6 +59,40 @@ function DashboardAdmin() {
           <p>Encuentros con mayor cantidad de entradas vendidas</p>
         </div>
       </header>
+
+      <section className="stats-filters" aria-label="Filtros de estadisticas">
+        <label className="stats-filter-field">
+          Periodo
+          <select value={periodo} onChange={(event) => setPeriodo(event.target.value)}>
+            <option value="semana">Esta semana</option>
+            <option value="mes">Este mes</option>
+            <option value="anio">Este año</option>
+            <option value="todo">Todo</option>
+            <option value="personalizado">Personalizado</option>
+          </select>
+        </label>
+
+        {periodo === 'personalizado' && (
+          <>
+            <label className="stats-filter-field">
+              Desde
+              <input
+                type="date"
+                value={desdePersonalizado}
+                onChange={(event) => setDesdePersonalizado(event.target.value)}
+              />
+            </label>
+            <label className="stats-filter-field">
+              Hasta
+              <input
+                type="date"
+                value={hastaPersonalizado}
+                onChange={(event) => setHastaPersonalizado(event.target.value)}
+              />
+            </label>
+          </>
+        )}
+      </section>
 
       {loading && <p className="matches-status">Cargando estadisticas...</p>}
       {!loading && error && <p className="matches-status is-error">{error}</p>}
@@ -157,6 +200,60 @@ function shortenTeam(team) {
 
 function getAxisMax(maxValue) {
   return Math.max(Math.ceil(maxValue / 5) * 5, 5)
+}
+
+function buildStatsUrl(endpoint, rangoFechas) {
+  const url = new URL(`http://localhost:8080/api/Estadisticas/${endpoint}`)
+
+  if (rangoFechas.desde) {
+    url.searchParams.set('desde', rangoFechas.desde)
+  }
+
+  if (rangoFechas.hasta) {
+    url.searchParams.set('hasta', rangoFechas.hasta)
+  }
+
+  return url.toString()
+}
+
+function getDateRange(periodo, desdePersonalizado, hastaPersonalizado) {
+  if (periodo === 'todo') {
+    return { desde: '', hasta: '' }
+  }
+
+  if (periodo === 'personalizado') {
+    return { desde: desdePersonalizado, hasta: hastaPersonalizado }
+  }
+
+  const today = new Date()
+  const desde = new Date(today)
+
+  if (periodo === 'semana') {
+    const day = today.getDay()
+    const diffToMonday = day === 0 ? -6 : 1 - day
+    desde.setDate(today.getDate() + diffToMonday)
+  }
+
+  if (periodo === 'mes') {
+    desde.setDate(1)
+  }
+
+  if (periodo === 'anio') {
+    desde.setMonth(0, 1)
+  }
+
+  return {
+    desde: formatDateInput(desde),
+    hasta: formatDateInput(today),
+  }
+}
+
+function formatDateInput(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
 }
 
 function buildTicks(axisMax) {

@@ -1,5 +1,6 @@
 -- Esquema alineado al modelo final BD2
 -- Ordenado para poder ejecutarse desde cero en PostgreSQL sin dependencias rotas.
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 
 CREATE TABLE IF NOT EXISTS pais_sede (
   id_pais_sede SERIAL PRIMARY KEY,
@@ -90,7 +91,7 @@ CREATE TABLE IF NOT EXISTS encuentro (
   fecha TIMESTAMP NOT NULL,
   fk_equipo_local INTEGER NOT NULL REFERENCES equipo(id_equipo),
   fk_equipo_visitante INTEGER NOT NULL REFERENCES equipo(id_equipo),
-  fk_estadio INTEGER NOT NULL REFERENCES estadio(id_estadio),
+  fk_estadio INTEGER NOT NULL REFERENCES estadio(id_estadio) ON DELETE CASCADE,
   estado VARCHAR(50) NOT NULL,
   CONSTRAINT chk_encuentro_equipos CHECK (fk_equipo_local <> fk_equipo_visitante),
   CONSTRAINT chk_encuentro_estado CHECK (estado IN ('programado', 'en_juego', 'finalizado', 'cancelado'))
@@ -109,7 +110,7 @@ CREATE TABLE IF NOT EXISTS sector (
 CREATE TABLE IF NOT EXISTS habilita (
   id SERIAL PRIMARY KEY,
   fk_encuentro INTEGER NOT NULL REFERENCES encuentro(id_encuentro) ON DELETE CASCADE,
-  fk_sector INTEGER NOT NULL REFERENCES sector(id_sector),
+  fk_sector INTEGER NOT NULL REFERENCES sector(id_sector) ON DELETE CASCADE,
   precio NUMERIC(12,2) NOT NULL,
   fk_administrador_mail VARCHAR(255) NOT NULL REFERENCES administrador(persona_mail),
   CONSTRAINT uq_habilita_encuentro_sector UNIQUE (fk_encuentro, fk_sector),
@@ -132,7 +133,7 @@ CREATE TABLE IF NOT EXISTS entrada (
   id_entrada SERIAL PRIMARY KEY,
   estado VARCHAR(50) NOT NULL,
   cantidad_transferencias INTEGER NOT NULL DEFAULT 0,
-  fk_habilita_id INTEGER NOT NULL REFERENCES habilita(id),
+  fk_habilita_id INTEGER NOT NULL REFERENCES habilita(id) ON DELETE CASCADE,
   fk_compra_id INTEGER NOT NULL REFERENCES compra(id_compra),
   fk_usuario_mail VARCHAR(255) NOT NULL REFERENCES usuario(persona_mail),
   CONSTRAINT chk_entrada_estado CHECK (estado IN ('reservada', 'activa', 'utilizada', 'transferida')),
@@ -152,7 +153,7 @@ CREATE TABLE IF NOT EXISTS transferencia (
   estado VARCHAR(50) NOT NULL,
   fk_usuario_mail_emisor VARCHAR(255) NOT NULL REFERENCES usuario(persona_mail),
   fk_usuario_mail_receptor VARCHAR(255) NOT NULL REFERENCES usuario(persona_mail),
-  fk_entrada_id INTEGER NOT NULL REFERENCES entrada(id_entrada),
+  fk_entrada_id INTEGER NOT NULL REFERENCES entrada(id_entrada) ON DELETE CASCADE,
   CONSTRAINT chk_transferencia_estado CHECK (estado IN ('pendiente', 'aceptada', 'rechazada')),
   CONSTRAINT chk_transferencia_usuarios CHECK (fk_usuario_mail_emisor <> fk_usuario_mail_receptor)
 );
@@ -164,11 +165,10 @@ CREATE TABLE IF NOT EXISTS validacion (
   token_utilizado VARCHAR(255) NOT NULL,
   funcionario_mail VARCHAR(255) NOT NULL REFERENCES funcionario(persona_mail),
   numero_dispositivo VARCHAR(100) NOT NULL REFERENCES dispositivo(numero_dispositivo),
-  entrada_id INTEGER NOT NULL UNIQUE REFERENCES entrada(id_entrada),
+  entrada_id INTEGER NOT NULL UNIQUE REFERENCES entrada(id_entrada) ON DELETE CASCADE,
   CONSTRAINT uq_validacion_token UNIQUE (token_utilizado),
   CONSTRAINT chk_validacion_token CHECK (length(trim(token_utilizado)) > 0)
 );
-
 CREATE INDEX IF NOT EXISTS idx_persona_apellido ON persona(apellido);
 CREATE INDEX IF NOT EXISTS idx_usuario_registro ON usuario(fecha_registro);
 CREATE INDEX IF NOT EXISTS idx_encuentro_fecha ON encuentro(fecha);
