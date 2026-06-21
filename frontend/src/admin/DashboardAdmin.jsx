@@ -72,13 +72,13 @@ function DashboardAdmin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [hoveredId, setHoveredId] = useState(null)
-  const [periodo, setPeriodo] = useState('mes')
+  const [statsPeriod, setStatsPeriod] = useState('mes')
   const [desdePersonalizado, setDesdePersonalizado] = useState('')
   const [hastaPersonalizado, setHastaPersonalizado] = useState('')
 
   const rangoFechas = useMemo(
-    () => getDateRange(periodo, desdePersonalizado, hastaPersonalizado),
-    [periodo, desdePersonalizado, hastaPersonalizado]
+    () => getDateRange(statsPeriod, desdePersonalizado, hastaPersonalizado),
+    [statsPeriod, desdePersonalizado, hastaPersonalizado]
   )
 
   const loadTopEncuentros = async () => {
@@ -141,7 +141,7 @@ function DashboardAdmin() {
       <section className="stats-filters" aria-label="Filtros de estadisticas">
         <label className="stats-filter-field">
           Periodo
-          <select value={periodo} onChange={(event) => setPeriodo(event.target.value)}>
+          <select value={statsPeriod} onChange={(event) => setStatsPeriod(event.target.value)}>
             <option value="semana">Esta semana</option>
             <option value="mes">Este mes</option>
             <option value="anio">Este año</option>
@@ -150,7 +150,7 @@ function DashboardAdmin() {
           </select>
         </label>
 
-        {periodo === 'personalizado' && (
+        {statsPeriod === 'personalizado' && (
           <>
             <label className="stats-filter-field">
               Desde
@@ -450,29 +450,29 @@ function buildStatsUrl(endpoint, rangoFechas) {
   return url.toString()
 }
 
-function getDateRange(periodo, desdePersonalizado, hastaPersonalizado) {
-  if (periodo === 'todo') {
+function getDateRange(selectedPeriod, desdePersonalizado, hastaPersonalizado) {
+  if (selectedPeriod === 'todo') {
     return { desde: '', hasta: '' }
   }
 
-  if (periodo === 'personalizado') {
+  if (selectedPeriod === 'personalizado') {
     return { desde: desdePersonalizado, hasta: hastaPersonalizado }
   }
 
   const today = new Date()
   const desde = new Date(today)
 
-  if (periodo === 'semana') {
+  if (selectedPeriod === 'semana') {
     const day = today.getDay()
     const diffToMonday = day === 0 ? -6 : 1 - day
     desde.setDate(today.getDate() + diffToMonday)
   }
 
-  if (periodo === 'mes') {
+  if (selectedPeriod === 'mes') {
     desde.setDate(1)
   }
 
-  if (periodo === 'anio') {
+  if (selectedPeriod === 'anio') {
     desde.setMonth(0, 1)
   }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import SidebarIcon from '../shared/SidebarIcon'
 
 const emptySectorForm = {
@@ -27,7 +27,7 @@ function SectoresAdmin({ onBack, stadium, user }) {
   const [sectorToDelete, setSectorToDelete] = useState(null)
   const [sectorDeleting, setSectorDeleting] = useState(false)
 
-  const loadSectors = async () => {
+  const loadSectors = useCallback(async () => {
     setSectorsError('')
     setSectorsLoading(true)
 
@@ -47,13 +47,13 @@ function SectoresAdmin({ onBack, stadium, user }) {
     } finally {
       setSectorsLoading(false)
     }
-  }
+  }, [stadium.id])
 
   useEffect(() => {
     // Diferimos la carga fuera del render sincrono para no disparar
     // setState de forma sincrona dentro del effect (react-hooks/set-state-in-effect).
     Promise.resolve().then(loadSectors)
-  }, [stadium.id])
+  }, [loadSectors])
 
   const openCreateSector = () => {
     setSelectedSector(null)
