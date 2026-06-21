@@ -83,3 +83,5 @@ INSERT INTO telefonos (persona_mail, telefono) VALUES
 ('admin2@mail.com',    '097000002'),
 ('admin3@mail.com',    '097000003')
 ON CONFLICT (persona_mail, telefono) DO NOTHING;
+
+
