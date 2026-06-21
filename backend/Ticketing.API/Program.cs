@@ -62,6 +62,7 @@ builder.Services.AddSingleton<IDispositivoRepository, DispositivoRepository>();
 builder.Services.AddSingleton<IFuncionarioRepository, FuncionarioRepository>();
 builder.Services.AddSingleton<ITransferenciaRepository, TransferenciaRepository>();
 builder.Services.AddSingleton<IEstadisticasRepository, EstadisticasRepository>();
+builder.Services.AddSingleton<ITrabajaEnRepository, TrabajaEnRepository>();
 
 var app = builder.Build();
 
