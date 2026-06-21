@@ -92,134 +92,180 @@ public class EncuentroRepository : IEncuentroRepository
         }
 
         public async Task<EncuentroDto?> CreateAsync(CrearEncuentroDto encuentro, string mailAdmin, int paisSedeId)
-    {
-        await using var connection = _connectionFactory.CreateConnection();
-        await connection.OpenAsync();
-
-        await using var transaction = await connection.BeginTransactionAsync();
-
-        //Valido que el admin haga encuentros sólo en los estadio de su país
-        await using var checkCommand = new NpgsqlCommand(
-            @"SELECT COUNT(*)
-            FROM estadio
-            WHERE id_estadio= @EstadioId
-            AND fk_pais_sede = @PaisSedeId;", connection, transaction
-        );
-
-        checkCommand.Parameters.AddWithValue("@EstadioId", encuentro.EstadioId);
-        checkCommand.Parameters.AddWithValue("@PaisSedeId",paisSedeId);
-
-        var count = Convert.ToInt64(await checkCommand.ExecuteScalarAsync());
-
-        if(count == 0)
         {
-            await transaction.RollbackAsync();
-            return null;
-        }
+            await using var connection = _connectionFactory.CreateConnection();
+            await connection.OpenAsync();
 
-        //Si el pais del estadio coincide con el del admin, 
-        // entonces se hacen los insert en encuentros y habilita
+            await using var transaction = await connection.BeginTransactionAsync();
 
-        try
-        {
-            await using var cmd = new NpgsqlCommand(
-                @"INSERT INTO encuentro(
-                    fecha,
-                    fk_equipo_local,
-                    fk_equipo_visitante,
-                    fk_estadio,
-                    estado)
-                    VALUES(
-                    @Fecha,
-                    @EquipoLocal,
-                    @EquipoVisitante,
-                    @Estadio,
-                    'programado')
-                    RETURNING id_encuentro, fecha, fk_equipo_local, fk_equipo_visitante, fk_estadio, estado;", 
-                connection,
-                transaction);
-
-            cmd.Parameters.AddWithValue("@Fecha", encuentro.Fecha);
-            cmd.Parameters.AddWithValue("@EquipoLocal", encuentro.EquipoLocalId);
-            cmd.Parameters.AddWithValue("@EquipoVisitante", encuentro.EquipoVisitanteId);
-            cmd.Parameters.AddWithValue("@Estadio", encuentro.EstadioId);
-
-            await using var reader = await cmd.ExecuteReaderAsync();
-
-            if (!await reader.ReadAsync())
+            try
             {
-                throw new InvalidOperationException("No se pudo crear el encuentro.");
-            }
-
-            var encuentroCreado = new EncuentroDto
-            {
-                Id = reader.GetInt32(reader.GetOrdinal("id_encuentro")),
-                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-                EquipoLocal = reader.GetInt32(reader.GetOrdinal("fk_equipo_local")),
-                EquipoVisitante = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
-                Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio")),
-                Estado = reader.GetString(reader.GetOrdinal("estado")),
-                Pais = paisSedeId
-            };
-
-            await reader.DisposeAsync();
-
-            foreach (var sector in encuentro.Sectores)
-            {
-
-                //Valido que el sector pertenezca a ese estadio
-
-                await using var checkSectorCommand = new NpgsqlCommand(
+                // Valido que el admin cree encuentros solo en estadios de su pais.
+                await using var checkCommand = new NpgsqlCommand(
                     @"SELECT COUNT(*)
-                    FROM sector
-                    WHERE id_sector = @IdSector
-                    AND fk_estadio = @IdEstadio;",
+                    FROM estadio
+                    WHERE id_estadio = @EstadioId
+                    AND fk_pais_sede = @PaisSedeId;",
                     connection,
                     transaction);
 
-                checkSectorCommand.Parameters.AddWithValue("@IdSector", sector.SectorId);
-                checkSectorCommand.Parameters.AddWithValue("@IdEstadio", encuentroCreado.Estadio);
+                checkCommand.Parameters.AddWithValue("@EstadioId", encuentro.EstadioId);
+                checkCommand.Parameters.AddWithValue("@PaisSedeId", paisSedeId);
 
-                var sectorCount = Convert.ToInt64(await checkSectorCommand.ExecuteScalarAsync());
+                var count = Convert.ToInt64(await checkCommand.ExecuteScalarAsync());
 
-                if (sectorCount == 0)
+                if (count == 0)
                 {
                     await transaction.RollbackAsync();
                     return null;
                 }
 
-                //Si está todo OK, entonces lo agrego
+                // Valido que no haya otro encuentro en el mismo estadio dentro del rango de 4 horas.
+                await using var checkHorarioCommand = new NpgsqlCommand(
+                    @"SELECT COUNT(*)
+                    FROM encuentro
+                    WHERE fk_estadio = @idEstadio
+                    AND fecha >= @fecha - interval '4 hours'
+                    AND fecha < @fecha + interval '4 hours';",
+                    connection,
+                    transaction);
 
-                await using var cmdSector = new NpgsqlCommand(
-                    @"INSERT INTO habilita(
-                        fk_encuentro,
-                        fk_sector,
-                        precio,
-                        fk_administrador_mail)
+                checkHorarioCommand.Parameters.AddWithValue("@idEstadio", encuentro.EstadioId);
+                checkHorarioCommand.Parameters.AddWithValue("@fecha", encuentro.Fecha);
+
+                var encuentrosEnRango = Convert.ToInt64(await checkHorarioCommand.ExecuteScalarAsync());
+
+                if (encuentrosEnRango > 0)
+                {
+                    await transaction.RollbackAsync();
+                    return null;
+                }
+
+                // Valido que ninguno de los equipos/paises juegue otro encuentro dentro del rango de 4 horas.
+                await using var checkEquiposCommand = new NpgsqlCommand(
+                    @"SELECT COUNT(*)
+                    FROM encuentro
+                    WHERE fecha >= @fecha - interval '4 hours'
+                    AND fecha < @fecha + interval '4 hours'
+                    AND (
+                        fk_equipo_local = @equipoLocal
+                        OR fk_equipo_visitante = @equipoLocal
+                        OR fk_equipo_local = @equipoVisitante
+                        OR fk_equipo_visitante = @equipoVisitante
+                    );",
+                    connection,
+                    transaction);
+
+                checkEquiposCommand.Parameters.AddWithValue("@fecha", encuentro.Fecha);
+                checkEquiposCommand.Parameters.AddWithValue("@equipoLocal", encuentro.EquipoLocalId);
+                checkEquiposCommand.Parameters.AddWithValue("@equipoVisitante", encuentro.EquipoVisitanteId);
+
+                var equiposEnRango = Convert.ToInt64(await checkEquiposCommand.ExecuteScalarAsync());
+
+                if (equiposEnRango > 0)
+                {
+                    await transaction.RollbackAsync();
+                    return null;
+                }
+
+                // Si esta todo OK, creo el encuentro.
+                await using var cmd = new NpgsqlCommand(
+                    @"INSERT INTO encuentro(
+                        fecha,
+                        fk_equipo_local,
+                        fk_equipo_visitante,
+                        fk_estadio,
+                        estado)
                     VALUES(
-                        @IdEncuentro,
-                        @IdSector,
-                        @Precio,
-                        @MailAdmin);",connection,transaction);
+                        @Fecha,
+                        @EquipoLocal,
+                        @EquipoVisitante,
+                        @Estadio,
+                        'programado')
+                    RETURNING id_encuentro, fecha, fk_equipo_local, fk_equipo_visitante, fk_estadio, estado;",
+                    connection,
+                    transaction);
 
-                cmdSector.Parameters.AddWithValue("@IdEncuentro", encuentroCreado.Id);
-                cmdSector.Parameters.AddWithValue("@IdSector", sector.SectorId);
-                cmdSector.Parameters.AddWithValue("@Precio", sector.Precio);
-                cmdSector.Parameters.AddWithValue("@MailAdmin", mailAdmin);
+                cmd.Parameters.AddWithValue("@Fecha", encuentro.Fecha);
+                cmd.Parameters.AddWithValue("@EquipoLocal", encuentro.EquipoLocalId);
+                cmd.Parameters.AddWithValue("@EquipoVisitante", encuentro.EquipoVisitanteId);
+                cmd.Parameters.AddWithValue("@Estadio", encuentro.EstadioId);
 
-                await cmdSector.ExecuteNonQueryAsync();
+                await using var reader = await cmd.ExecuteReaderAsync();
+
+                if (!await reader.ReadAsync())
+                {
+                    await transaction.RollbackAsync();
+                    return null;
+                }
+
+                var encuentroCreado = new EncuentroDto
+                {
+                    Id = reader.GetInt32(reader.GetOrdinal("id_encuentro")),
+                    Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
+                    EquipoLocal = reader.GetInt32(reader.GetOrdinal("fk_equipo_local")),
+                    EquipoVisitante = reader.GetInt32(reader.GetOrdinal("fk_equipo_visitante")),
+                    Estadio = reader.GetInt32(reader.GetOrdinal("fk_estadio")),
+                    Estado = reader.GetString(reader.GetOrdinal("estado")),
+                    Pais = paisSedeId
+                };
+
+                await reader.DisposeAsync();
+
+                foreach (var sector in encuentro.Sectores)
+                {
+                    // Valido que el sector pertenezca al estadio del encuentro.
+                    await using var checkSectorCommand = new NpgsqlCommand(
+                        @"SELECT COUNT(*)
+                        FROM sector
+                        WHERE id_sector = @IdSector
+                        AND fk_estadio = @IdEstadio;",
+                        connection,
+                        transaction);
+
+                    checkSectorCommand.Parameters.AddWithValue("@IdSector", sector.SectorId);
+                    checkSectorCommand.Parameters.AddWithValue("@IdEstadio", encuentroCreado.Estadio);
+
+                    var sectorCount = Convert.ToInt64(await checkSectorCommand.ExecuteScalarAsync());
+
+                    if (sectorCount == 0)
+                    {
+                        await transaction.RollbackAsync();
+                        return null;
+                    }
+
+                    await using var cmdSector = new NpgsqlCommand(
+                        @"INSERT INTO habilita(
+                            fk_encuentro,
+                            fk_sector,
+                            precio,
+                            fk_administrador_mail)
+                        VALUES(
+                            @IdEncuentro,
+                            @IdSector,
+                            @Precio,
+                            @MailAdmin);",
+                        connection,
+                        transaction);
+
+                    cmdSector.Parameters.AddWithValue("@IdEncuentro", encuentroCreado.Id);
+                    cmdSector.Parameters.AddWithValue("@IdSector", sector.SectorId);
+                    cmdSector.Parameters.AddWithValue("@Precio", sector.Precio);
+                    cmdSector.Parameters.AddWithValue("@MailAdmin", mailAdmin);
+
+                    await cmdSector.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
+
+                return encuentroCreado;
             }
-
-            await transaction.CommitAsync();
-
-            return encuentroCreado;
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
-    }
 
     public async Task<EncuentroDto?> UpdateAsync(int id, ActualizarEncuentroDto encuentro, int paisSedeId, string mailAdmin)
     {
@@ -246,6 +292,11 @@ public class EncuentroRepository : IEncuentroRepository
             return null;
         }
 
+        if (estadoActual == "cancelado" && encuentro.Estado != "programado")
+        {
+            return null;
+        }
+
         if (estadoActual == "en_juego" && encuentro.Estado != "finalizado")
         {
             return null;
@@ -253,7 +304,8 @@ public class EncuentroRepository : IEncuentroRepository
 
         if (estadoActual == "programado" &&
             encuentro.Estado != "programado" &&
-            encuentro.Estado != "en_juego")
+            encuentro.Estado != "en_juego" &&
+            encuentro.Estado != "cancelado")
         {
             return null;
         }

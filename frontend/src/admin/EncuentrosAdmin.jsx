@@ -20,6 +20,14 @@ const eventStatusOptions = [
   { value: 'cancelado', label: 'Cancelado' },
 ]
 
+const eventStatusTabs = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'programado', label: 'Programados' },
+  { value: 'en_juego', label: 'En juego' },
+  { value: 'cancelado', label: 'Cancelados' },
+  { value: 'finalizado', label: 'Finalizados' },
+]
+
 function getAuthHeaders(extraHeaders = {}) {
   const token = localStorage.getItem('ticketmatch-token')
 
@@ -65,7 +73,10 @@ function EncuentrosAdmin({ user }) {
   const [sectors, setSectors] = useState([])
   const [sectorsLoading, setSectorsLoading] = useState(false)
   const [selectedSectors, setSelectedSectors] = useState({})
+  const [statusFilter, setStatusFilter] = useState('todos')
   const adminCountryId = getAdminCountryId(user)
+  const minEventDate = getTodayInputValue()
+  const availableTimeOptions = getAvailableTimeOptions(eventForm.fecha)
 
   const loadEncuentros = async () => {
     setEncuentrosError('')
@@ -209,7 +220,15 @@ function EncuentrosAdmin({ user }) {
   }
 
   const updateEventField = (field, value) => {
-    setEventForm((current) => ({ ...current, [field]: value }))
+    setEventForm((current) => {
+      const next = { ...current, [field]: value }
+
+      if (field === 'fecha' && next.hora && !getAvailableTimeOptions(value).includes(next.hora)) {
+        next.hora = ''
+      }
+
+      return next
+    })
 
     if (field === 'estadioId') {
       setSelectedSectors({})
@@ -268,6 +287,12 @@ function EncuentrosAdmin({ user }) {
       return
     }
 
+    if (!isFutureEventDateTime(eventForm.fecha, eventForm.hora)) {
+      setEventFormError('El encuentro debe ser en una fecha y hora futura')
+      setEventSaving(false)
+      return
+    }
+
     const payload = {
       equipoLocalId: Number(eventForm.equipoLocalId),
       equipoVisitanteId: Number(eventForm.equipoVisitanteId),
@@ -299,9 +324,15 @@ function EncuentrosAdmin({ user }) {
   }
 
   const openEditEvent = async (encuentro) => {
+    if (!canEditEncounter(encuentro, adminCountryId)) {
+      return
+    }
+
+    const allowedStatusOptions = getAllowedStatusOptions(encuentro.estado)
+
     setSelectedEvent(encuentro)
     setEditEventForm({
-      estado: encuentro.estado ?? 'programado',
+      estado: allowedStatusOptions[0]?.value ?? encuentro.estado ?? 'programado',
     })
     setEditEventError('')
     setSelectedSectors({})
@@ -397,11 +428,27 @@ function EncuentrosAdmin({ user }) {
       {encuentrosError && <p className="matches-status is-error">{encuentrosError}</p>}
 
       {!encuentrosLoading && !encuentrosError && (
-        <div className="stadium-grid">
-          {encuentros.length === 0 ? (
+        <>
+          <div className="reservas-tabs encounter-tabs" role="tablist" aria-label="Estados de encuentros">
+            {eventStatusTabs.map((tab) => (
+              <button
+                aria-selected={statusFilter === tab.value}
+                className={`reservas-tab ${statusFilter === tab.value ? 'is-active' : ''}`}
+                key={tab.value}
+                onClick={() => setStatusFilter(tab.value)}
+                role="tab"
+                type="button"
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="stadium-grid">
+            {getVisibleEncuentros(encuentros, statusFilter).length === 0 ? (
             <p className="matches-status">No hay encuentros disponibles.</p>
           ) : (
-            sortEncuentrosByPermission(encuentros, adminCountryId).map((encuentro) => (
+            sortEncuentrosByPermission(getVisibleEncuentros(encuentros, statusFilter), adminCountryId).map((encuentro) => (
               <EncuentroCard
                 adminCountryId={adminCountryId}
                 encuentro={encuentro}
@@ -410,7 +457,8 @@ function EncuentrosAdmin({ user }) {
               />
             ))
           )}
-        </div>
+          </div>
+        </>
       )}
 
       {eventModalOpen && (
@@ -430,6 +478,8 @@ function EncuentrosAdmin({ user }) {
           selectedSectors={selectedSectors}
           stadiums={stadiums}
           stadiumsLoading={stadiumsLoading}
+          minEventDate={minEventDate}
+          timeOptions={availableTimeOptions}
         />
       )}
 
@@ -455,6 +505,7 @@ function EncuentrosAdmin({ user }) {
 
 function EncuentroCard({ adminCountryId, encuentro, onEdit }) {
   const isOwnCountry = Number(encuentro.pais) === adminCountryId
+  const canEdit = canEditEncounter(encuentro, adminCountryId)
   const teamsLabel = getTeamsLabel(encuentro)
   const stadiumLabel = getStadiumLabel(encuentro)
   const countryLabel = getCountryLabel(encuentro, isOwnCountry)
@@ -486,11 +537,15 @@ function EncuentroCard({ adminCountryId, encuentro, onEdit }) {
         </p>
         <p>
           <span>Estado</span>
-          <strong>{formatStatus(encuentro.estado)}</strong>
+          <strong>
+            <span className={`encounter-status-badge ${getStatusClass(encuentro.estado)}`}>
+              {formatStatus(encuentro.estado)}
+            </span>
+          </strong>
         </p>
       </div>
 
-      {isOwnCountry && (
+      {canEdit && (
         <footer className="stadium-actions event-actions">
           <button className="details-button" type="button" onClick={onEdit}>
             <SidebarIcon name="edit" />
@@ -518,6 +573,8 @@ function CreateEventModal({
   selectedSectors,
   stadiums,
   stadiumsLoading,
+  minEventDate,
+  timeOptions,
 }) {
   return (
     <div className="modal-backdrop" role="presentation">
@@ -570,6 +627,7 @@ function CreateEventModal({
               <span>Fecha</span>
               <input
                 required
+                min={minEventDate}
                 type="date"
                 value={form.fecha}
                 onChange={(event) => onChange('fecha', event.target.value)}
@@ -578,8 +636,19 @@ function CreateEventModal({
 
             <label>
               <span>Hora</span>
-              <select required value={form.hora} onChange={(event) => onChange('hora', event.target.value)}>
-                <option value="">Selecciona una hora</option>
+              <select
+                required
+                disabled={!form.fecha}
+                value={form.hora}
+                onChange={(event) => onChange('hora', event.target.value)}
+              >
+                <option value="">
+                  {!form.fecha
+                    ? 'Selecciona primero una fecha'
+                    : timeOptions.length === 0
+                      ? 'No quedan horas disponibles hoy'
+                      : 'Selecciona una hora'}
+                </option>
                 {timeOptions.map((time) => (
                   <option key={time} value={time}>
                     {time}
@@ -675,6 +744,7 @@ function EditEventModal({
 }) {
   const teamsLabel = getTeamsLabel(encuentro)
   const stadiumLabel = getStadiumLabel(encuentro)
+  const allowedStatusOptions = getAllowedStatusOptions(encuentro.estado)
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -711,7 +781,7 @@ function EditEventModal({
           <label>
             <span>Estado</span>
             <select required value={form.estado} onChange={(event) => onChange('estado', event.target.value)}>
-              {eventStatusOptions.map((status) => (
+              {allowedStatusOptions.map((status) => (
                 <option key={status.value} value={status.value}>
                   {status.label}
                 </option>
@@ -777,6 +847,36 @@ function getAdminCountryId(user) {
   const parsedCountryId = Number(countryId)
 
   return Number.isInteger(parsedCountryId) ? parsedCountryId : null
+}
+
+function getVisibleEncuentros(encuentros, statusFilter) {
+  if (statusFilter === 'todos') {
+    return encuentros
+  }
+
+  return encuentros.filter((encuentro) => encuentro.estado === statusFilter)
+}
+
+function canEditEncounter(encuentro, adminCountryId) {
+  return Number(encuentro.pais) === adminCountryId && encuentro.estado !== 'finalizado'
+}
+
+function getAllowedStatusOptions(currentStatus) {
+  if (currentStatus === 'programado') {
+    return eventStatusOptions.filter((status) =>
+      ['programado', 'en_juego', 'cancelado'].includes(status.value)
+    )
+  }
+
+  if (currentStatus === 'cancelado') {
+    return eventStatusOptions.filter((status) => status.value === 'programado')
+  }
+
+  if (currentStatus === 'en_juego') {
+    return eventStatusOptions.filter((status) => status.value === 'finalizado')
+  }
+
+  return []
 }
 
 function sortEncuentrosByPermission(encuentros, adminCountryId) {
@@ -889,10 +989,61 @@ const timeOptions = Array.from({ length: 48 }, (_, index) => {
   return `${hours}:${minutes}`
 })
 
+function getTodayInputValue() {
+  return formatDateInputValue(new Date())
+}
+
+function getAvailableTimeOptions(selectedDate) {
+  if (!selectedDate) {
+    return timeOptions
+  }
+
+  const today = getTodayInputValue()
+
+  if (selectedDate < today) {
+    return []
+  }
+
+  if (selectedDate > today) {
+    return timeOptions
+  }
+
+  const now = new Date()
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+
+  return timeOptions.filter((time) => timeToMinutes(time) > currentMinutes)
+}
+
+function isFutureEventDateTime(date, time) {
+  if (!date || !time) {
+    return false
+  }
+
+  return new Date(`${date}T${time}:00`) > new Date()
+}
+
+function timeToMinutes(time) {
+  const [hours, minutes] = time.split(':').map(Number)
+
+  return hours * 60 + minutes
+}
+
+function formatDateInputValue(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
 function formatStatus(status) {
   const option = eventStatusOptions.find((currentStatus) => currentStatus.value === status)
 
   return option?.label ?? 'Sin estado'
+}
+
+function getStatusClass(status) {
+  return `is-${String(status ?? 'unknown').replace('_', '-')}`
 }
 
 function formatDate(date) {
