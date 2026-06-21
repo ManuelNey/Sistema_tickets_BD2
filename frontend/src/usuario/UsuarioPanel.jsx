@@ -17,7 +17,6 @@ const userTabs = [
   { id: 'comprar', label: 'Comprar Entradas', icon: 'bag' },
   { id: 'entradas', label: 'Mis Entradas', icon: 'ticket' },
   { id: 'reservas', label: 'Mis Reservas', icon: 'bookmark' },
-  { id: 'mapa', label: 'Mapa de Estadios', icon: 'map' },
   { id: 'qr', label: 'Codigos QR', icon: 'qr' },
   { id: 'enviadas', label: 'Enviadas', icon: 'send' },
   { id: 'recibidas', label: 'Recibidas', icon: 'inbox' },
@@ -37,6 +36,10 @@ function UsuarioPanel({ onLogout, user }) {
 
   const goToMisEntradas = () => {
     handleTabChange('entradas')
+  }
+
+  const goToEnviadas = () => {
+    handleTabChange('enviadas')
   }
 
   return (
@@ -74,7 +77,7 @@ function UsuarioPanel({ onLogout, user }) {
         ) : activeTab === 'comprar' ? (
           <ComprarEntradas onIrAMisEntradas={goToMisEntradas} />
         ) : activeTab === 'entradas' ? (
-          <MisEntradas />
+          <MisEntradas onIrAEnviadas={goToEnviadas} />
         ) : activeTab === 'reservas' ? (
           <MisReservas onIrAMisEntradas={goToMisEntradas} />
         ) : activeTab === 'qr' ? (
