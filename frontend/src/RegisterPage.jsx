@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import './RegisterPage.css'
 import BallLogo from './assets/pelota.png'
-import { useAuth } from './context/useAuth'
 
 const pasos = [
   { id: 1, nombre: 'Personal', icono: '◌' },
@@ -34,8 +33,6 @@ const datosIniciales = {
 }
 
 function RegisterPage({ onVolverLogin }) {
-  const { login } = useAuth()
-
   const [pasoActual, setPasoActual] = useState(1)
   const [datos, setDatos] = useState(datosIniciales)
   const [errores, setErrores] = useState({})
@@ -176,21 +173,12 @@ function RegisterPage({ onVolverLogin }) {
         )
       }
 
-      const token = respuesta?.token || respuesta?.Token
+      window.alert('Usuario registrado correctamente. Ahora podes iniciar sesion.')
 
-      if (!token) {
-        throw new Error(
-          'La cuenta fue creada, pero el servidor no devolvió un token.'
-        )
-      }
-
-      const usuarioParaLogin = {
-        ...respuesta,
-        token,
-        Token: token,
-      }
-
-      login(usuarioParaLogin)
+      setDatos(datosIniciales)
+      setErrores({})
+      setPasoActual(1)
+      onVolverLogin()
     } catch (error) {
       setErrorApi(
         error.message || 'Ocurrió un error al crear la cuenta.'

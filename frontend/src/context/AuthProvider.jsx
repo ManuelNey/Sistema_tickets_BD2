@@ -65,14 +65,29 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
+  const updateUser = useCallback((updatedFields) => {
+    setUser((currentUser) => {
+      if (!currentUser) return currentUser
+
+      const updatedUser = {
+        ...currentUser,
+        ...updatedFields,
+      }
+
+      localStorage.setItem(USER_KEY, JSON.stringify(updatedUser))
+      return updatedUser
+    })
+  }, [])
+
   const value = useMemo(
     () => ({
       user,
       login,
       logout,
+      updateUser,
       isAuthenticated: Boolean(user),
     }),
-    [user, login, logout]
+    [user, login, logout, updateUser]
   )
 
   return (

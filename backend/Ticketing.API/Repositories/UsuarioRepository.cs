@@ -30,6 +30,16 @@ public class UsuarioRepository : IUsuarioRepository
                 p.mail,
                 p.nombre,
                 p.apellido,
+                p.fecha_nacimiento,
+                p.tipo_documento,
+                p.numero_documento,
+                p.pais_documento,
+                p.pais_casa,
+                p.localidad,
+                p.calle,
+                p.numero_casa,
+                p.codigo_postal,
+                t.telefono AS telefono,
                 CASE
                     WHEN a.persona_mail IS NOT NULL THEN 'admin'
                     WHEN f.persona_mail IS NOT NULL THEN 'funcionario'
@@ -39,9 +49,10 @@ public class UsuarioRepository : IUsuarioRepository
                 u.fecha_registro,
                 a.fk_pais_sede
             FROM persona p
-            LEFT JOIN usuario u       ON p.mail = u.persona_mail
+            LEFT JOIN usuario u ON p.mail = u.persona_mail
             LEFT JOIN administrador a ON p.mail = a.persona_mail
-            LEFT JOIN funcionario f   ON p.mail = f.persona_mail
+            LEFT JOIN funcionario f ON p.mail = f.persona_mail
+            LEFT JOIN telefonos t ON p.mail = t.persona_mail
             WHERE p.mail = @mail";
 
         cmd.Parameters.AddWithValue("@mail", mail);
@@ -50,7 +61,11 @@ public class UsuarioRepository : IUsuarioRepository
         if (!await reader.ReadAsync())
             return null;
 
-        return MapDto(reader);
+        var usuario = MapDto(reader);
+        await reader.CloseAsync();
+
+        usuario.Telefonos = await GetTelefonosAsync(connection, mail);
+        return usuario;
     }
 
     // Verifica si existe un usuario con el mail dado
@@ -113,6 +128,21 @@ public class UsuarioRepository : IUsuarioRepository
         insertUsuarioCmd.Parameters.AddWithValue("@mail", registro.Mail);
 
         await insertUsuarioCmd.ExecuteNonQueryAsync();
+
+        if (!string.IsNullOrWhiteSpace(registro.Telefono))
+        {
+            using var insertTelefonoCmd = connection.CreateCommand();
+            insertTelefonoCmd.Transaction = tx;
+
+            insertTelefonoCmd.CommandText = @"
+                INSERT INTO telefonos (persona_mail, telefono)
+                VALUES (@mail, @telefono)";
+
+            insertTelefonoCmd.Parameters.AddWithValue("@mail", registro.Mail);
+            insertTelefonoCmd.Parameters.AddWithValue("@telefono", registro.Telefono.Trim());
+
+            await insertTelefonoCmd.ExecuteNonQueryAsync();
+        }
         await tx.CommitAsync();
     }
 
@@ -149,15 +179,7 @@ public class UsuarioRepository : IUsuarioRepository
                 u.identidad_verificada,
                 u.fecha_registro,
                 a.fk_pais_sede,
-
-                COALESCE(
-                    (
-                        SELECT array_agg(t.telefono)
-                        FROM telefonos t
-                        WHERE t.persona_mail = p.mail
-                    ),
-                    ARRAY[]::text[]
-                ) AS telefonos
+                t.telefono AS telefono
 
             FROM persona p
             LEFT JOIN usuario u
@@ -166,6 +188,8 @@ public class UsuarioRepository : IUsuarioRepository
                 ON p.mail = a.persona_mail
             LEFT JOIN funcionario f
                 ON p.mail = f.persona_mail
+            LEFT JOIN telefonos t
+                ON p.mail = t.persona_mail
             WHERE p.mail = @mail;";
 
             cmd.Parameters.AddWithValue("@mail", mail);
@@ -182,7 +206,11 @@ public class UsuarioRepository : IUsuarioRepository
                 return null;
             }
 
-            return MapDto(reader);
+            var usuario = MapDto(reader);
+            await reader.CloseAsync();
+
+            usuario.Telefonos = await GetTelefonosAsync(connection, mail);
+            return usuario;
     }
 
     public async Task<bool> UpdateProfileAsync(
@@ -192,8 +220,10 @@ public class UsuarioRepository : IUsuarioRepository
 {
     await using var connection = _connectionFactory.CreateConnection();
     await connection.OpenAsync();
+    await using var tx = await connection.BeginTransactionAsync();
 
     using var updatePersonaCmd = connection.CreateCommand();
+    updatePersonaCmd.Transaction = tx;
 
     updatePersonaCmd.CommandText = @"
         UPDATE persona
@@ -235,6 +265,7 @@ public class UsuarioRepository : IUsuarioRepository
     }
 
     using var deleteTelefonosCmd = connection.CreateCommand();
+    deleteTelefonosCmd.Transaction = tx;
 
     deleteTelefonosCmd.CommandText = @"
         DELETE FROM telefonos
@@ -244,27 +275,58 @@ public class UsuarioRepository : IUsuarioRepository
 
     await deleteTelefonosCmd.ExecuteNonQueryAsync();
 
-    foreach (var telefono in perfil.Telefonos)
+    foreach (var telefono in perfil.Telefonos.Select(t => t.Trim()).Distinct())
     {
         if (string.IsNullOrWhiteSpace(telefono))
         {
             continue;
         }
 
+        if (!telefono.All(char.IsDigit))
+        {
+            throw new InvalidOperationException("El teléfono solo puede contener números.");
+        }
+
         using var insertTelefonoCmd = connection.CreateCommand();
+        insertTelefonoCmd.Transaction = tx;
 
         insertTelefonoCmd.CommandText = @"
             INSERT INTO telefonos (persona_mail, telefono)
             VALUES (@mail, @telefono);";
 
         insertTelefonoCmd.Parameters.AddWithValue("@mail", mail);
-        insertTelefonoCmd.Parameters.AddWithValue("@telefono", telefono.Trim());
+        insertTelefonoCmd.Parameters.AddWithValue("@telefono", telefono);
 
         await insertTelefonoCmd.ExecuteNonQueryAsync();
     }
 
+    await tx.CommitAsync();
+
     return true;
 }
+
+    private static async Task<List<string>> GetTelefonosAsync(NpgsqlConnection connection, string mail)
+    {
+        var telefonos = new List<string>();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT telefono
+            FROM telefonos
+            WHERE persona_mail = @mail
+            ORDER BY telefono;";
+
+        command.Parameters.AddWithValue("@mail", mail);
+
+        using var reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
+        {
+            telefonos.Add(reader.GetString(reader.GetOrdinal("telefono")));
+        }
+
+        return telefonos;
+    }
 
     // Mapea lo renderizado de la consulta SQL a un DTO, manejando posibles valores nulos
     private static UsuarioResponseDto MapDto(NpgsqlDataReader reader)
@@ -273,7 +335,7 @@ public class UsuarioRepository : IUsuarioRepository
         var ordIdV = reader.GetOrdinal("identidad_verificada");
         var ordFR = reader.GetOrdinal("fecha_registro");
         var ordPais = reader.GetOrdinal("fk_pais_sede");
-        var ordTelefonos = reader.GetOrdinal("telefonos");
+        var ordTelefono = reader.GetOrdinal("telefono");
         var ordFechaNacimiento = reader.GetOrdinal("fecha_nacimiento");
 
         return new UsuarioResponseDto
@@ -330,9 +392,9 @@ public class UsuarioRepository : IUsuarioRepository
                 ? string.Empty
                 : reader.GetString(reader.GetOrdinal("codigo_postal")),
 
-            Telefonos = reader.IsDBNull(ordTelefonos)
+            Telefonos = reader.IsDBNull(ordTelefono)
                 ? new List<string>()
-                : reader.GetFieldValue<string[]>(ordTelefonos).ToList(),
+                : new List<string> { reader.GetString(ordTelefono) },
 
             FechaNacimiento = reader.IsDBNull(ordFechaNacimiento)
                 ? null

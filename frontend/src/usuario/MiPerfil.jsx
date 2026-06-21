@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import SidebarIcon from '../shared/SidebarIcon'
+import { useAuth } from '../context/useAuth'
 import './MiPerfil.css'
 
 const API_URL = 'http://localhost:8080/api/usuario'
 
 function MiPerfil({ user }) {
+  const { updateUser } = useAuth()
+
   const [perfil, setPerfil] = useState(() => user || {})
   const [editandoSeccion, setEditandoSeccion] = useState(null)
 
@@ -60,9 +63,20 @@ function MiPerfil({ user }) {
   const agregarTelefono = () => {
     const telefonoLimpio = nuevoTelefono.trim()
 
-    if (!telefonoLimpio || telefonos.includes(telefonoLimpio)) {
+    if (!telefonoLimpio) {
       return
     }
+
+    if (!/^\d+$/.test(telefonoLimpio)) {
+      setError('El telefono solo puede contener numeros.')
+      return
+    }
+
+    if (telefonos.includes(telefonoLimpio)) {
+      return
+    }
+
+    setError('')
 
     setTelefonos((telefonosActuales) => [
       ...telefonosActuales,
@@ -99,8 +113,32 @@ function MiPerfil({ user }) {
     setError('')
     setMensajeExito('')
 
+    const telefonoInvalido = telefonos.find(
+      (telefono) => !/^\d+$/.test(telefono)
+    )
+
+    if (telefonoInvalido) {
+      setError('El telefono solo puede contener numeros.')
+      setGuardando(false)
+      return
+    }
+
     try {
       const token = localStorage.getItem('ticketmatch-token')
+      const perfilActualizado = {
+        nombre: perfil.nombre || '',
+        apellido: perfil.apellido || '',
+        fechaNacimiento: perfil.fechaNacimiento || null,
+        tipoDocumento: perfil.tipoDocumento || '',
+        numeroDocumento: perfil.numeroDocumento || '',
+        paisDocumento: perfil.paisDocumento || '',
+        paisCasa: perfil.paisCasa || '',
+        localidad: perfil.localidad || '',
+        calle: perfil.calle || '',
+        numeroCasa: perfil.numeroCasa || '',
+        codigoPostal: perfil.codigoPostal || '',
+        telefonos,
+      }
 
       const response = await fetch(
         `${API_URL}/perfil/${encodeURIComponent(perfil.mail)}`,
@@ -110,20 +148,7 @@ function MiPerfil({ user }) {
             'Content-Type': 'application/json',
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify({
-            nombre: perfil.nombre || '',
-            apellido: perfil.apellido || '',
-            fechaNacimiento: perfil.fechaNacimiento || null,
-            tipoDocumento: perfil.tipoDocumento || '',
-            numeroDocumento: perfil.numeroDocumento || '',
-            paisDocumento: perfil.paisDocumento || '',
-            paisCasa: perfil.paisCasa || '',
-            localidad: perfil.localidad || '',
-            calle: perfil.calle || '',
-            numeroCasa: perfil.numeroCasa || '',
-            codigoPostal: perfil.codigoPostal || '',
-            telefonos,
-          }),
+          body: JSON.stringify(perfilActualizado),
         }
       )
 
@@ -135,10 +160,14 @@ function MiPerfil({ user }) {
         )
       }
 
-      setMensajeExito(
-        'Cambios guardados correctamente. Se verán al volver a iniciar sesión.'
-      )
+      updateUser(perfilActualizado)
+      setPerfil((perfilActual) => ({
+        ...perfilActual,
+        ...perfilActualizado,
+      }))
+      setTelefonos(perfilActualizado.telefonos)
 
+      setMensajeExito('Cambios guardados correctamente.')
       setEditandoSeccion(null)
     } catch (errorGuardado) {
       setError(

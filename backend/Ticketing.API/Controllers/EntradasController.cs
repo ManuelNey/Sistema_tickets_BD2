@@ -99,8 +99,7 @@ public class EntradasController : ControllerBase
         var tokenQr = _jwtService.GenerateQrToken(idEntrada, mail);
 
         var qrContenido =
-            $"http://192.168.1.23:8080/api/Entradas/ScanQr?token={Uri.EscapeDataString(tokenQr)}";
-
+                    $"http://10.140.24.139:8080/api/Entradas/ScanQr?token={Uri.EscapeDataString(tokenQr)}";
         return Ok(new
         {
             entradaId = idEntrada,
