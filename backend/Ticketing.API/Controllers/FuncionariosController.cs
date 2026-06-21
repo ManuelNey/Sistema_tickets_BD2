@@ -10,10 +10,14 @@ namespace Ticketing.API.Controllers;
 public class FuncionariosController : ControllerBase
 {
     private readonly IFuncionarioRepository _funcionarioRepository;
+    private readonly ITrabajaEnRepository _trabajaEnRepository;
 
-    public FuncionariosController(IFuncionarioRepository funcionarioRepository)
+    public FuncionariosController(
+        IFuncionarioRepository funcionarioRepository,
+        ITrabajaEnRepository trabajaEnRepository)
     {
         _funcionarioRepository = funcionarioRepository;
+        _trabajaEnRepository = trabajaEnRepository;
     }
 
     [HttpGet("admin")]
@@ -23,5 +27,13 @@ public class FuncionariosController : ControllerBase
         var funcionarios = await _funcionarioRepository.GetAllAsync();
 
         return Ok(funcionarios);
+    }
+
+    [HttpGet("encuentro/{encuentroId:int}")]
+    [Authorize(Roles = "admin")]
+    public async Task<ActionResult<IReadOnlyCollection<TrabajaEnDto>>> GetFuncionariosPorEncuentro(int encuentroId)
+    {
+        var asignaciones = await _trabajaEnRepository.GetByEncuentroAsync(encuentroId);
+        return Ok(asignaciones);
     }
 }

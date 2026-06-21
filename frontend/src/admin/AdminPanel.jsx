@@ -8,6 +8,7 @@ import DispositivosAdmin from './DispositivosAdmin'
 import EstadiosAdmin from './EstadiosAdmin'
 import SectoresAdmin from './SectoresAdmin'
 import Ticket from '../assets/ticket.png'
+import './AdminPanel.css'
 
 const adminTabs = [
   { id: 'dashboard', label: 'Dashboard', icon: 'chart' },
