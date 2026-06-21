@@ -125,7 +125,7 @@ function EnviarEntrada({ grupo, onVolver, onEnviado }) {
               <strong>{resultado.email}</strong>. Quedan en estado <strong>transferida</strong> hasta que el destinatario las acepte.
             </p>
             <button className="btn-primary" type="button" onClick={() => onEnviado(resultado.enviadas)} style={{ width: '100%' }}>
-              Volver a Mis Entradas
+              Ver transferencias enviadas
             </button>
           </div>
         </div>

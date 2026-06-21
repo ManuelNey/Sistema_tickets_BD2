@@ -5,7 +5,7 @@ import TeamBadge from './TeamBadge'
 import EnviarEntrada from './EnviarEntrada'
 import './reserva.css'
 
-function MisEntradas() {
+function MisEntradas({ onIrAEnviadas }) {
   const [grupos, setGrupos] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -43,11 +43,12 @@ function MisEntradas() {
     setView('enviar')
   }
 
-  // Vuelve al listado tras enviar con éxito y recarga (el modal ya confirmó el envío).
+  // Tras enviar con éxito: limpia estado y navega a Transferencias Enviadas para que el
+  // usuario vea el estado de la transferencia recién creada.
   const handleEnviado = () => {
     setView('list')
     setGrupoSel(null)
-    cargar()
+    onIrAEnviadas?.()
   }
 
   if (view === 'enviar' && grupoSel) {
