@@ -1,60 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import './DashboardAdmin.css'
 
-const MOCK_KPI = {
-  semana: {
-    entradasVendidas: 3210,
-    ingresosTotales: 261000,
-    reservasCanceladas: 212,
-    transferencias: 308,
-  },
-  mes: {
-    entradasVendidas: 12847,
-    ingresosTotales: 1030000,
-    reservasCanceladas: 847,
-    transferencias: 1234,
-  },
-  total: {
-    entradasVendidas: 38210,
-    ingresosTotales: 3100000,
-    reservasCanceladas: 2541,
-    transferencias: 3701,
-  },
-}
-
-const MOCK_TOP_COMPRADORES = [
-  { email: 'user43@gmail.com', entradas: 8, total: 640 },
-  { email: 'maria_p@hotmail.com', entradas: 6, total: 480 },
-  { email: 'carlos99@gmail.com', entradas: 5, total: 400 },
-  { email: 'ana_lopez@gmail.com', entradas: 4, total: 320 },
-  { email: 'javier.m@gmail.com', entradas: 3, total: 240 },
-]
-
-const MOCK_TOP_TRANSFERIDORES = [
-  { email: 'user43@gmail.com', transferencias: 5, estado: 'activo' },
-  { email: 'carlos99@gmail.com', transferencias: 4, estado: 'activo' },
-  { email: 'p.gonzalez@gmail.com', transferencias: 3, estado: 'pendiente' },
-  { email: 'laura.r@gmail.com', transferencias: 2, estado: 'activo' },
-  { email: 'm.ramirez@gmail.com', transferencias: 2, estado: 'inactivo' },
-]
-
-const MOCK_CANCELADAS = {
-  total: 847,
-  tasaCancelacion: 18.4,
-  montoPerdido: 67760,
-  topMatches: [
-    { nombre: 'Mexico vs Sudafrica', venue: 'Est. Ciudad de Mexico - 11 Jun', cantidad: 214 },
-    { nombre: 'Canada vs Bosnia y Herz.', venue: 'BMO Field - 12 Jun', cantidad: 189 },
-    { nombre: 'Rep. Corea vs Rep. Checa', venue: 'Est. Guadalajara - 12 Jun', cantidad: 163 },
-  ],
-}
-
 const AVATAR_COLORS = ['#7C3AED', '#2563EB', '#16A34A', '#D97706', '#DB2777']
 
 function DashboardAdmin() {
-  const [periodo, setPeriodo] = useState('mes')
   const [topEncuentros, setTopEncuentros] = useState([])
-  const [loadingEncuentros, setLoadingEncuentros] = useState(false)
+  const [topEstadios, setTopEstadios] = useState([])
+  const [topUsuarios, setTopUsuarios] = useState([])
+  const [topTransferidores, setTopTransferidores] = useState([])
+  const [canceladas, setCanceladas] = useState(null)
+  const [loadingStats, setLoadingStats] = useState(false)
   const [error, setError] = useState('')
   const [statsPeriod, setStatsPeriod] = useState('mes')
   const [desdePersonalizado, setDesdePersonalizado] = useState('')
@@ -66,73 +21,76 @@ function DashboardAdmin() {
   )
 
   useEffect(() => {
-    const loadTopEncuentros = async () => {
-      setLoadingEncuentros(true)
+    const loadDashboardStats = async () => {
+      setLoadingStats(true)
       setError('')
 
       try {
-        const token = localStorage.getItem('ticketmatch-token')
-        const response = await fetch(buildStatsUrl('TopEncuentros', rangoFechas), {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const [
+          encuentrosResult,
+          estadiosResult,
+          usuariosResult,
+          transferidoresResult,
+          canceladasResult,
+        ] = await Promise.allSettled([
+          fetchStatsEndpoint('TopEncuentros', rangoFechas),
+          fetchStatsEndpoint('EntradasPorEstadio', rangoFechas),
+          fetchStatsEndpoint('TopUsuarios', rangoFechas),
+          fetchStatsEndpoint('UsuariosTransferencias', rangoFechas),
+          fetchStatsEndpoint('Canceladas', rangoFechas),
+        ])
 
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar los encuentros')
+        setTopEncuentros(getSettledValue(encuentrosResult, []))
+        setTopEstadios(getSettledValue(estadiosResult, []))
+        setTopUsuarios(getSettledValue(usuariosResult, []))
+        setTopTransferidores(getSettledValue(transferidoresResult, []))
+        setCanceladas(getSettledValue(canceladasResult, null))
+
+        const failedRequests = [
+          encuentrosResult,
+          estadiosResult,
+          usuariosResult,
+          transferidoresResult,
+          canceladasResult,
+        ].some((result) => result.status === 'rejected')
+
+        if (failedRequests) {
+          setError('Algunas estadisticas no se pudieron cargar.')
         }
-
-        setTopEncuentros(await response.json())
-      } catch (err) {
-        setTopEncuentros([])
-        setError(err.message || 'No se pudieron cargar las estadisticas.')
       } finally {
-        setLoadingEncuentros(false)
+        setLoadingStats(false)
       }
     }
 
-    loadTopEncuentros()
+    loadDashboardStats()
   }, [rangoFechas])
 
-  const kpi = MOCK_KPI[periodo]
-  const topEstadios = deriveTopEstadios(topEncuentros)
-  const maxEncuentros = Math.max(...topEncuentros.map(getVendidas), 1)
-  const maxEstadios = Math.max(...topEstadios.map((estadio) => estadio.vendidas), 1)
-  const maxCompradores = Math.max(...MOCK_TOP_COMPRADORES.map((usuario) => usuario.entradas), 1)
-  const maxTransferidores = Math.max(
-    ...MOCK_TOP_TRANSFERIDORES.map((usuario) => usuario.transferencias),
-    1
+  const entradasVendidas = topEstadios.reduce(
+    (total, estadio) => total + getEstadioVendidas(estadio),
+    0
   )
+  const transferencias = topTransferidores.reduce(
+    (total, usuario) => total + getCantidadUsuario(usuario),
+    0
+  )
+  const porcentajeCanceladas = getPorcentajeCanceladas(canceladas)
+  const maxEncuentros = Math.max(...topEncuentros.map(getVendidas), 1)
+  const maxEstadios = Math.max(...topEstadios.map(getEstadioVendidas), 1)
+  const maxCompradores = Math.max(...topUsuarios.map(getCantidadUsuario), 1)
+  const maxTransferidores = Math.max(...topTransferidores.map(getCantidadUsuario), 1)
 
   return (
     <div className="admin-view stats-view">
       <header className="stats-header">
         <div>
           <h1 id="dashboard-title">Estadisticas Generales</h1>
-          <p>Copa Mundial FIFA 2026 - Datos en Tiempo Real</p>
-        </div>
-
-        <div className="period-tabs" role="tablist">
-          {[
-            ['semana', 'Esta semana'],
-            ['mes', 'Este mes'],
-            ['total', 'Total'],
-          ].map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={periodo === id}
-              className={`period-tab ${periodo === id ? 'is-active' : ''}`}
-              onClick={() => setPeriodo(id)}
-            >
-              {label}
-            </button>
-          ))}
+          <p>Copa Mundial FIFA 2026 - datos filtrados por periodo</p>
         </div>
       </header>
 
       <section className="stats-filters" aria-label="Filtros de estadisticas">
         <label className="stats-filter-field">
-          Periodo de graficas
+          Periodo
           <select value={statsPeriod} onChange={(event) => setStatsPeriod(event.target.value)}>
             <option value="semana">Esta semana</option>
             <option value="mes">Este mes</option>
@@ -164,6 +122,7 @@ function DashboardAdmin() {
         )}
       </section>
 
+      {loadingStats && <p className="matches-status">Cargando estadisticas...</p>}
       {error && <p className="matches-status is-error">{error}</p>}
 
       <div className="kpi-row">
@@ -171,25 +130,25 @@ function DashboardAdmin() {
           icon={<TicketIcon />}
           colorClass="is-purple"
           label="Entradas Vendidas"
-          value={formatCount(kpi.entradasVendidas)}
+          value={formatCount(entradasVendidas)}
         />
         <KpiCard
           icon={<MoneyIcon />}
           colorClass="is-green"
           label="Ingresos Totales"
-          value={formatMoney(kpi.ingresosTotales)}
+          value="Pendiente"
         />
         <KpiCard
           icon={<AlertIcon />}
           colorClass="is-amber"
           label="Reservas Canceladas"
-          value={formatCount(kpi.reservasCanceladas)}
+          value={`${formatDecimal(porcentajeCanceladas)}%`}
         />
         <KpiCard
           icon={<SendIcon />}
           colorClass="is-blue"
           label="Transferencias"
-          value={formatCount(kpi.transferencias)}
+          value={formatCount(transferencias)}
         />
       </div>
 
@@ -206,8 +165,7 @@ function DashboardAdmin() {
           </div>
 
           <div className="top-list">
-            {loadingEncuentros && <p className="matches-status">Cargando...</p>}
-            {!loadingEncuentros && topEncuentros.length === 0 && (
+            {topEncuentros.length === 0 && !loadingStats && (
               <p className="matches-status">Sin datos disponibles.</p>
             )}
             {topEncuentros.map((encuentro, index) => {
@@ -244,24 +202,28 @@ function DashboardAdmin() {
           </div>
 
           <div className="top-list">
-            {topEstadios.length === 0 && !loadingEncuentros && (
+            {topEstadios.length === 0 && !loadingStats && (
               <p className="matches-status">Sin datos disponibles.</p>
             )}
-            {topEstadios.map((estadio, index) => (
-              <div className="top-list-item" key={estadio.nombre}>
-                <span className="top-rank">#{index + 1}</span>
-                <div className="top-match-info is-estadio">
-                  <div className="top-match-name">{estadio.nombre}</div>
-                  <div className="top-bar-wrap">
-                    <div
-                      className="top-bar-fill"
-                      style={{ width: `${(estadio.vendidas / maxEstadios) * 100}%` }}
-                    />
+            {topEstadios.map((estadio, index) => {
+              const vendidas = getEstadioVendidas(estadio)
+
+              return (
+                <div className="top-list-item" key={estadio.nombreEstadio ?? index}>
+                  <span className="top-rank">#{index + 1}</span>
+                  <div className="top-match-info is-estadio">
+                    <div className="top-match-name">{estadio.nombreEstadio}</div>
+                    <div className="top-bar-wrap">
+                      <div
+                        className="top-bar-fill"
+                        style={{ width: `${(vendidas / maxEstadios) * 100}%` }}
+                      />
+                    </div>
                   </div>
+                  <span className="top-count">{formatCount(vendidas)}</span>
                 </div>
-                <span className="top-count">{formatCount(estadio.vendidas)}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
@@ -275,35 +237,37 @@ function DashboardAdmin() {
             </div>
           </div>
 
-          <div className="top-users-table">
-            <div className="top-users-head">
-              <span>USUARIO</span>
-              <span>ENTRADAS</span>
-              <span>TOTAL</span>
-            </div>
-            {MOCK_TOP_COMPRADORES.map((usuario, index) => (
-              <div className="top-users-row" key={usuario.email}>
-                <div className="user-cell">
-                  <span
-                    className="user-avatar"
-                    style={{ background: avatarColor(usuario.email, index) }}
-                  >
-                    {avatarInitials(usuario.email)}
-                  </span>
-                  <div style={{ minWidth: 0 }}>
-                    <div className="user-email">{usuario.email}</div>
-                    <div className="user-bar-wrap">
-                      <div
-                        className="user-bar-fill"
-                        style={{ width: `${(usuario.entradas / maxCompradores) * 100}%` }}
-                      />
+          <div className="top-list">
+            {topUsuarios.length === 0 && !loadingStats && (
+              <p className="matches-status">Sin datos disponibles.</p>
+            )}
+            {topUsuarios.map((usuario, index) => {
+              const cantidad = getCantidadUsuario(usuario)
+
+              return (
+                <div className="top-list-item" key={usuario.mail ?? index}>
+                  <span className="top-rank">{index + 1}</span>
+                  <div className="user-cell">
+                    <span
+                      className="user-avatar"
+                      style={{ background: avatarColor(usuario.mail, index) }}
+                    >
+                      {avatarInitials(usuario.mail)}
+                    </span>
+                    <div className="top-match-info">
+                      <div className="user-email">{usuario.mail}</div>
+                      <div className="user-bar-wrap">
+                        <div
+                          className="user-bar-fill"
+                          style={{ width: `${(cantidad / maxCompradores) * 100}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
+                  <span className="top-count">{formatCount(cantidad)}</span>
                 </div>
-                <span className="user-num">{usuario.entradas}</span>
-                <span className="user-total">${formatCount(usuario.total)}</span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
 
@@ -315,39 +279,37 @@ function DashboardAdmin() {
             </div>
           </div>
 
-          <div className="top-users-table">
-            <div className="top-users-head">
-              <span>USUARIO</span>
-              <span>TRANSF.</span>
-              <span>ESTADO</span>
-            </div>
-            {MOCK_TOP_TRANSFERIDORES.map((usuario, index) => (
-              <div className="top-users-row" key={usuario.email}>
-                <div className="user-cell">
-                  <span
-                    className="user-avatar"
-                    style={{ background: avatarColor(usuario.email, index) }}
-                  >
-                    {avatarInitials(usuario.email)}
-                  </span>
-                  <div style={{ minWidth: 0 }}>
-                    <div className="user-email">{usuario.email}</div>
-                    <div className="user-bar-wrap">
-                      <div
-                        className="user-bar-fill is-amber"
-                        style={{
-                          width: `${(usuario.transferencias / maxTransferidores) * 100}%`,
-                        }}
-                      />
+          <div className="top-list">
+            {topTransferidores.length === 0 && !loadingStats && (
+              <p className="matches-status">Sin datos disponibles.</p>
+            )}
+            {topTransferidores.map((usuario, index) => {
+              const cantidad = getCantidadUsuario(usuario)
+
+              return (
+                <div className="top-list-item" key={usuario.mail ?? index}>
+                  <span className="top-rank">{index + 1}</span>
+                  <div className="user-cell">
+                    <span
+                      className="user-avatar"
+                      style={{ background: avatarColor(usuario.mail, index) }}
+                    >
+                      {avatarInitials(usuario.mail)}
+                    </span>
+                    <div className="top-match-info">
+                      <div className="user-email">{usuario.mail}</div>
+                      <div className="user-bar-wrap">
+                        <div
+                          className="user-bar-fill is-amber"
+                          style={{ width: `${(cantidad / maxTransferidores) * 100}%` }}
+                        />
+                      </div>
                     </div>
                   </div>
+                  <span className="top-count">{formatCount(cantidad)}</span>
                 </div>
-                <span className="user-num">{usuario.transferencias}</span>
-                <span className={`estado-dot is-${usuario.estado}`}>
-                  {capitalize(usuario.estado)}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>
@@ -356,42 +318,46 @@ function DashboardAdmin() {
         <div className="stat-card-head">
           <div>
             <h2>Reservas Canceladas / No Pagadas</h2>
-            <p>Usuarios que reservaron pero no completaron el pago</p>
+            <p>Porcentaje de compras canceladas en el periodo seleccionado</p>
           </div>
         </div>
 
         <div className="canceladas-kpis">
           <div className="canceladas-kpi">
-            <span className="canceladas-kpi-value is-red">{formatCount(MOCK_CANCELADAS.total)}</span>
-            <span className="canceladas-kpi-label">total canceladas</span>
-          </div>
-          <div className="canceladas-kpi">
-            <span className="canceladas-kpi-value is-amber">
-              {MOCK_CANCELADAS.tasaCancelacion}%
+            <span className="canceladas-kpi-value is-red">
+              {formatDecimal(porcentajeCanceladas)}%
             </span>
             <span className="canceladas-kpi-label">tasa de cancelacion</span>
           </div>
           <div className="canceladas-kpi">
-            <span className="canceladas-kpi-value">
-              {formatMoneyExact(MOCK_CANCELADAS.montoPerdido)}
-            </span>
+            <span className="canceladas-kpi-value is-amber">Pendiente</span>
+            <span className="canceladas-kpi-label">total canceladas</span>
+          </div>
+          <div className="canceladas-kpi">
+            <span className="canceladas-kpi-value">Pendiente</span>
             <span className="canceladas-kpi-label">monto perdido</span>
           </div>
-        </div>
-
-        <div className="canceladas-list">
-          {MOCK_CANCELADAS.topMatches.map((match) => (
-            <div className="canceladas-match" key={match.nombre}>
-              <div className="canceladas-match-name">{match.nombre}</div>
-              <div className="canceladas-match-venue">{match.venue}</div>
-              <div className="canceladas-match-count">{match.cantidad}</div>
-              <div className="canceladas-match-count-label">reservas canceladas</div>
-            </div>
-          ))}
         </div>
       </div>
     </div>
   )
+}
+
+async function fetchStatsEndpoint(endpoint, rangoFechas) {
+  const token = localStorage.getItem('ticketmatch-token')
+  const response = await fetch(buildStatsUrl(endpoint, rangoFechas), {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  if (!response.ok) {
+    throw new Error(`No se pudo cargar ${endpoint}`)
+  }
+
+  return response.json()
+}
+
+function getSettledValue(result, fallback) {
+  return result.status === 'fulfilled' ? result.value : fallback
 }
 
 function KpiCard({ icon, colorClass, label, value }) {
@@ -410,17 +376,16 @@ function getVendidas(encuentro) {
   return encuentro.entradasVendidas ?? encuentro.cantidadEntradasVendidas ?? 0
 }
 
-function deriveTopEstadios(encuentros) {
-  const map = new Map()
+function getEstadioVendidas(estadio) {
+  return estadio.cantidadEntradas ?? estadio.vendidas ?? 0
+}
 
-  encuentros.forEach((encuentro) => {
-    const nombre = encuentro.nombreEstadio ?? '-'
-    map.set(nombre, (map.get(nombre) ?? 0) + getVendidas(encuentro))
-  })
+function getCantidadUsuario(usuario) {
+  return usuario.cantidad ?? usuario.entradas ?? usuario.transferencias ?? 0
+}
 
-  return Array.from(map, ([nombre, vendidas]) => ({ nombre, vendidas }))
-    .sort((a, b) => b.vendidas - a.vendidas)
-    .slice(0, 5)
+function getPorcentajeCanceladas(canceladas) {
+  return canceladas?.porcentaje ?? canceladas?.Porcentaje ?? 0
 }
 
 function avatarColor(email, index) {
@@ -435,28 +400,10 @@ function formatCount(value) {
   return new Intl.NumberFormat('es-UY').format(Math.round(value ?? 0))
 }
 
-function formatMoney(value) {
-  if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(2)}M`
-  }
-
-  if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(0)}K`
-  }
-
-  return `$${formatCount(value)}`
-}
-
-function formatMoneyExact(value) {
+function formatDecimal(value) {
   return new Intl.NumberFormat('es-UY', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  }).format(value)
-}
-
-function capitalize(value) {
-  return value ? value[0].toUpperCase() + value.slice(1) : ''
+    maximumFractionDigits: 1,
+  }).format(value ?? 0)
 }
 
 function buildStatsUrl(endpoint, rangoFechas) {
