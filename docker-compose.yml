@@ -22,6 +22,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__TicketingDb: Host=postgres;Port=5432;Database=ticketing;Username=postgres;Password=postgres
+      ConnectionStrings__TicketingDb_Usuario: Host=postgres;Port=5432;Database=ticketing;Username=app_usuario;Password=pwd_usuario
+      ConnectionStrings__TicketingDb_Funcionario: Host=postgres;Port=5432;Database=ticketing;Username=app_funcionario;Password=pwd_funcionario
+      ConnectionStrings__TicketingDb_Admin: Host=postgres;Port=5432;Database=ticketing;Username=app_admin;Password=pwd_admin
     volumes:
       - ./backend:/app
     working_dir: /app
