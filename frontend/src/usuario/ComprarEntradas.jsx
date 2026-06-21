@@ -80,12 +80,13 @@ function ComprarEntradas({ onIrAMisEntradas }) {
   }, [])
 
 
-  //Funcion para volver a los partidos.
+  //Funcion para volver a los partidos. Re-fetcha para reflejar disponibilidad actualizada.
   const volverAlMenu = () => {
     setSelectedMatch(null)
     setPedido(null)
     setResumen(null)
     setView('list')
+    fetchMatches(equipoId, estadioId)
   }
 
   if (view === 'reservar' && selectedMatch) {
