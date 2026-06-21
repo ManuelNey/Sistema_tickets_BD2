@@ -169,6 +169,20 @@ CREATE TABLE IF NOT EXISTS validacion (
   CONSTRAINT uq_validacion_token UNIQUE (token_utilizado),
   CONSTRAINT chk_validacion_token CHECK (length(trim(token_utilizado)) > 0)
 );
+
+CREATE TABLE IF NOT EXISTS trabaja_en (
+  funcionario_mail VARCHAR(320) NOT NULL,
+  fk_habilita_id INT NOT NULL,
+  PRIMARY KEY (funcionario_mail, fk_habilita_id),
+  FOREIGN KEY (funcionario_mail)
+    REFERENCES funcionario(persona_mail)
+    ON DELETE CASCADE,
+  FOREIGN KEY (fk_habilita_id)
+    REFERENCES habilita(id)
+    ON DELETE CASCADE
+);
+
+
 CREATE INDEX IF NOT EXISTS idx_persona_apellido ON persona(apellido);
 CREATE INDEX IF NOT EXISTS idx_usuario_registro ON usuario(fecha_registro);
 CREATE INDEX IF NOT EXISTS idx_encuentro_fecha ON encuentro(fecha);
