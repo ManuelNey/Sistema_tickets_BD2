@@ -1,0 +1,728 @@
+/* ── Admin Panel — Card Redesign ── */
+
+.ac-view {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 28px;
+}
+
+/* ── Page header ── */
+.ac-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.ac-header h1 {
+  font-size: 19px;
+  font-weight: 800;
+  color: #130F1E;
+  letter-spacing: -0.4px;
+  margin: 0 0 3px;
+}
+
+.ac-header p {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #9490A0;
+  margin: 0;
+}
+
+/* ── Buttons ── */
+.ac-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #7C3AED, #9333EA);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(124,58,237,0.3);
+  transition: box-shadow 0.2s, transform 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ac-btn-primary:hover {
+  box-shadow: 0 5px 18px rgba(124,58,237,0.42);
+  transform: translateY(-1px);
+}
+
+.ac-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #E2E0E8;
+  background: transparent;
+  color: #5B4E70;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  flex: 1;
+}
+
+.ac-btn-outline:hover {
+  border-color: #C4B5FD;
+  color: #7C3AED;
+  background: #F5F3FF;
+}
+
+.ac-btn-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(239,68,68,0.2);
+  background: rgba(254,242,242,0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.ac-btn-icon:hover {
+  background: #FEE2E2;
+  border-color: #EF4444;
+}
+
+.ac-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #7C3AED;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.ac-btn-back:hover { opacity: 0.7; }
+
+/* ── Filter bar ── */
+.ac-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.ac-search {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 13px;
+  background: #fff;
+  border-radius: 9px;
+  border: 1px solid #E8E6EF;
+}
+
+.ac-search input {
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #130F1E;
+  background: transparent;
+  flex: 1;
+  min-width: 0;
+}
+
+.ac-search input::placeholder { color: #B0ACBA; }
+
+.ac-filter-select {
+  padding: 9px 13px;
+  border-radius: 9px;
+  border: 1px solid #E8E6EF;
+  background: #fff;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #3A3445;
+  cursor: pointer;
+  outline: none;
+}
+
+/* ── Status tabs ── */
+.ac-tabs {
+  display: flex;
+  background: #ECEAF2;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  margin-bottom: 18px;
+  width: fit-content;
+}
+
+.ac-tab {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9490A0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.ac-tab.is-active {
+  background: #fff;
+  color: #130F1E;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ── Card grid ── */
+.ac-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 1050px) { .ac-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 680px)  { .ac-grid { grid-template-columns: 1fr; } }
+
+/* ── Base card ── */
+.ac-card {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.ac-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.07), 0 12px 28px rgba(124,58,237,0.09);
+}
+
+/* Dark header common */
+.ac-card-head {
+  padding: 13px 16px 16px;
+  background: linear-gradient(150deg, #1B1428 0%, #25193C 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.ac-card-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% -10%, rgba(124,58,237,0.14) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* White body */
+.ac-card-body {
+  padding: 13px 16px 15px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Stadium card ── */
+.ac-stadium-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+  position: relative;
+}
+
+.ac-stadium-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255,255,255,0.42);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.ac-badge-fifa {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: rgba(167,139,250,0.12);
+  border: 1px solid rgba(167,139,250,0.2);
+  color: #A78BFA;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.ac-badge-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #A78BFA;
+  flex: none;
+  display: inline-block;
+}
+
+.ac-stadium-name {
+  color: rgba(255,255,255,0.95);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1.3;
+  position: relative;
+}
+
+/* Stat boxes */
+.ac-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ac-stat-box {
+  background: #F8F7FB;
+  border-radius: 7px;
+  padding: 8px 10px;
+}
+
+.ac-stat-label {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #B0ACBA;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 3px;
+}
+
+.ac-stat-value {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+  color: #7C3AED;
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.ac-stat-value.is-dark { color: #130F1E; }
+
+/* Divider */
+.ac-divider {
+  height: 1px;
+  background: #F0EEF5;
+  margin-bottom: 12px;
+  margin-top: auto;
+}
+
+/* Actions row */
+.ac-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Match card ── */
+.ac-match-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.ac-competition-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #A78BFA;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.ac-status-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 100px;
+  letter-spacing: 0.2px;
+  border: 1px solid;
+}
+
+.ac-status-badge.is-programado  { background: #EFF6FF; color: #1D4ED8; border-color: rgba(59,130,246,0.25); }
+.ac-status-badge.is-en_juego    { background: #F0FDF4; color: #16A34A; border-color: rgba(34,197,94,0.25); }
+.ac-status-badge.is-finalizado  { background: #F8F7FB; color: #9490A0; border-color: #E5E3EB; }
+.ac-status-badge.is-cancelado   { background: #FEF2F2; color: #DC2626; border-color: rgba(239,68,68,0.2); }
+
+.ac-vs-grid {
+  display: grid;
+  grid-template-columns: 1fr 32px 1fr;
+  align-items: center;
+  gap: 3px;
+  position: relative;
+}
+
+.ac-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.ac-team-flag { font-size: 28px; line-height: 1; }
+
+.ac-team-name {
+  color: rgba(255,255,255,0.9);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.ac-vs-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.28);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.ac-match-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 10px;
+  margin-bottom: 11px;
+}
+
+.ac-match-info .full-width { grid-column: 1 / -1; }
+
+.ac-info-label {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #B0ACBA;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.ac-info-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.ac-info-icon { color: #A78BFA; flex: none; }
+
+.ac-info-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: #2D2638;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-sectors-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: #EDE9FE;
+  border: 1px solid rgba(124,58,237,0.12);
+  color: #7C3AED;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 11px;
+}
+
+/* ── Stadium hero (sectores view) ── */
+.ac-hero {
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+.ac-hero-inner {
+  padding: 22px 28px;
+  background: linear-gradient(150deg, #1B1428 0%, #2D1F4A 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.ac-hero-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(124,58,237,0.18) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.ac-hero-content { position: relative; }
+
+.ac-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ac-hero-flag { font-size: 22px; line-height: 1; }
+
+.ac-hero-name {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin: 0 0 5px;
+}
+
+.ac-hero-location {
+  color: rgba(255,255,255,0.45);
+  font-size: 12.5px;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+
+.ac-hero-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ac-hero-stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.ac-hero-stat strong { color: #fff; font-weight: 700; }
+
+/* ── Sector card ── */
+.ac-sector-head {
+  padding: 12px 15px 13px;
+  background: linear-gradient(150deg, #1B1428, #25193C);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ac-sector-head::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 80% 50%, rgba(124,58,237,0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.ac-sector-head-info { position: relative; }
+
+.ac-sector-name {
+  display: block;
+  color: rgba(255,255,255,0.95);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+}
+
+.ac-sector-num {
+  display: block;
+  color: rgba(255,255,255,0.35);
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 3px;
+}
+
+.ac-sector-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(124,58,237,0.25);
+  border: 1px solid rgba(167,139,250,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  position: relative;
+  color: #A78BFA;
+}
+
+.ac-sector-capacity { margin-bottom: 12px; }
+
+.ac-sector-cap-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 800;
+  color: #130F1E;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.ac-sector-cap-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: #9490A0;
+  margin-top: 1px;
+}
+
+/* ── Modal de funcionarios ─────────────────────────────────── */
+.func-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.func-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.func-modal-match {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #7C3AED;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.func-modal-head h2 {
+  font-size: 16px;
+  font-weight: 800;
+  color: #130F1E;
+  margin: 0;
+}
+
+.func-sector {
+  border: 1.5px solid #E9E7F0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.func-sector-title {
+  background: linear-gradient(150deg, #1B1428 0%, #25193C 100%);
+  color: rgba(255,255,255,0.9);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 14px;
+  letter-spacing: 0.2px;
+}
+
+.func-empty {
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #B0ACBA;
+  margin: 0;
+}
+
+.func-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.func-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-bottom: 1px solid #F3F2F7;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2D2540;
+}
+
+.func-mail {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 400;
+  color: #9490A0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.func-btn-remove {
+  font-size: 11px;
+  font-weight: 600;
+  color: #DC2626;
+  background: rgba(254,242,242,0.8);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 6px;
+  padding: 3px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.func-btn-remove:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.func-add-row {
+  padding: 10px 14px;
+  background: #FAFAF9;
+}
+
+.func-select {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid #E2E0E8;
+  border-radius: 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #2D2540;
+  background: #fff;
+  cursor: pointer;
+}
+.func-select:disabled { opacity: 0.5; }

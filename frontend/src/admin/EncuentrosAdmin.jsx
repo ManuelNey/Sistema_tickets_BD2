@@ -74,6 +74,8 @@ function EncuentrosAdmin({ user }) {
   const [sectorsLoading, setSectorsLoading] = useState(false)
   const [selectedSectors, setSelectedSectors] = useState({})
   const [statusFilter, setStatusFilter] = useState('todos')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [funcionariosEncuentro, setFuncionariosEncuentro] = useState(null)
   const adminCountryId = getAdminCountryId(user)
   const minEventDate = getTodayInputValue()
   const availableTimeOptions = getAvailableTimeOptions(eventForm.fecha)
@@ -411,16 +413,27 @@ function EncuentrosAdmin({ user }) {
     }
   }
 
+  const filteredEncuentros = sortEncuentrosByPermission(
+    getVisibleEncuentros(encuentros, statusFilter),
+    adminCountryId
+  ).filter((e) => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return true
+    const label = getTeamsLabel(e).toLowerCase()
+    const estadio = getStadiumLabel(e).toLowerCase()
+    return label.includes(q) || estadio.includes(q)
+  })
+
   return (
-    <div className="admin-view">
-      <header className="admin-header">
+    <div className="ac-view">
+      <header className="ac-header">
         <div>
-          <h1 id="dashboard-title">Gestion de Encuentros</h1>
-          <p>Administra los encuentros del sistema</p>
+          <h1 id="dashboard-title">Gestión de Encuentros</h1>
+          <p>Administrá partidos, precios y funcionarios asignados</p>
         </div>
-        <button className="create-stadium-button" type="button" onClick={openCreateEvent}>
-          <SidebarIcon name="plus" />
-          <span>Crear Encuentro</span>
+        <button className="ac-btn-primary" type="button" onClick={openCreateEvent}>
+          <PlusIconE />
+          Crear Encuentro
         </button>
       </header>
 
@@ -429,11 +442,22 @@ function EncuentrosAdmin({ user }) {
 
       {!encuentrosLoading && !encuentrosError && (
         <>
-          <div className="reservas-tabs encounter-tabs" role="tablist" aria-label="Estados de encuentros">
+          <div className="ac-filterbar">
+            <label className="ac-search">
+              <SearchIconE />
+              <input
+                placeholder="Buscar partido o equipo..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className="ac-tabs" role="tablist" aria-label="Estados de encuentros">
             {eventStatusTabs.map((tab) => (
               <button
                 aria-selected={statusFilter === tab.value}
-                className={`reservas-tab ${statusFilter === tab.value ? 'is-active' : ''}`}
+                className={`ac-tab ${statusFilter === tab.value ? 'is-active' : ''}`}
                 key={tab.value}
                 onClick={() => setStatusFilter(tab.value)}
                 role="tab"
@@ -444,19 +468,20 @@ function EncuentrosAdmin({ user }) {
             ))}
           </div>
 
-          <div className="stadium-grid">
-            {getVisibleEncuentros(encuentros, statusFilter).length === 0 ? (
-            <p className="matches-status">No hay encuentros disponibles.</p>
-          ) : (
-            sortEncuentrosByPermission(getVisibleEncuentros(encuentros, statusFilter), adminCountryId).map((encuentro) => (
-              <EncuentroCard
-                adminCountryId={adminCountryId}
-                encuentro={encuentro}
-                key={encuentro.id}
-                onEdit={() => openEditEvent(encuentro)}
-              />
-            ))
-          )}
+          <div className="ac-grid">
+            {filteredEncuentros.length === 0 ? (
+              <p className="matches-status">No hay encuentros disponibles.</p>
+            ) : (
+              filteredEncuentros.map((encuentro) => (
+                <EncuentroCard
+                  adminCountryId={adminCountryId}
+                  encuentro={encuentro}
+                  key={encuentro.id}
+                  onEdit={() => openEditEvent(encuentro)}
+                  onFuncionarios={() => setFuncionariosEncuentro(encuentro)}
+                />
+              ))
+            )}
           </div>
         </>
       )}
@@ -483,6 +508,13 @@ function EncuentrosAdmin({ user }) {
         />
       )}
 
+      {funcionariosEncuentro && (
+        <FuncionariosModal
+          encuentro={funcionariosEncuentro}
+          onClose={() => setFuncionariosEncuentro(null)}
+        />
+      )}
+
       {editEventModalOpen && selectedEvent && (
         <EditEventModal
           encuentro={selectedEvent}
@@ -503,57 +535,341 @@ function EncuentrosAdmin({ user }) {
   )
 }
 
-function EncuentroCard({ adminCountryId, encuentro, onEdit }) {
-  const isOwnCountry = Number(encuentro.pais) === adminCountryId
+function EncuentroCard({ adminCountryId, encuentro, onEdit, onFuncionarios }) {
   const canEdit = canEditEncounter(encuentro, adminCountryId)
-  const teamsLabel = getTeamsLabel(encuentro)
-  const stadiumLabel = getStadiumLabel(encuentro)
-  const countryLabel = getCountryLabel(encuentro, isOwnCountry)
+  const localName  = encuentro.equipoLocalNombre    ?? `Equipo #${encuentro.equipoLocal}`
+  const visitName  = encuentro.equipoVisitanteNombre ?? `Equipo #${encuentro.equipoVisitante}`
+  const fechaDt    = encuentro.fecha ? new Date(encuentro.fecha) : null
+  const fechaStr   = fechaDt ? fechaDt.toLocaleDateString('es-UY', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
+  const horaStr    = fechaDt ? fechaDt.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '—'
+  const estadioLabel = getStadiumLabel(encuentro)
+  const sectoresCount = encuentro.sectoresHabilitados ?? encuentro.sectores ?? null
 
   return (
-    <article className="stadium-card event-card">
-      <header className="stadium-card-header">
-        <div className="stadium-card-icon" aria-hidden="true">
-          <SidebarIcon name="calendar" />
+    <article className="ac-card">
+      <div className="ac-card-head">
+        <div className="ac-match-meta">
+          <div className="ac-competition-badge">
+            <span className="ac-badge-dot" />
+            Copa Mundial FIFA 2026
+          </div>
+          <span className={`ac-status-badge is-${encuentro.estado ?? 'programado'}`}>
+            {formatStatus(encuentro.estado)}
+          </span>
         </div>
-        <div>
-          <h2>Encuentro #{encuentro.id}</h2>
-          <p>{formatDate(encuentro.fecha)}</p>
-        </div>
-      </header>
 
-      <div className="stadium-card-body">
-        <p>
-          <span>Equipos</span>
-          <strong>{teamsLabel}</strong>
-        </p>
-        <p>
-          <span>Estadio</span>
-          <strong>{stadiumLabel}</strong>
-        </p>
-        <p>
-          <span>Pais</span>
-          <strong>{countryLabel}</strong>
-        </p>
-        <p>
-          <span>Estado</span>
-          <strong>
-            <span className={`encounter-status-badge ${getStatusClass(encuentro.estado)}`}>
-              {formatStatus(encuentro.estado)}
-            </span>
-          </strong>
-        </p>
+        <div className="ac-vs-grid">
+          <div className="ac-team">
+            <span className="ac-team-flag">{getTeamFlag(localName)}</span>
+            <span className="ac-team-name">{localName}</span>
+          </div>
+          <div className="ac-vs-circle">VS</div>
+          <div className="ac-team">
+            <span className="ac-team-flag">{getTeamFlag(visitName)}</span>
+            <span className="ac-team-name">{visitName}</span>
+          </div>
+        </div>
       </div>
 
-      {canEdit && (
-        <footer className="stadium-actions event-actions">
-          <button className="details-button" type="button" onClick={onEdit}>
-            <SidebarIcon name="edit" />
-            <span>Modificar Encuentro</span>
+      <div className="ac-card-body">
+        <div className="ac-match-info">
+          <div>
+            <span className="ac-info-label">Fecha</span>
+            <div className="ac-info-row">
+              <CalIconE />
+              <span className="ac-info-value">{fechaStr}</span>
+            </div>
+          </div>
+          <div>
+            <span className="ac-info-label">Hora</span>
+            <div className="ac-info-row">
+              <ClockIconE />
+              <span className="ac-info-value">{horaStr}</span>
+            </div>
+          </div>
+          <div className="full-width">
+            <span className="ac-info-label">Estadio</span>
+            <div className="ac-info-row">
+              <PinIconE />
+              <span className="ac-info-value">{estadioLabel}</span>
+            </div>
+          </div>
+        </div>
+
+        {sectoresCount !== null && (
+          <div className="ac-sectors-pill">
+            <SectorsIconE />
+            {sectoresCount} sectores habilitados
+          </div>
+        )}
+
+        <div className="ac-divider" />
+
+        <div className="ac-actions">
+          <button className="ac-btn-outline" type="button" onClick={onFuncionarios}>
+            <FuncIconE />
+            Funcionarios
           </button>
-        </footer>
-      )}
+          {canEdit && (
+            <button className="ac-btn-outline" type="button" onClick={onEdit}>
+              <EditIconE />
+              Modificar
+            </button>
+          )}
+        </div>
+      </div>
     </article>
+  )
+}
+
+const TEAM_FLAGS = {
+  'argentina': '🇦🇷', 'brazil': '🇧🇷', 'brasil': '🇧🇷',
+  'france': '🇫🇷', 'francia': '🇫🇷',
+  'germany': '🇩🇪', 'alemania': '🇩🇪',
+  'spain': '🇪🇸', 'españa': '🇪🇸',
+  'portugal': '🇵🇹',
+  'england': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'inglaterra': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+  'mexico': '🇲🇽', 'méxico': '🇲🇽',
+  'usa': '🇺🇸', 'estados unidos': '🇺🇸', 'united states': '🇺🇸',
+  'canada': '🇨🇦', 'canadá': '🇨🇦',
+  'japan': '🇯🇵', 'japón': '🇯🇵', 'japon': '🇯🇵',
+  'south korea': '🇰🇷', 'corea del sur': '🇰🇷', 'corea': '🇰🇷',
+  'morocco': '🇲🇦', 'marruecos': '🇲🇦',
+  'senegal': '🇸🇳', 'ghana': '🇬🇭', 'nigeria': '🇳🇬',
+  'cameroon': '🇨🇲', 'camerún': '🇨🇲',
+  'netherlands': '🇳🇱', 'países bajos': '🇳🇱', 'holanda': '🇳🇱',
+  'belgium': '🇧🇪', 'bélgica': '🇧🇪',
+  'switzerland': '🇨🇭', 'suiza': '🇨🇭',
+  'denmark': '🇩🇰', 'dinamarca': '🇩🇰',
+  'croatia': '🇭🇷', 'croacia': '🇭🇷',
+  'poland': '🇵🇱', 'polonia': '🇵🇱',
+  'serbia': '🇷🇸', 'austria': '🇦🇹',
+  'colombia': '🇨🇴', 'uruguay': '🇺🇾', 'chile': '🇨🇱',
+  'ecuador': '🇪🇨', 'venezuela': '🇻🇪',
+  'peru': '🇵🇪', 'perú': '🇵🇪',
+  'bolivia': '🇧🇴', 'paraguay': '🇵🇾',
+  'costa rica': '🇨🇷',
+  'panama': '🇵🇦', 'panamá': '🇵🇦',
+  'jamaica': '🇯🇲',
+  'australia': '🇦🇺', 'iran': '🇮🇷',
+  'saudi arabia': '🇸🇦', 'arabia saudita': '🇸🇦',
+  'qatar': '🇶🇦', 'turkey': '🇹🇷', 'turquía': '🇹🇷',
+  'ukraine': '🇺🇦', 'ucrania': '🇺🇦',
+  'mali': '🇲🇱', 'egypt': '🇪🇬', 'egipto': '🇪🇬',
+  'indonesia': '🇮🇩',
+  'nueva zelanda': '🇳🇿', 'new zealand': '🇳🇿',
+}
+
+function getTeamFlag(name) {
+  if (!name) return '⚽'
+  return TEAM_FLAGS[name.toLowerCase().trim()] ?? '⚽'
+}
+
+function PlusIconE() {
+  return (
+    <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <line x1="7" y1="1" x2="7" y2="13" /><line x1="1" y1="7" x2="13" y2="7" />
+    </svg>
+  )
+}
+function SearchIconE() {
+  return (
+    <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#B0ACBA" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <circle cx="6" cy="6" r="4.5" /><path d="M9.5 9.5l3 3" />
+    </svg>
+  )
+}
+function CalIconE() {
+  return (
+    <svg className="ac-info-icon" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+      <rect x="1" y="1.5" width="10" height="9" rx="1.5" /><line x1="1" y1="4.5" x2="11" y2="4.5" />
+      <line x1="3.5" y1="0.5" x2="3.5" y2="3" /><line x1="8.5" y1="0.5" x2="8.5" y2="3" />
+    </svg>
+  )
+}
+function ClockIconE() {
+  return (
+    <svg className="ac-info-icon" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+      <circle cx="6" cy="6" r="4.5" /><polyline points="6 3.5 6 6 7.5 7.5" />
+    </svg>
+  )
+}
+function PinIconE() {
+  return (
+    <svg className="ac-info-icon" viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 11S2 7.5 2 5a4 4 0 0 1 8 0c0 2.5-4 6-4 6z" /><circle cx="6" cy="5" r="1.5" />
+    </svg>
+  )
+}
+function SectorsIconE() {
+  return (
+    <svg viewBox="0 0 10 10" width="8" height="8" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+      <rect x="0.5" y="0.5" width="3.5" height="3.5" rx="0.5" /><rect x="6" y="0.5" width="3.5" height="3.5" rx="0.5" />
+      <rect x="0.5" y="6" width="3.5" height="3.5" rx="0.5" /><rect x="6" y="6" width="3.5" height="3.5" rx="0.5" />
+    </svg>
+  )
+}
+function EditIconE() {
+  return (
+    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8.5 1.5a1.4 1.4 0 0 1 2 2L3 11l-3 1 1-3L8.5 1.5z" />
+    </svg>
+  )
+}
+function FuncIconE() {
+  return (
+    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <circle cx="6" cy="4" r="2.5" /><path d="M1 11c0-2.8 2.2-5 5-5s5 2.2 5 5" />
+    </svg>
+  )
+}
+
+function FuncionariosModal({ encuentro, onClose }) {
+  const [asignaciones, setAsignaciones] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [todos, setTodos] = useState([])
+  const [saving, setSaving] = useState(false)
+
+  const localName = encuentro.equipoLocalNombre ?? `Equipo #${encuentro.equipoLocal}`
+  const visitName = encuentro.equipoVisitanteNombre ?? `Equipo #${encuentro.equipoVisitante}`
+
+  // Carga asignaciones y lista de todos los funcionarios
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      setError('')
+      try {
+        const [resAsig, resTodos] = await Promise.all([
+          fetch(`http://localhost:8080/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() }),
+          fetch('http://localhost:8080/api/funcionarios/admin', { headers: getAuthHeaders() }),
+        ])
+        if (!resAsig.ok || !resTodos.ok) throw new Error()
+        setAsignaciones(await resAsig.json())
+        setTodos(await resTodos.json())
+      } catch {
+        setError('No se pudieron cargar los datos')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [encuentro.id])
+
+  // Agrupación en JS: filas planas → { habilitaId → { sectorNombre, funcionarios[] } }
+  const sectores = Object.values(
+    asignaciones.reduce((acc, row) => {
+      if (!acc[row.habilitaId]) {
+        acc[row.habilitaId] = { habilitaId: row.habilitaId, sectorNombre: row.sectorNombre, funcionarios: [] }
+      }
+      acc[row.habilitaId].funcionarios.push({ mail: row.funcionarioMail, nombre: row.nombreFuncionario, apellido: row.apellidoFuncionario })
+      return acc
+    }, {})
+  )
+
+  const asignar = async (habilitaId, mail) => {
+    setSaving(true)
+    try {
+      const res = await fetch('http://localhost:8080/api/trabajaen', {
+        method: 'POST',
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ funcionarioMail: mail, habilitaId }),
+      })
+      if (!res.ok) throw new Error()
+      const updated = await fetch(`http://localhost:8080/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() })
+      setAsignaciones(await updated.json())
+    } catch {
+      setError('No se pudo asignar el funcionario')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const desasignar = async (habilitaId, mail) => {
+    setSaving(true)
+    try {
+      const res = await fetch(`http://localhost:8080/api/trabajaen?funcionarioMail=${encodeURIComponent(mail)}&habilitaId=${habilitaId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      })
+      if (!res.ok) throw new Error()
+      setAsignaciones((prev) => prev.filter((r) => !(r.habilitaId === habilitaId && r.funcionarioMail === mail)))
+    } catch {
+      setError('No se pudo quitar el funcionario')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section className="func-modal" aria-labelledby="func-modal-title" role="dialog">
+        <div className="func-modal-head">
+          <div>
+            <span className="func-modal-match">{localName} vs {visitName}</span>
+            <h2 id="func-modal-title">Funcionarios por sector</h2>
+          </div>
+          <button className="modal-close" type="button" onClick={onClose} aria-label="Cerrar">
+            ✕
+          </button>
+        </div>
+
+        {loading && <p className="matches-status">Cargando...</p>}
+        {error && <p className="matches-status is-error">{error}</p>}
+
+        {!loading && !error && sectores.length === 0 && (
+          <p className="matches-status">Este encuentro no tiene sectores habilitados.</p>
+        )}
+
+        {!loading && !error && sectores.map((sector) => {
+          const asignados = new Set(sector.funcionarios.map((f) => f.mail))
+          const disponibles = todos.filter((f) => !asignados.has(f.mail))
+
+          return (
+            <div className="func-sector" key={sector.habilitaId}>
+              <div className="func-sector-title">{sector.sectorNombre}</div>
+
+              {sector.funcionarios.length === 0 ? (
+                <p className="func-empty">Sin funcionarios asignados</p>
+              ) : (
+                <ul className="func-list">
+                  {sector.funcionarios.map((f) => (
+                    <li key={f.mail} className="func-row">
+                      <span>{f.nombre} {f.apellido}</span>
+                      <span className="func-mail">{f.mail}</span>
+                      <button
+                        className="func-btn-remove"
+                        type="button"
+                        disabled={saving}
+                        onClick={() => desasignar(sector.habilitaId, f.mail)}
+                      >
+                        Quitar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {disponibles.length > 0 && (
+                <div className="func-add-row">
+                  <select
+                    className="func-select"
+                    defaultValue=""
+                    disabled={saving}
+                    onChange={(e) => { if (e.target.value) asignar(sector.habilitaId, e.target.value) }}
+                  >
+                    <option value="" disabled>Agregar funcionario...</option>
+                    {disponibles.map((f) => (
+                      <option key={f.mail} value={f.mail}>{f.nombre} {f.apellido}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </section>
+    </div>
   )
 }
 
@@ -933,14 +1249,6 @@ function getStadiumLabel(encuentro) {
   return `#${encuentro.estadio}`
 }
 
-function getCountryLabel(encuentro, isOwnCountry) {
-  if (encuentro.paisNombre) {
-    return isOwnCountry ? `${encuentro.paisNombre} (tu pais)` : encuentro.paisNombre
-  }
-
-  return isOwnCountry ? `Tu pais (#${encuentro.pais})` : `Pais #${encuentro.pais}`
-}
-
 function buildSelectedSectorsFromPrices(stadiumSectors, currentEventSectors) {
   const sectorsByName = new Map(
     stadiumSectors.map((sector) => [normalizeSectorName(sector.nombre), sector.id])
@@ -1040,10 +1348,6 @@ function formatStatus(status) {
   const option = eventStatusOptions.find((currentStatus) => currentStatus.value === status)
 
   return option?.label ?? 'Sin estado'
-}
-
-function getStatusClass(status) {
-  return `is-${String(status ?? 'unknown').replace('_', '-')}`
 }
 
 function formatDate(date) {

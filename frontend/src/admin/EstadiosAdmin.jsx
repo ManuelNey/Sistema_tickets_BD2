@@ -60,6 +60,7 @@ function EstadiosAdmin({ onOpenSectors, user }) {
   const [stadiumFormError, setStadiumFormError] = useState('')
   const [stadiumToDelete, setStadiumToDelete] = useState(null)
   const [stadiumDeleting, setStadiumDeleting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const adminCountryId = getAdminCountryId(user)
 
   const loadStadiums = async () => {
@@ -197,28 +198,45 @@ function EstadiosAdmin({ onOpenSectors, user }) {
     }
   }
 
+  const visibleStadiums = sortStadiumsByPermission(stadiums, adminCountryId).filter((s) => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return true
+    return s.nombre?.toLowerCase().includes(q) || s.ciudad?.toLowerCase().includes(q)
+  })
+
   return (
-    <div className="admin-view">
-      <header className="admin-header">
+    <div className="ac-view">
+      <header className="ac-header">
         <div>
-          <h1 id="dashboard-title">Gestion de Estadios</h1>
-          <p>Administra los estadios del sistema</p>
+          <h1 id="dashboard-title">Gestión de Estadios</h1>
+          <p>{stadiums.length} estadios registrados en el sistema</p>
         </div>
-        <button className="create-stadium-button" type="button" onClick={openCreateStadium}>
-          <SidebarIcon name="plus" />
-          <span>Crear Estadio</span>
+        <button className="ac-btn-primary" type="button" onClick={openCreateStadium}>
+          <PlusIcon />
+          Crear Estadio
         </button>
       </header>
+
+      <div className="ac-filterbar">
+        <label className="ac-search">
+          <SearchIcon />
+          <input
+            placeholder="Buscar estadio o ciudad..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </label>
+      </div>
 
       {stadiumsLoading && <p className="matches-status">Cargando estadios...</p>}
       {stadiumsError && <p className="matches-status is-error">{stadiumsError}</p>}
 
       {!stadiumsLoading && !stadiumsError && (
-        <div className="stadium-grid">
-          {stadiums.length === 0 ? (
-            <p className="matches-status">No hay estadios disponibles.</p>
+        <div className="ac-grid">
+          {visibleStadiums.length === 0 ? (
+            <p className="matches-status">{stadiums.length === 0 ? 'No hay estadios disponibles.' : 'Sin resultados para esa búsqueda.'}</p>
           ) : (
-            sortStadiumsByPermission(stadiums, adminCountryId).map((stadium) => (
+            visibleStadiums.map((stadium) => (
               <StadiumCard
                 adminCountryId={adminCountryId}
                 key={stadium.id}
@@ -262,48 +280,108 @@ function StadiumCard({ adminCountryId, onDelete, onDetails, onOpenSectors, stadi
   const capacity = stats?.capacity ?? null
   const sectorsCount = stats?.sectorsCount ?? null
   const countryName = getStadiumCountryName(stadium)
+  const countryFlag = getCountryFlag(stadium.paisSedeId)
 
   return (
-    <article className="stadium-card">
-      <header className="stadium-card-header">
-        <div className="stadium-card-icon" aria-hidden="true">
-          <SidebarIcon name="stadium" />
+    <article className="ac-card">
+      <div className="ac-card-head">
+        <div className="ac-stadium-meta">
+          <span className="ac-stadium-location">
+            <span>{countryFlag}</span>
+            {stadium.ciudad}, {countryName}
+          </span>
+          <span className="ac-badge-fifa">
+            <span className="ac-badge-dot" />
+            FIFA 2026
+          </span>
         </div>
-        <div>
-          <h2>{stadium.nombre}</h2>
-          <p>{stadium.ciudad}, {countryName}</p>
-        </div>
-      </header>
-
-      <div className="stadium-card-body">
-        <p>
-          <span>Capacidad</span>
-          <strong>{capacity === null ? 'Sin datos' : `${formatNumber(capacity)} personas`}</strong>
-        </p>
-        <p>
-          <span>Sectores</span>
-          <strong>{sectorsCount === null ? 'Sin datos' : sectorsCount}</strong>
-        </p>
+        <div className="ac-stadium-name">{stadium.nombre}</div>
       </div>
 
-      <footer className={`stadium-actions ${canManageStadium ? '' : 'is-readonly'}`}>
-        {canManageStadium && (
-          <button className="details-button" type="button" onClick={onDetails}>
-            <SidebarIcon name="edit" />
-            <span>Ver Detalles</span>
+      <div className="ac-card-body">
+        <div className="ac-stats-grid">
+          <div className="ac-stat-box">
+            <span className="ac-stat-label">Capacidad</span>
+            <span className="ac-stat-value">
+              {capacity === null ? '—' : formatNumber(capacity)}
+            </span>
+          </div>
+          <div className="ac-stat-box">
+            <span className="ac-stat-label">Sectores</span>
+            <span className="ac-stat-value is-dark">
+              {sectorsCount === null ? '—' : sectorsCount}
+            </span>
+          </div>
+        </div>
+
+        <div className="ac-divider" />
+
+        <div className="ac-actions">
+          {canManageStadium && (
+            <button className="ac-btn-outline" type="button" onClick={onDetails}>
+              <EditIconSm />
+              Detalles
+            </button>
+          )}
+          <button className="ac-btn-outline" type="button" onClick={() => onOpenSectors(stadium)}>
+            <SectorsIconSm />
+            Sectores
           </button>
-        )}
-        <button className="sections-button" type="button" onClick={() => onOpenSectors(stadium)}>
-          <SidebarIcon name="sections" />
-          <span>Ver Sectores</span>
-        </button>
-        {canManageStadium && (
-          <button className="delete-button" type="button" onClick={onDelete} aria-label="Borrar estadio">
-            <SidebarIcon name="trash" />
-          </button>
-        )}
-      </footer>
+          {canManageStadium && (
+            <button className="ac-btn-icon" type="button" onClick={onDelete} aria-label="Borrar estadio">
+              <TrashIconSm />
+            </button>
+          )}
+        </div>
+      </div>
     </article>
+  )
+}
+
+function getCountryFlag(paisSedeId) {
+  const flags = { 1: '🇨🇦', 2: '🇲🇽', 3: '🇺🇸' }
+  return flags[Number(paisSedeId)] ?? '🌐'
+}
+
+function PlusIcon() {
+  return (
+    <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <line x1="7" y1="1" x2="7" y2="13" /><line x1="1" y1="7" x2="13" y2="7" />
+    </svg>
+  )
+}
+
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#B0ACBA" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <circle cx="6" cy="6" r="4.5" /><path d="M9.5 9.5l3 3" />
+    </svg>
+  )
+}
+
+function EditIconSm() {
+  return (
+    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8.5 1.5a1.4 1.4 0 0 1 2 2L3 11l-3 1 1-3L8.5 1.5z" />
+    </svg>
+  )
+}
+
+function SectorsIconSm() {
+  return (
+    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <rect x="1" y="1" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="1" width="4.5" height="4.5" rx="1" />
+      <rect x="1" y="6.5" width="4.5" height="4.5" rx="1" /><rect x="6.5" y="6.5" width="4.5" height="4.5" rx="1" />
+    </svg>
+  )
+}
+
+function TrashIconSm() {
+  return (
+    <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="1 3 11 3" /><path d="M4.5 3V2h3v1M2 3l.7 7.5A1 1 0 0 0 3.7 11h4.6a1 1 0 0 0 1-.9L10 3" />
+      <line x1="5" y1="5.5" x2="5" y2="8.5" /><line x1="7" y1="5.5" x2="7" y2="8.5" />
+    </svg>
   )
 }
 
