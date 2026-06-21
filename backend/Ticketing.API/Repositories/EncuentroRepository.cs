@@ -316,6 +316,7 @@ public class EncuentroRepository : IEncuentroRepository
                 @"UPDATE encuentro
                 SET estado = @nuevoEstado
                 WHERE id_encuentro = @idEncuentro
+                AND estado = 'en_juego'
                 RETURNING id_encuentro, fecha, fk_equipo_local, fk_equipo_visitante, fk_estadio, estado;",
                 connection);
 
@@ -347,22 +348,27 @@ public class EncuentroRepository : IEncuentroRepository
             //Si el pási del admin co coincide con el pais del estadio, entonces no se modifica
             await using var command = new NpgsqlCommand(
                 @"UPDATE encuentro e
-                SET estado = @nuevoEstado
+                SET
+                    estado = @nuevoEstado,
+                    fecha = @nuevaFecha,
+                    fk_estadio = @nuevoEstadioId
                 FROM estadio s
-                WHERE e.fk_estadio = s.id_estadio
+                WHERE @nuevoEstadioId = s.id_estadio
                 AND e.id_encuentro = @idEncuentro
                 AND s.fk_pais_sede = @paisSedeId
                 AND e.estado IN ('programado', 'cancelado')
                 RETURNING 
-                e.id_encuentro,
-                e.estado,
-                e.fecha,
-                e.fk_equipo_local,
-                e.fk_equipo_visitante,
-                e.fk_estadio,
-                s.fk_pais_sede;", connection,transaction);
+                    e.id_encuentro,
+                    e.estado,
+                    e.fecha,
+                    e.fk_equipo_local,
+                    e.fk_equipo_visitante,
+                    e.fk_estadio,
+                    s.fk_pais_sede;", connection,transaction);
 
             command.Parameters.AddWithValue("@nuevoEstado", encuentro.Estado);
+            command.Parameters.AddWithValue("@nuevaFecha", encuentro.Fecha);
+            command.Parameters.AddWithValue("@nuevoEstadioId", encuentro.EstadioId);
             command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
             command.Parameters.AddWithValue("@idEncuentro", id);
 

@@ -11,6 +11,9 @@ const emptyEventForm = {
 
 const emptyEditEventForm = {
   estado: 'programado',
+  fecha: '',
+  hora: '',
+  estadioId: '',
 }
 
 const eventStatusOptions = [
@@ -79,6 +82,7 @@ function EncuentrosAdmin({ user }) {
   const adminCountryId = getAdminCountryId(user)
   const minEventDate = getTodayInputValue()
   const availableTimeOptions = getAvailableTimeOptions(eventForm.fecha)
+  const editAvailableTimeOptions = getAvailableTimeOptions(editEventForm.fecha)
 
   const loadEncuentros = async () => {
     setEncuentrosError('')
@@ -331,15 +335,20 @@ function EncuentrosAdmin({ user }) {
     }
 
     const allowedStatusOptions = getAllowedStatusOptions(encuentro.estado)
+    const eventDateParts = getDateAndTimeInputValues(encuentro.fecha)
 
     setSelectedEvent(encuentro)
     setEditEventForm({
       estado: allowedStatusOptions[0]?.value ?? encuentro.estado ?? 'programado',
+      fecha: eventDateParts.fecha,
+      hora: eventDateParts.hora,
+      estadioId: String(encuentro.estadio ?? ''),
     })
     setEditEventError('')
     setSelectedSectors({})
     setSectors([])
     setEditEventModalOpen(true)
+    loadAdminStadiums()
 
     const [stadiumSectors, currentEventSectors] = await Promise.all([
       loadSectorsByStadium(encuentro.estadio, setEditEventError),
@@ -360,7 +369,20 @@ function EncuentrosAdmin({ user }) {
   }
 
   const updateEditEventField = (field, value) => {
-    setEditEventForm((current) => ({ ...current, [field]: value }))
+    setEditEventForm((current) => {
+      const next = { ...current, [field]: value }
+
+      if (field === 'fecha' && next.hora && !getAvailableTimeOptions(value).includes(next.hora)) {
+        next.hora = ''
+      }
+
+      return next
+    })
+
+    if (field === 'estadioId') {
+      setSelectedSectors({})
+      loadSectorsByStadium(value, setEditEventError)
+    }
   }
 
   const submitEditEvent = async (event) => {
@@ -386,8 +408,16 @@ function EncuentrosAdmin({ user }) {
       return
     }
 
+    if (canEditMainEventData(selectedEvent) && !isFutureEventDateTime(editEventForm.fecha, editEventForm.hora)) {
+      setEditEventError('El encuentro debe quedar en una fecha y hora futura')
+      setEditEventSaving(false)
+      return
+    }
+
     const payload = {
       estado: editEventForm.estado,
+      fecha: `${editEventForm.fecha}T${editEventForm.hora}:00`,
+      estadioId: Number(editEventForm.estadioId),
       sectores: selectedSectorPayload,
     }
 
@@ -529,6 +559,10 @@ function EncuentrosAdmin({ user }) {
           sectors={sectors}
           sectorsLoading={sectorsLoading}
           selectedSectors={selectedSectors}
+          stadiums={stadiums}
+          stadiumsLoading={stadiumsLoading}
+          minEventDate={minEventDate}
+          timeOptions={editAvailableTimeOptions}
         />
       )}
     </div>
@@ -1049,6 +1083,7 @@ function EditEventModal({
   error,
   form,
   isSaving,
+  minEventDate,
   onChange,
   onClose,
   onSectorPriceChange,
@@ -1057,10 +1092,14 @@ function EditEventModal({
   sectors,
   sectorsLoading,
   selectedSectors,
+  stadiums,
+  stadiumsLoading,
+  timeOptions,
 }) {
   const teamsLabel = getTeamsLabel(encuentro)
   const stadiumLabel = getStadiumLabel(encuentro)
   const allowedStatusOptions = getAllowedStatusOptions(encuentro.estado)
+  const canEditMainData = canEditMainEventData(encuentro)
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -1078,21 +1117,82 @@ function EditEventModal({
               <input disabled value={`#${encuentro.id}`} />
             </label>
 
-            <label>
-              <span>Fecha</span>
-              <input disabled value={formatDate(encuentro.fecha)} />
-            </label>
+            {!canEditMainData && (
+              <label>
+                <span>Fecha</span>
+                <input disabled value={formatDate(encuentro.fecha)} />
+              </label>
+            )}
 
             <label>
               <span>Equipos</span>
               <input disabled value={teamsLabel} />
             </label>
 
-            <label>
-              <span>Estadio</span>
-              <input disabled value={stadiumLabel} />
-            </label>
+            {!canEditMainData && (
+              <label>
+                <span>Estadio</span>
+                <input disabled value={stadiumLabel} />
+              </label>
+            )}
           </div>
+
+          {canEditMainData && (
+            <>
+              <div className="event-form-grid">
+                <label>
+                  <span>Fecha</span>
+                  <input
+                    required
+                    min={minEventDate}
+                    type="date"
+                    value={form.fecha}
+                    onChange={(event) => onChange('fecha', event.target.value)}
+                  />
+                </label>
+
+                <label>
+                  <span>Hora</span>
+                  <select
+                    required
+                    disabled={!form.fecha}
+                    value={form.hora}
+                    onChange={(event) => onChange('hora', event.target.value)}
+                  >
+                    <option value="">
+                      {!form.fecha
+                        ? 'Selecciona primero una fecha'
+                        : timeOptions.length === 0
+                          ? 'No quedan horas disponibles hoy'
+                          : 'Selecciona una hora'}
+                    </option>
+                    {timeOptions.map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                <span>Estadio</span>
+                <select
+                  required
+                  disabled={stadiumsLoading}
+                  value={form.estadioId}
+                  onChange={(event) => onChange('estadioId', event.target.value)}
+                >
+                  <option value="">{stadiumsLoading ? 'Cargando estadios...' : 'Selecciona un estadio'}</option>
+                  {stadiums.map((stadium) => (
+                    <option key={stadium.id} value={stadium.id}>
+                      {stadium.nombre} - {stadium.ciudad}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
 
           <label>
             <span>Estado</span>
@@ -1175,6 +1275,10 @@ function getVisibleEncuentros(encuentros, statusFilter) {
 
 function canEditEncounter(encuentro, adminCountryId) {
   return Number(encuentro.pais) === adminCountryId && encuentro.estado !== 'finalizado'
+}
+
+function canEditMainEventData(encuentro) {
+  return encuentro?.estado === 'programado' || encuentro?.estado === 'cancelado'
 }
 
 function getAllowedStatusOptions(currentStatus) {
@@ -1342,6 +1446,19 @@ function formatDateInputValue(date) {
   const day = String(date.getDate()).padStart(2, '0')
 
   return `${year}-${month}-${day}`
+}
+
+function getDateAndTimeInputValues(date) {
+  if (!date) {
+    return { fecha: '', hora: '' }
+  }
+
+  const eventDate = new Date(date)
+
+  return {
+    fecha: formatDateInputValue(eventDate),
+    hora: eventDate.toTimeString().slice(0, 5),
+  }
 }
 
 function formatStatus(status) {
