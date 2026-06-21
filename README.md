@@ -17,19 +17,21 @@ API REST para la gestión de entradas al Mundial 2026. Permite registro de usuar
 
 ## Levantar el proyecto
 
-Requiere **Docker** y **Docker Compose** instalados.
+Para levantar el proyecto es necesario tener instalado **Docker Desktop**.
 
-**Windows (PowerShell):**
-```powershell
-.\scripts\bootstrap.ps1
+El archivo principal para iniciar el proyecto es:
+
+```txt
+docker-compose.yml
 ```
 
-**Linux / macOS:**
+Desde una terminal ubicada en la carpeta raíz del proyecto, ejecutar:
+
 ```bash
-./scripts/bootstrap.sh
+docker compose up --build
 ```
 
-Esto levanta tres contenedores:
+Este comando levanta tres contenedores:
 
 | Contenedor | Puerto | Descripción |
 |---|---|---|
@@ -39,19 +41,13 @@ Esto levanta tres contenedores:
 
 La BD se inicializa automáticamente la primera vez: Docker ejecuta los archivos de `database/init/` en orden alfabético al crear el volumen.
 
-### Resetear la base de datos
-
-```powershell
-# Windows
-.\scripts\reset-db.ps1
-
-# Linux/macOS
-./scripts/reset-db.sh
+### Resetear docker
+```bash
+docker compose down -v
+docker compose up --build
 ```
 
-Esto baja los contenedores, **elimina el volumen** (borrando todos los datos) y los vuelve a levantar. Docker re-ejecuta los scripts de init automáticamente con datos limpios.
-
----
+El comando `docker compose down -v` elimina los volúmenes.
 
 ## Inicialización de la base de datos
 
