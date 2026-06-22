@@ -16,6 +16,7 @@ export default function QrScannerScreen() {
   const [loading, setLoading] = useState(false)
   const [resultMessage, setResultMessage] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null)
+  const API_URL = 'http://192.168.1.23:8080'
 
   if (!permission) return null
 
@@ -69,7 +70,7 @@ export default function QrScannerScreen() {
         return
       }
 
-      const url = `${endpoint}&deviceId=${encodeURIComponent(deviceId)}`
+      const url = `${API_URL}${endpoint}&deviceId=${encodeURIComponent(deviceId)}`
 
       const response = await fetch(url, {
         method: 'POST',

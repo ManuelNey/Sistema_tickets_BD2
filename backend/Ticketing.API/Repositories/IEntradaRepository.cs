@@ -11,4 +11,6 @@ public interface IEntradaRepository
     Task<List<MisEntradasGrupoDto>> GetMisEntradasAsync(string mail);
     Task<int> TransferirAsync(int idHabilita, int cantidad, string emisorMail, string receptorMail);
 
+    Task<bool> FuncionarioPuedeValidarEntradaAsync(int idEntrada, string mailFuncionario);
+
 }
