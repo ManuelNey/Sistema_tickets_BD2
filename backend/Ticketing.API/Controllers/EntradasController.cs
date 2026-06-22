@@ -99,7 +99,7 @@ public class EntradasController : ControllerBase
         var tokenQr = _jwtService.GenerateQrToken(idEntrada, mail);
 
         var qrContenido =
-                    $"http://10.140.24.139:8080/api/Entradas/ScanQr?token={Uri.EscapeDataString(tokenQr)}";
+                    $"/api/Entradas/ScanQr?token={Uri.EscapeDataString(tokenQr)}";
         return Ok(new
         {
             entradaId = idEntrada,
@@ -130,6 +130,9 @@ public class EntradasController : ControllerBase
     {
         var mailFuncionario = User.FindFirstValue("mail");
 
+        if (string.IsNullOrWhiteSpace(mailFuncionario))
+            return Unauthorized(new { message = "Funcionario no autenticado" });
+
         if (string.IsNullOrWhiteSpace(token))
             return BadRequest(new { message = "Token inválido" });
 
@@ -145,6 +148,20 @@ public class EntradasController : ControllerBase
         var entradaId = datos.entradaId;
         var mailUsuario = datos.mail;
 
+        var funcionarioAutorizado =
+            await _entradaRepository.FuncionarioPuedeValidarEntradaAsync(
+                entradaId,
+                mailFuncionario
+            );
+
+        if (!funcionarioAutorizado)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "El funcionario no está habilitado para validar entradas de este sector."
+            });
+        }
+
         var actualizada = await _entradaRepository.MarcarEntradaComoUtilizadaAsync(
             entradaId,
             mailUsuario,
@@ -154,7 +171,12 @@ public class EntradasController : ControllerBase
         );
 
         if (!actualizada)
-            return BadRequest(new { message = "La entrada no existe, no pertenece al usuario o ya fue utilizada" });
+        {
+            return BadRequest(new
+            {
+                message = "La entrada no existe, no pertenece al usuario o ya fue utilizada"
+            });
+        }
 
         return Ok(new
         {
@@ -165,5 +187,4 @@ public class EntradasController : ControllerBase
             dispositivo = deviceId
         });
     }
-
 }

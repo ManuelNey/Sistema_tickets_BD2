@@ -64,6 +64,9 @@ GRANT UPDATE (estado) ON entrada TO app_funcionario;
 GRANT SELECT, INSERT ON validacion TO app_funcionario;
 GRANT USAGE, SELECT ON SEQUENCE validacion_id_validacion_seq TO app_funcionario;
 
+GRANT SELECT ON TABLE trabaja_en TO app_funcionario;
+
+
 -- ═══════════════════════════════════════════════════════════════════════════
 -- app_admin
 -- ═══════════════════════════════════════════════════════════════════════════

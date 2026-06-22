@@ -346,4 +346,27 @@ public class EntradaRepository : IEntradaRepository
 
         return true;
     }
+
+    public async Task<bool> FuncionarioPuedeValidarEntradaAsync(int entradaId, string mailFuncionario){
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = new NpgsqlCommand(@"
+            SELECT EXISTS (
+                SELECT 1
+                FROM entrada e
+                INNER JOIN trabaja_en te
+                    ON te.fk_habilita_id = e.fk_habilita_id
+                WHERE e.id_entrada = @entradaId
+                AND te.funcionario_mail = @mailFuncionario
+            );
+        ", connection);
+
+        cmd.Parameters.AddWithValue("@entradaId", entradaId);
+        cmd.Parameters.AddWithValue("@mailFuncionario", mailFuncionario);
+
+        var resultado = await cmd.ExecuteScalarAsync();
+
+        return resultado is bool autorizado && autorizado;
+    }
 }
