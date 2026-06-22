@@ -614,13 +614,33 @@
   border-radius: 14px;
   width: 100%;
   max-width: 560px;
-  max-height: 80vh;
-  overflow-y: auto;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
   padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
   position: relative;
+}
+
+.func-modal-body {
+  max-height: calc(100vh - 185px);
+  overflow-y: auto;
+  margin-top: 20px;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #9B2DEE #F3F2F7;
+}
+
+.func-modal-body::-webkit-scrollbar {
+  width: 10px;
+}
+
+.func-modal-body::-webkit-scrollbar-track {
+  background: #F3F2F7;
+  border-radius: 999px;
+}
+
+.func-modal-body::-webkit-scrollbar-thumb {
+  background: #9B2DEE;
+  border-radius: 999px;
 }
 
 .func-modal-head {
@@ -653,6 +673,10 @@
   overflow: hidden;
 }
 
+.func-sector + .func-sector {
+  margin-top: 14px;
+}
+
 .func-sector-title {
   background: linear-gradient(150deg, #1B1428 0%, #25193C 100%);
   color: rgba(255,255,255,0.9);
@@ -673,6 +697,23 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  max-height: 190px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #9B2DEE #F3F2F7;
+}
+
+.func-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.func-list::-webkit-scrollbar-track {
+  background: #F3F2F7;
+}
+
+.func-list::-webkit-scrollbar-thumb {
+  background: #9B2DEE;
+  border-radius: 999px;
 }
 
 .func-row {

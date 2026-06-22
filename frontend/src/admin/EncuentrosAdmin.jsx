@@ -229,6 +229,14 @@ function EncuentrosAdmin({ user }) {
     setEventForm((current) => {
       const next = { ...current, [field]: value }
 
+      if (field === 'equipoLocalId' && value === next.equipoVisitanteId) {
+        next.equipoVisitanteId = ''
+      }
+
+      if (field === 'equipoVisitanteId' && value === next.equipoLocalId) {
+        next.equipoLocalId = ''
+      }
+
       if (field === 'fecha' && next.hora && !getAvailableTimeOptions(value).includes(next.hora)) {
         next.hora = ''
       }
@@ -796,7 +804,15 @@ function FuncionariosModal({ encuentro, onClose }) {
       if (!acc[row.habilitaId]) {
         acc[row.habilitaId] = { habilitaId: row.habilitaId, sectorNombre: row.sectorNombre, funcionarios: [] }
       }
-      acc[row.habilitaId].funcionarios.push({ mail: row.funcionarioMail, nombre: row.nombreFuncionario, apellido: row.apellidoFuncionario })
+
+      if (row.funcionarioMail) {
+        acc[row.habilitaId].funcionarios.push({
+          mail: row.funcionarioMail,
+          nombre: row.nombreFuncionario,
+          apellido: row.apellidoFuncionario,
+        })
+      }
+
       return acc
     }, {})
   )
@@ -851,57 +867,61 @@ function FuncionariosModal({ encuentro, onClose }) {
         {loading && <p className="matches-status">Cargando...</p>}
         {error && <p className="matches-status is-error">{error}</p>}
 
-        {!loading && !error && sectores.length === 0 && (
-          <p className="matches-status">Este encuentro no tiene sectores habilitados.</p>
-        )}
+        {!loading && !error && (
+          <div className="func-modal-body">
+            {sectores.length === 0 && (
+              <p className="matches-status">Este encuentro no tiene sectores habilitados.</p>
+            )}
 
-        {!loading && !error && sectores.map((sector) => {
-          const asignados = new Set(sector.funcionarios.map((f) => f.mail))
-          const disponibles = todos.filter((f) => !asignados.has(f.mail))
+            {sectores.map((sector) => {
+              const asignados = new Set(sector.funcionarios.map((f) => f.mail))
+              const disponibles = todos.filter((f) => !asignados.has(f.mail))
 
-          return (
-            <div className="func-sector" key={sector.habilitaId}>
-              <div className="func-sector-title">{sector.sectorNombre}</div>
+              return (
+                <div className="func-sector" key={sector.habilitaId}>
+                  <div className="func-sector-title">{sector.sectorNombre}</div>
 
-              {sector.funcionarios.length === 0 ? (
-                <p className="func-empty">Sin funcionarios asignados</p>
-              ) : (
-                <ul className="func-list">
-                  {sector.funcionarios.map((f) => (
-                    <li key={f.mail} className="func-row">
-                      <span>{f.nombre} {f.apellido}</span>
-                      <span className="func-mail">{f.mail}</span>
-                      <button
-                        className="func-btn-remove"
-                        type="button"
+                  {sector.funcionarios.length === 0 ? (
+                    <p className="func-empty">Sin funcionarios asignados</p>
+                  ) : (
+                    <ul className="func-list">
+                      {sector.funcionarios.map((f) => (
+                        <li key={f.mail} className="func-row">
+                          <span>{f.nombre} {f.apellido}</span>
+                          <span className="func-mail">{f.mail}</span>
+                          <button
+                            className="func-btn-remove"
+                            type="button"
+                            disabled={saving}
+                            onClick={() => desasignar(sector.habilitaId, f.mail)}
+                          >
+                            Quitar
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {disponibles.length > 0 && (
+                    <div className="func-add-row">
+                      <select
+                        className="func-select"
+                        defaultValue=""
                         disabled={saving}
-                        onClick={() => desasignar(sector.habilitaId, f.mail)}
+                        onChange={(e) => { if (e.target.value) asignar(sector.habilitaId, e.target.value) }}
                       >
-                        Quitar
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {disponibles.length > 0 && (
-                <div className="func-add-row">
-                  <select
-                    className="func-select"
-                    defaultValue=""
-                    disabled={saving}
-                    onChange={(e) => { if (e.target.value) asignar(sector.habilitaId, e.target.value) }}
-                  >
-                    <option value="" disabled>Agregar funcionario...</option>
-                    {disponibles.map((f) => (
-                      <option key={f.mail} value={f.mail}>{f.nombre} {f.apellido}</option>
-                    ))}
-                  </select>
+                        <option value="" disabled>Agregar funcionario...</option>
+                        {disponibles.map((f) => (
+                          <option key={f.mail} value={f.mail}>{f.nombre} {f.apellido}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )
-        })}
+              )
+            })}
+          </div>
+        )}
       </section>
     </div>
   )
@@ -926,6 +946,13 @@ function CreateEventModal({
   minEventDate,
   timeOptions,
 }) {
+  const localOptions = countries.filter(
+    (country) => String(country.id) !== String(form.equipoVisitanteId)
+  )
+  const visitorOptions = countries.filter(
+    (country) => String(country.id) !== String(form.equipoLocalId)
+  )
+
   return (
     <div className="modal-backdrop" role="presentation">
       <section className="stadium-modal event-modal" aria-labelledby="event-modal-title" role="dialog">
@@ -946,7 +973,7 @@ function CreateEventModal({
                 onChange={(event) => onChange('equipoLocalId', event.target.value)}
               >
                 <option value="">{countriesLoading ? 'Cargando paises...' : 'Selecciona un pais'}</option>
-                {countries.map((country) => (
+                {localOptions.map((country) => (
                   <option key={country.id} value={country.id}>
                     {country.nombre}
                   </option>
@@ -963,7 +990,7 @@ function CreateEventModal({
                 onChange={(event) => onChange('equipoVisitanteId', event.target.value)}
               >
                 <option value="">{countriesLoading ? 'Cargando paises...' : 'Selecciona un pais'}</option>
-                {countries.map((country) => (
+                {visitorOptions.map((country) => (
                   <option key={country.id} value={country.id}>
                     {country.nombre}
                   </option>
