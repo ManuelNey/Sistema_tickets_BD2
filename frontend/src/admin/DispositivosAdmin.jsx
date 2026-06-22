@@ -312,15 +312,15 @@ function DispositivosAdmin() {
   }
 
   return (
-    <div className="admin-view">
-      <header className="admin-header">
+    <div className="ac-view">
+      <header className="ac-header">
         <div>
-          <h1 id="dashboard-title">Gestion de Dispositivos</h1>
-          <p>Administra los dispositivos y sus funcionarios asignados</p>
+          <h1 id="dashboard-title">Gestión de Dispositivos</h1>
+          <p>{devices.length} dispositivos registrados en el sistema</p>
         </div>
-        <button className="create-stadium-button" type="button" onClick={openCreateDevice}>
-          <SidebarIcon name="plus" />
-          <span>Nuevo Dispositivo</span>
+        <button className="ac-btn-primary" type="button" onClick={openCreateDevice}>
+          <PlusIconD />
+          Nuevo Dispositivo
         </button>
       </header>
 
@@ -328,7 +328,7 @@ function DispositivosAdmin() {
       {devicesError && <p className="matches-status is-error">{devicesError}</p>}
 
       {!devicesLoading && !devicesError && (
-        <div className="device-grid">
+        <div className="ac-grid">
           {devices.length === 0 ? (
             <p className="matches-status">No hay dispositivos disponibles.</p>
           ) : (
@@ -386,63 +386,104 @@ function DispositivosAdmin() {
 
 function DeviceCard({ device, onDelete, onEdit, onToggleStatus }) {
   const isEnabled = isDeviceEnabled(device.estado)
-  const funcionarios = device.funcionarios.length > 0 ? device.funcionarios : ['Sin funcionarios asignados']
 
   return (
-    <article className={`device-card ${isEnabled ? 'is-enabled' : 'is-disabled'}`}>
-      <header className="device-card-header">
-        <div className={`device-icon ${isEnabled ? 'is-enabled' : 'is-disabled'}`} aria-hidden="true">
-          <SidebarIcon name="device" />
+    <article className="ac-card">
+      <div className="ac-card-head">
+        <div className="ac-device-meta">
+          <span className={`ac-device-status-dot ${isEnabled ? 'is-on' : 'is-off'}`} />
+          <span className={`ac-device-status-label ${isEnabled ? 'is-on' : 'is-off'}`}>
+            {isEnabled ? 'Habilitado' : 'Deshabilitado'}
+          </span>
         </div>
-        <div>
-          <h2>{device.descripcion || 'Dispositivo sin descripcion'}</h2>
-          <p>{device.numeroDispositivo}</p>
-        </div>
-        <span className={`device-power ${isEnabled ? 'is-enabled' : 'is-disabled'}`}>
-          <SidebarIcon name={isEnabled ? 'power' : 'powerOff'} />
-        </span>
-      </header>
-
-      <div className="device-card-body">
-        <p>
-          <span>Numero</span>
-          <strong>{device.numeroDispositivo}</strong>
-        </p>
-
-        <div className="device-workers">
-          <span>Funcionarios asignados ({device.funcionarios.length})</span>
+        <div className="ac-device-head-body">
+          <DeviceIconD />
           <div>
-            {funcionarios.map((funcionario) => (
-              <small key={funcionario}>{funcionario}</small>
-            ))}
+            <div className="ac-device-name">{device.descripcion || 'Sin descripción'}</div>
+            <div className="ac-device-id"># {device.numeroDispositivo}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="ac-card-body">
+        <div className="ac-stats-grid">
+          <div className="ac-stat-box">
+            <span className="ac-stat-label">Funcionarios</span>
+            <span className="ac-stat-value is-dark">{device.funcionarios.length}</span>
+          </div>
+          <div className="ac-stat-box">
+            <span className="ac-stat-label">Estado</span>
+            <span className={`ac-device-pill ${isEnabled ? 'is-on' : 'is-off'}`}>
+              {isEnabled ? 'Activo' : 'Inactivo'}
+            </span>
           </div>
         </div>
 
-        <span className={`device-status ${isEnabled ? 'is-enabled' : 'is-disabled'}`}>
-          {isEnabled ? 'Activo' : 'Inactivo'}
-        </span>
-      </div>
+        {device.funcionarios.length > 0 && (
+          <div className="ac-device-workers">
+            {device.funcionarios.map((mail) => (
+              <span key={mail} className="ac-worker-chip">{mail}</span>
+            ))}
+          </div>
+        )}
 
-      <footer className="device-actions">
-        <button
-          className={`device-toggle-button ${isEnabled ? 'is-disable-action' : 'is-enable-action'}`}
-          type="button"
-          onClick={onToggleStatus}
-        >
-          <SidebarIcon name={isEnabled ? 'powerOff' : 'power'} />
-          <span>{isEnabled ? 'Desactivar' : 'Activar'}</span>
-        </button>
-        <div className="device-secondary-actions">
-          <button className="details-button" type="button" onClick={onEdit}>
-            <SidebarIcon name="edit" />
-            <span>Modificar</span>
+        <div className="ac-divider" />
+
+        <div className="ac-actions">
+          <button
+            className={`ac-btn-outline ${isEnabled ? 'is-warn' : 'is-ok'}`}
+            type="button"
+            onClick={onToggleStatus}
+          >
+            <PowerIconD on={isEnabled} />
+            {isEnabled ? 'Desactivar' : 'Activar'}
           </button>
-          <button className="delete-button" type="button" aria-label="Borrar dispositivo" onClick={onDelete}>
-            <SidebarIcon name="trash" />
+          <button className="ac-btn-outline" type="button" onClick={onEdit}>
+            <EditIconD />
+            Modificar
+          </button>
+          <button className="ac-btn-icon" type="button" aria-label="Borrar" onClick={onDelete}>
+            <TrashIconD />
           </button>
         </div>
-      </footer>
+      </div>
     </article>
+  )
+}
+
+function PlusIconD() {
+  return (
+    <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <line x1="7" y1="1" x2="7" y2="13" /><line x1="1" y1="7" x2="13" y2="7" />
+    </svg>
+  )
+}
+function DeviceIconD() {
+  return (
+    <svg viewBox="0 0 18 18" width="22" height="22" fill="none" stroke="rgba(255,255,255,0.7)" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+      <rect x="2" y="4" width="14" height="10" rx="2" /><line x1="9" y1="14" x2="9" y2="17" /><line x1="6" y1="17" x2="12" y2="17" />
+    </svg>
+  )
+}
+function PowerIconD() {
+  return (
+    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <path d="M6 1v4M3.5 2.8A5 5 0 1 0 6 1" />
+    </svg>
+  )
+}
+function EditIconD() {
+  return (
+    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8.5 1.5a1.4 1.4 0 0 1 2 2L3 11l-3 1 1-3L8.5 1.5z" />
+    </svg>
+  )
+}
+function TrashIconD() {
+  return (
+    <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="1 3 11 3" /><path d="M4.5 3V2h3v1M2 3l.7 7.5A1 1 0 0 0 3.7 11h4.6a1 1 0 0 0 1-.9L10 3" />
+    </svg>
   )
 }
 

@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ticketing.API.DTOs;
 using Ticketing.API.Repositories;
@@ -54,8 +56,13 @@ public class UsuarioController : ControllerBase
     }
 
     [HttpGet("perfil/{mail}")]
+    [Authorize]
     public async Task<IActionResult> GetPerfil(string mail)
     {
+        var mailToken = User.FindFirstValue("mail");
+        if (mailToken != mail)
+            return Forbid();
+
         var usuario = await _usuarioRepository.GetByMailAsync(mail);
         if (usuario == null)
             return NotFound(new { message = "Usuario no encontrado" });
@@ -63,25 +70,21 @@ public class UsuarioController : ControllerBase
         return Ok(usuario);
     }
 
-
     [HttpPut("perfil/{mail}")]
+    [Authorize]
     public async Task<IActionResult> ActualizarPerfil(
         string mail,
         [FromBody] ActualizarPerfilDto perfil
     )
     {
-        var actualizado = await _usuarioRepository.UpdateProfileAsync(
-            mail,
-            perfil
-        );
+        var mailToken = User.FindFirstValue("mail");
+        if (mailToken != mail)
+            return Forbid();
+
+        var actualizado = await _usuarioRepository.UpdateProfileAsync(mail, perfil);
 
         if (!actualizado)
-        {
-            return NotFound(new
-            {
-                message = "No se encontró el usuario."
-            });
-        }
+            return NotFound(new { message = "No se encontró el usuario." });
 
         return NoContent();
     }

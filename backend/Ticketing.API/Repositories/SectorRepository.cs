@@ -48,8 +48,12 @@ public class SectorRepository : ISectorRepository
 
     public async Task<SectorDto?> CreateAsync(CrearSectorDto sector, int paisSedeId)
     {
+        //No se pueden agregar más de 4 sectores por estadio, ni agregar sectores a estadios que no sean de su país sede.
+
+
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
+
         await using var command = new NpgsqlCommand(
             @"INSERT INTO sector(nombre, capacidad_maxima, fk_estadio)
             SELECT @nombre, @capacidad, @idEstadio
@@ -59,6 +63,9 @@ public class SectorRepository : ISectorRepository
                 WHERE id_estadio = @idEstadio
                 AND fk_pais_sede = @paisSedeId
             )
+            AND (
+                SELECT COUNT(*) FROM sector WHERE fk_estadio = @idEstadio
+            ) < 4
             RETURNING id_sector, nombre, capacidad_maxima, fk_estadio;", connection);
 
         command.Parameters.AddWithValue("@nombre", sector.Nombre);
@@ -67,6 +74,7 @@ public class SectorRepository : ISectorRepository
         command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
     
     await using var reader = await command.ExecuteReaderAsync();
+
 
     if(!await reader.ReadAsync())
     {
