@@ -126,101 +126,272 @@
 .pedido-total strong { color: #7c3aed; font-size: 1.25rem; }
 .pedido-comp { color: #7c3aed; font-size: 0.8rem; font-weight: 600; }
 
-/* --- Mis Reservas --- */
-.reservas-view { padding: 1.5rem; max-width: 900px; }
+/* --- Mis Reservas (nuevo diseño) --- */
 
-/* Solapas Pendientes / Pagadas */
-.reservas-tabs {
+/* Tabs */
+.reservas-tabs-new {
   display: inline-flex;
-  gap: 0.25rem;
-  margin: 0.5rem 0 1.25rem;
-  padding: 0.25rem;
-  border-radius: 999px;
-  background: #f3f4f6;
+  gap: 0;
+  background: #ECEAF2;
+  border-radius: 10px;
+  padding: 3px;
+  width: fit-content;
+  margin-bottom: 20px;
 }
-.reservas-tab {
+.reservas-tab-new {
+  padding: 7px 20px;
+  border-radius: 8px;
   border: none;
-  background: transparent;
-  padding: 0.5rem 1.1rem;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: #6b7280;
   cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  background: transparent;
+  color: #9490A0;
+  transition: all 0.18s;
 }
-.reservas-tab.is-active {
-  background: #7c3aed;
-  color: #fff;
+.reservas-tab-new.is-active {
+  background: #fff;
+  color: #130F1E;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
 
-.reservas-list { display: flex; flex-direction: column; gap: 0.85rem; }
-.reserva-card {
-  border: 1px solid #e2d9f3;
+/* Lista */
+.reservas-list-new { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
+
+/* Card de reserva */
+.reserva-card-new {
+  background: #fff;
   border-radius: 14px;
   overflow: hidden;
-  background: #f8f7ff;
-  box-shadow: 0 2px 8px rgba(100, 60, 180, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.04);
 }
-.reserva-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 28px rgba(100, 60, 180, 0.15);
-}
-.reserva-card-head {
-  background: #16051f;
-  color: #fff;
-  padding: 0.9rem 1.1rem;
+.reserva-card-head-new {
+  padding: 14px 20px;
+  background: linear-gradient(150deg, #1B1428 0%, #25193C 100%);
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
+  position: relative;
+  overflow: hidden;
 }
-.reserva-card-head .comp { color: #a78bfa; font-size: 0.72rem; font-weight: 600; }
-.reserva-card-head h3 { margin: 0.2rem 0 0; font-size: 0.95rem; }
-.reserva-card-code {
+.reserva-card-comp {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #A78BFA;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.reserva-card-title {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+.reserva-card-id-label {
+  color: rgba(255,255,255,0.28);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.reserva-card-id {
+  color: rgba(255,255,255,0.55);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.reserva-card-body-new {
+  padding: 18px 20px 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: start;
+}
+.reserva-card-info-new {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.reserva-info-row-new {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #3A3445;
+  font-size: 13px;
+  font-weight: 500;
+}
+.reserva-sector-chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.18rem 0.55rem;
-  border-radius: 999px;
-  font-size: 0.68rem;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: #EDE9FE;
+  border: 1px solid rgba(124,58,237,0.12);
+  font-size: 12px;
+  font-weight: 700;
+  color: #5B21B6;
+}
+.reserva-sector-chip-qty {
+  font-size: 11px;
+  font-weight: 500;
+  color: #A78BFA;
+}
+.reserva-total-label {
+  font-size: 10px;
   font-weight: 600;
-  background: rgba(155, 45, 238, 0.18);
-  color: #c4b5fd;
-  border: 1px solid rgba(155, 45, 238, 0.35);
+  color: #B0ACBA;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.reserva-total-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: #130F1E;
+  letter-spacing: -1.2px;
+  line-height: 1;
+}
+.reserva-card-side-new {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 180px;
+}
+.reserva-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  border: 1px solid;
+  font-size: 12px;
+  font-weight: 600;
   white-space: nowrap;
 }
+.reserva-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.reserva-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.reserva-btn-secondary {
+  padding: 10px 16px;
+  border-radius: 9px;
+  border: 1.5px solid #E2E0E8;
+  background: transparent;
+  cursor: pointer;
+  color: #5B4E70;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.reserva-btn-secondary:hover {
+  border-color: #C4B5FD;
+  color: #7C3AED;
+}
+.reserva-btn-primary {
+  padding: 10px 20px;
+  border-radius: 9px;
+  border: none;
+  background: linear-gradient(135deg, #7C3AED, #9333EA);
+  cursor: pointer;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(124,58,237,0.3);
+  transition: all 0.18s;
+}
+.reserva-btn-primary:hover {
+  box-shadow: 0 4px 16px rgba(124,58,237,0.45);
+  transform: translateY(-1px);
+}
+
+/* Legacy (usado por PagoEntrada y otros) */
+.reservas-view { padding: 1.5rem; max-width: 900px; }
+.reservas-tabs { display: inline-flex; gap: 0.25rem; margin: 0.5rem 0 1.25rem; padding: 0.25rem; border-radius: 999px; background: #f3f4f6; }
+.reservas-tab { border: none; background: transparent; padding: 0.5rem 1.1rem; border-radius: 999px; font-weight: 600; font-size: 0.9rem; color: #6b7280; cursor: pointer; }
+.reservas-tab.is-active { background: #7c3aed; color: #fff; }
+.reservas-list { display: flex; flex-direction: column; gap: 0.85rem; }
+.reserva-card { border: 1px solid #e2d9f3; border-radius: 14px; overflow: hidden; background: #f8f7ff; }
+.reserva-card-head { background: #16051f; color: #fff; padding: 0.9rem 1.1rem; display: flex; justify-content: space-between; align-items: flex-start; }
+.reserva-card-head .comp { color: #a78bfa; font-size: 0.72rem; font-weight: 600; }
+.reserva-card-head h3 { margin: 0.2rem 0 0; font-size: 0.95rem; }
+.reserva-card-code { display: inline-flex; align-items: center; padding: 0.18rem 0.55rem; border-radius: 999px; font-size: 0.68rem; font-weight: 600; background: rgba(155,45,238,0.18); color: #c4b5fd; border: 1px solid rgba(155,45,238,0.35); white-space: nowrap; }
 .reserva-card-body { padding: 1rem 1.25rem; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .reserva-card-info { display: flex; flex-direction: column; gap: 0.3rem; font-size: 0.9rem; color: #374151; }
-.reserva-info-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-.reserva-line-icon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-  fill: none;
-  stroke: #6b7280;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+.reserva-info-row { display: inline-flex; align-items: center; gap: 0.55rem; }
+.reserva-line-icon { width: 18px; height: 18px; flex: 0 0 18px; fill: none; stroke: #6b7280; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .reserva-card-precio { color: #7c3aed; font-weight: 700; font-size: 1.1rem; }
 .reserva-card-side { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
-
-.estado-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.25rem 0.7rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  border: 1px solid;
-}
+.estado-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600; border: 1px solid; }
 .estado-badge.is-pendiente { color: #6d28d9; border-color: #c4b5fd; background: #faf5ff; }
 .estado-badge.is-pagada { color: #15803d; border-color: #86efac; background: #f0fdf4; }
 .estado-badge.is-cancelada { color: #b91c1c; border-color: #fca5a5; background: #fef2f2; }
+
+/* --- Mis Entradas (nuevo diseño) --- */
+.entrada-badge-transferred {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: #FFF7ED;
+  border: 1px solid rgba(245,158,11,0.18);
+  color: #92400E;
+  font-size: 11px;
+  font-weight: 600;
+}
+.entrada-badge-avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  background: #F0FDF4;
+  border: 1px solid rgba(34,197,94,0.18);
+  color: #15803D;
+  font-size: 11px;
+  font-weight: 600;
+}
+.entrada-badge-avail.is-zero {
+  background: #F8F7FB;
+  border-color: #E5E3EB;
+  color: #9490A0;
+}
+.entrada-btn-disabled {
+  width: 100%;
+  padding: 10px 15px;
+  border-radius: 9px;
+  border: none;
+  cursor: not-allowed;
+  background: #ECEAF2;
+  color: #B0ACBA;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: auto;
+}
 
 /* --- Transferencias Enviadas --- */
 .transferencias-view {

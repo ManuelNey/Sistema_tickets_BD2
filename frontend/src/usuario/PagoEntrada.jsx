@@ -13,10 +13,7 @@ function PagoEntrada({ pedido, onPagoExitoso, onVolver }) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  // El total real (con comisión) lo define el back; el cargo se deriva de ese total.
-  const subtotal = pedido.precioUnitario * pedido.cantidad
   const total = pedido.montoTotal
-  const cargo = total - subtotal
   const expiraMs = getExpiracion(pedido.fechaReserva)
 
   const handleConfirmarPago = async (event) => {
@@ -50,8 +47,7 @@ function PagoEntrada({ pedido, onPagoExitoso, onVolver }) {
         fechaPartido: pedido.fecha,
         horaPartido: pedido.hora,
         estadio: pedido.estadio,
-        sector: pedido.sector,
-        cantidad: pedido.cantidad,
+        sectores: pedido.sectores,
         totalConCargo: total,
       })
     } catch (err) {
@@ -153,22 +149,12 @@ function PagoEntrada({ pedido, onPagoExitoso, onVolver }) {
           </p>
 
           <dl className="pedido-rows">
-            <div>
-              <dt>Seccion</dt>
-              <dd>{pedido.sector}</dd>
-            </div>
-            <div>
-              <dt>Cantidad</dt>
-              <dd>{pedido.cantidad}</dd>
-            </div>
-            <div>
-              <dt>Subtotal</dt>
-              <dd>{formatPrice(subtotal)}</dd>
-            </div>
-            <div>
-              <dt>Cargo por servicio</dt>
-              <dd>{formatPrice(cargo)}</dd>
-            </div>
+            {(pedido.sectores ?? []).map(s => (
+              <div key={s.sector}>
+                <dt>{s.sector}</dt>
+                <dd>{s.cantidad} {s.cantidad === 1 ? 'entrada' : 'entradas'}</dd>
+              </div>
+            ))}
           </dl>
 
           <div className="pedido-total">

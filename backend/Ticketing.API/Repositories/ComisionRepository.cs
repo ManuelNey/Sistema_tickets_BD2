@@ -86,13 +86,13 @@ public class ComisionRepository : IComisionRepository
         await cmd.ExecuteNonQueryAsync();
     }
 
-    // null = no existe; false = tiene compras asociadas; true = borrada OK.
+    // null = no existe, false = tiene compras asociadas y true = borrada OK.
     public async Task<bool?> DeleteAsync(int id)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        // Verificar que existe
+        // Verificar que existe como tal
         await using var existsCmd = new NpgsqlCommand(
             "SELECT 1 FROM comision WHERE id_comision = @id;", connection);
         existsCmd.Parameters.AddWithValue("@id", id);

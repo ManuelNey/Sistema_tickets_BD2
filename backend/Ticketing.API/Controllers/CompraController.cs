@@ -20,9 +20,10 @@ public class CompraController : ControllerBase
     }
 
     //  Crea la compra 'pendiente' con sus entradas 'reservada'.
+    //  Acepta uno o varios sectores en la misma lista; todos quedan en una sola compra y transacción.
     [HttpPost("reservar")]
     [Authorize(Roles = "usuario")]
-    public async Task<ActionResult> Reservar([FromBody] ReservarEntradaRequest request)
+    public async Task<ActionResult> Reservar([FromBody] List<ReservarEntradaRequest> items)
     {
         var mail = User.FindFirstValue("mail");
         if (mail == null)
@@ -31,7 +32,7 @@ public class CompraController : ControllerBase
         //Control de errores que puede disparar el repository
         try
         {
-            var idCompra = await _compraRepository.ReservarAsync(request, mail);
+            var idCompra = await _compraRepository.ReservarAsync(items, mail);
             return Ok(new { idCompra });
         }
         catch (KeyNotFoundException ex)

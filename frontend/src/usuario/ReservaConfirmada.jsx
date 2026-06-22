@@ -5,10 +5,7 @@ import { formatDate, formatPrice, formatTime, getExpiracion } from './format'
 // Pantalla "Reserva Confirmada": resumen + cuenta regresiva de 30 min para pagar.
 function ReservaConfirmada({ pedido, onPagar, onPagarMasTarde }) {
   const [expirada, setExpirada] = useState(false)
-  // El total real (con comisión) lo define el back.
-  const subtotal = pedido.precioUnitario * pedido.cantidad
   const total = pedido.montoTotal
-  const cargo = total - subtotal
   const expiraMs = getExpiracion(pedido.fechaReserva)
 
   return (
@@ -49,26 +46,12 @@ function ReservaConfirmada({ pedido, onPagar, onPagarMasTarde }) {
             <dt>Estadio</dt>
             <dd>{pedido.estadio}</dd>
           </div>
-          <div>
-            <dt>Seccion</dt>
-            <dd>{pedido.sector}</dd>
-          </div>
-          <div>
-            <dt>Precio unitario</dt>
-            <dd>{formatPrice(pedido.precioUnitario)}</dd>
-          </div>
-          <div>
-            <dt>Cantidad</dt>
-            <dd>{pedido.cantidad} {pedido.cantidad === 1 ? 'entrada' : 'entradas'}</dd>
-          </div>
-          <div>
-            <dt>Subtotal</dt>
-            <dd>{formatPrice(subtotal)}</dd>
-          </div>
-          <div>
-            <dt>Cargo por servicio</dt>
-            <dd>{formatPrice(cargo)}</dd>
-          </div>
+          {(pedido.sectores ?? []).map(s => (
+            <div key={s.sector}>
+              <dt>{s.sector}</dt>
+              <dd>{s.cantidad} {s.cantidad === 1 ? 'entrada' : 'entradas'}</dd>
+            </div>
+          ))}
         </dl>
 
         <div className="resumen-total">

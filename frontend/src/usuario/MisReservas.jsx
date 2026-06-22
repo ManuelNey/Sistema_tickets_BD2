@@ -20,9 +20,7 @@ function reservaToPedido(r) {
     fecha: r.fechaEncuentro,
     hora: r.horaEncuentro,
     estadio: r.estadio,
-    sector: r.sector,
-    precioUnitario: r.precioUnitario,
-    cantidad: r.cantidad,
+    sectores: r.sectores,
     montoTotal: r.montoTotal,
     fechaReserva: r.fechaReserva,
   }
@@ -117,46 +115,47 @@ function MisReservas({ onIrAMisEntradas }) {
 
   // vista principal con el listado de reservas
   return (
-    <div className="reservas-view">
-      <header className="buy-header">
-        <h1 id="dashboard-title">Mis Reservas</h1>
-        <p>Historial de reservas y estado de pago</p>
-      </header>
+    <div className="buy-view">
+      <div style={{ paddingBottom: 0 }}>
+        <header className="buy-header">
+          <div>
+            <h1 id="dashboard-title">Mis Reservas</h1>
+            <p>Historial de reservas y estado de pago</p>
+          </div>
+        </header>
 
-      <div className="reservas-tabs" role="tablist">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'pendientes'}
-          className={`reservas-tab ${tab === 'pendientes' ? 'is-active' : ''}`}
-          onClick={() => setTab('pendientes')}
-        >
-          Pendientes de pago
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'pagadas'}
-          className={`reservas-tab ${tab === 'pagadas' ? 'is-active' : ''}`}
-          onClick={() => setTab('pagadas')}
-        >
-          Pagadas
-        </button>
+        <div className="reservas-tabs-new" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'pendientes'}
+            className={`reservas-tab-new ${tab === 'pendientes' ? 'is-active' : ''}`}
+            onClick={() => setTab('pendientes')}
+          >
+            Pendientes de pago
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'pagadas'}
+            className={`reservas-tab-new ${tab === 'pagadas' ? 'is-active' : ''}`}
+            onClick={() => setTab('pagadas')}
+          >
+            Pagadas
+          </button>
+        </div>
+        <div className="filters-divider" />
       </div>
 
       {loading && <p className="matches-status">Cargando reservas...</p>}
-
       {!loading && error && <p className="matches-status is-error">{error}</p>}
-
       {!loading && !error && reservas.length === 0 && (
         <p className="matches-status">
-          {tab === 'pendientes'
-            ? 'No tenes reservas pendientes de pago.'
-            : 'Todavia no tenes compras pagadas.'}
+          {tab === 'pendientes' ? 'No tenes reservas pendientes de pago.' : 'Todavia no tenes compras pagadas.'}
         </p>
       )}
 
-      <div className="reservas-list">
+      <div className="reservas-list-new">
         {reservas.map((r) => (
           <ReservaCard
             key={r.idCompra}
@@ -170,100 +169,124 @@ function MisReservas({ onIrAMisEntradas }) {
   )
 }
 
-// Card de cada reserva en el listado. 
+// Card de cada reserva en el listado.
 function ReservaCard({ reserva, onPagar, onCancelar }) {
   const [expirada, setExpirada] = useState(false)
   const esPendiente = reserva.estado === 'pendiente'
+  const esPagada = reserva.estado === 'pagada'
   const expiraMs = getExpiracion(reserva.fechaReserva)
 
+  const statusMap = {
+    pendiente: { bg: '#FFF7ED', border: 'rgba(245,158,11,0.25)', dot: '#F59E0B', color: '#92400E', label: 'Pendiente de pago' },
+    pagada:    { bg: '#F0FDF4', border: 'rgba(34,197,94,0.25)',   dot: '#22C55E', color: '#15803D', label: 'Confirmado' },
+    cancelada: { bg: '#FEF2F2', border: 'rgba(239,68,68,0.25)',   dot: '#EF4444', color: '#B91C1C', label: 'Cancelada' },
+  }
+  const st = statusMap[reserva.estado] ?? statusMap.cancelada
+
   return (
-    <article className="reserva-card">
-      <div className="reserva-card-head">
-        <div>
-          <p className="comp">Copa Mundial FIFA 2026</p>
-          <h3>
-            {reserva.equipoLocal} vs {reserva.equipoVisitante}
-          </h3>
+    <article className="reserva-card-new">
+      {/* Cabecera oscura */}
+      <div className="reserva-card-head-new">
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 30% 50%, rgba(124,58,237,0.12) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative' }}>
+          <div className="reserva-card-comp">
+            <span className="match-competition-dot" />
+            Copa Mundial FIFA 2026
+          </div>
+          <div className="reserva-card-title">{reserva.equipoLocal} vs {reserva.equipoVisitante}</div>
         </div>
-        <span className="reserva-card-code">{codigoReserva(reserva.idCompra)}</span>
+        <div style={{ position: 'relative', textAlign: 'right' }}>
+          <div className="reserva-card-id-label">Reserva</div>
+          <div className="reserva-card-id">{codigoReserva(reserva.idCompra)}</div>
+        </div>
       </div>
 
-      <div className="reserva-card-body">
-        <div className="reserva-card-info">
-          <span className="reserva-info-row">
-            <CalendarIcon />
-            {formatDate(reserva.fechaEncuentro)}
-          </span>
-          <span className="reserva-info-row">
-            <ClockIcon />
-            {formatTime(reserva.horaEncuentro)}
-          </span>
-          <span className="reserva-info-row">
-            <PinIcon />
-            {reserva.estadio}
-          </span>
-          <span>{reserva.sector} - {reserva.cantidad} {reserva.cantidad === 1 ? 'entrada' : 'entradas'}</span>
-          <span className="reserva-card-precio">{formatPrice(reserva.montoTotal)}</span>
+      {/* Cuerpo */}
+      <div className="reserva-card-body-new">
+        {/* Info izquierda */}
+        <div>
+          <div className="reserva-card-info-new">
+            <div className="reserva-info-row-new">
+              <CalSvg />
+              <span>{formatDate(reserva.fechaEncuentro)} · {formatTime(reserva.horaEncuentro)}</span>
+            </div>
+            <div className="reserva-info-row-new">
+              <PinSvg />
+              <span>{reserva.estadio}</span>
+            </div>
+            <div className="reserva-info-row-new">
+              <TicketSvg />
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                {(reserva.sectores ?? []).map(s => (
+                  <span key={s.sector} className="reserva-sector-chip">
+                    <span>{s.sector}</span>
+                    <span className="reserva-sector-chip-qty">× {s.cantidad}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="reserva-total-label">Total</div>
+            <div className="reserva-total-val">{formatPrice(reserva.montoTotal)}</div>
+          </div>
         </div>
 
-        <div className="reserva-card-side">
-          <EstadoBadge estado={reserva.estado} />
+        {/* Acciones derecha */}
+        <div className="reserva-card-side-new">
+          <div className="reserva-status-badge" style={{ background: st.bg, borderColor: st.border }}>
+            <span className="reserva-status-dot" style={{ background: st.dot }} />
+            <span style={{ color: st.color }}>{st.label}</span>
+          </div>
 
           {esPendiente && !expirada && (
-            <>
-              <Countdown expiraMs={expiraMs} onExpire={() => setExpirada(true)} />
-              <button className="btn-primary" type="button" onClick={onPagar} style={{ padding: '0.5rem 1rem' }}>
-                Pagar ahora
-              </button>
-              <button className="btn-secondary" type="button" onClick={onCancelar} style={{ padding: '0.5rem 1rem' }}>
-                Cancelar
-              </button>
-            </>
+            <Countdown expiraMs={expiraMs} onExpire={() => setExpirada(true)} />
           )}
-
           {esPendiente && expirada && (
             <span className="countdown-pill is-expired">Reserva expirada</span>
           )}
+
+          <div style={{ flex: 1 }} />
+
+          <div className="reserva-card-actions">
+            {esPendiente && !expirada && (
+              <>
+                <button className="reserva-btn-secondary" type="button" onClick={onCancelar}>Cancelar</button>
+                <button className="reserva-btn-primary" type="button" onClick={onPagar}>Pagar ahora</button>
+              </>
+            )}
+            {esPagada && (
+              <>
+                <button className="reserva-btn-secondary" type="button">Ver detalle</button>
+                <button className="reserva-btn-primary" type="button">Ver QR</button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </article>
   )
 }
 
-// Muestra el estado de la reserva con un chapita de color.
-function EstadoBadge({ estado }) {
-  const map = {
-    pendiente: { cls: 'is-pendiente', label: 'Pendiente de pago' },
-    pagada: { cls: 'is-pagada', label: 'Pagada' },
-    cancelada: { cls: 'is-cancelada', label: 'Cancelada' },
-  }
-  const { cls, label } = map[estado] ?? { cls: '', label: estado }
-  return <span className={`estado-badge ${cls}`}>{label}</span>
-}
-
-function CalendarIcon() {
+function CalSvg() {
   return (
-    <svg className="reserva-line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 5h12v14H6z" />
-      <path d="M8 3v4M16 3v4M6 9h12" />
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" style={{ flex: 'none' }} aria-hidden="true">
+      <rect x="1.5" y="2.5" width="13" height="11" rx="2" /><line x1="1.5" y1="6.5" x2="14.5" y2="6.5" /><line x1="5" y1="1" x2="5" y2="4" /><line x1="11" y1="1" x2="11" y2="4" />
     </svg>
   )
 }
-
-function ClockIcon() {
+function PinSvg() {
   return (
-    <svg className="reserva-line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
-      <path d="M12 7v5l3 2" />
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }} aria-hidden="true">
+      <path d="M8 14.5S2 9.5 2 6a6 6 0 0 1 12 0c0 3.5-6 8.5-6 8.5z" /><circle cx="8" cy="6" r="2" />
     </svg>
   )
 }
-
-function PinIcon() {
+function TicketSvg() {
   return (
-    <svg className="reserva-line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" />
-      <path d="M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" style={{ flex: 'none', marginTop: 3 }} aria-hidden="true">
+      <path d="M2 6.5A1.5 1.5 0 0 1 3.5 5h9A1.5 1.5 0 0 1 14 6.5v.5a1 1 0 0 0 0 2v.5A1.5 1.5 0 0 1 12.5 11h-9A1.5 1.5 0 0 1 2 9.5V9a1 1 0 0 0 0-2v-.5z" />
+      <line x1="6.5" y1="5" x2="6.5" y2="11" strokeDasharray="1.5 1.5" />
     </svg>
   )
 }

@@ -356,46 +356,83 @@
 
 .buy-view {
   width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
+  padding: 24px 28px 36px;
 }
 
 .buy-header {
-  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
 .buy-header h1 {
   margin: 0;
-  color: #08080b;
-  font-size: 24px;
-  line-height: 1.1;
+  color: #130F1E;
+  font-size: 19px;
+  line-height: 1.2;
   font-weight: 800;
+  letter-spacing: -0.4px;
 }
 
 .buy-header p {
-  margin: 6px 0 0;
-  color: #5f6a7e;
-  font-size: 14px;
+  margin: 4px 0 0;
+  color: #9490A0;
+  font-size: 12.5px;
+  font-weight: 500;
 }
 
-.filters-card {
-  margin-bottom: 30px;
-  padding: 24px 22px 20px;
-  background: #ffffff;
-  border: 1px solid #d7d9e2;
-  border-radius: 14px;
-  box-shadow: 0 5px 14px rgba(17, 17, 17, 0.09);
-}
-
-.filters-card h2 {
+/* Barra de filtros compacta (reemplaza la filters-card anterior) */
+.filters-inline {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 0 0 24px;
-  color: #09090b;
-  font-size: 24px;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #E8E6EF;
+  margin-bottom: 18px;
+}
+.filters-inline-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9490A0;
+  white-space: nowrap;
+}
+.filters-inline-sep {
+  width: 1px;
+  height: 16px;
+  background: #E8E6EF;
+  flex: none;
+}
+.filters-inline-selects {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+.filters-inline-selects select {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 7px;
+  border: 1px solid #E8E6EF;
+  background: #F8F7FB;
+  color: #3A3445;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+.filters-divider {
+  height: 1px;
+  background: #E5E3EB;
+  margin-bottom: 18px;
 }
 
+/* Clases de filtros legacy por si quedan referencias */
 .filter-icon,
 .trophy-icon,
 .line-icon {
@@ -405,72 +442,201 @@
   stroke-linejoin: round;
   stroke-width: 2;
 }
+.filter-icon { width: 24px; height: 24px; color: #9b2dee; }
+.filters-card { display: none; } /* desactivada */
+.filters-grid select { font: inherit; }
 
-.filter-icon {
-  width: 24px;
-  height: 24px;
-  color: #9b2dee;
-}
-
-.filters-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.filters-grid label {
-  display: grid;
-  gap: 10px;
-  color: #09090b;
-  font-size: 16px;
-  font-weight: 750;
-}
-
-.filters-grid select {
-  width: 100%;
-  height: 52px;
-  padding: 0 18px;
-  color: #111111;
-  background: #f3f4f7;
-  border: 1px solid #cfd2dc;
-  border-radius: 14px;
-  font: inherit;
-  font-size: 19px;
-}
-
+/* ── Grid de partidos ─────────────────────────────────────────── */
 .matches-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(260px, 1fr));
-  align-items: stretch;
-  gap: 30px;
+  grid-template-columns: repeat(3, minmax(240px, 1fr));
+  align-items: start;
+  gap: 14px;
 }
 
+/* ── Match card nueva ─────────────────────────────────────────── */
 .match-card {
   overflow: hidden;
-  min-height: 100%;
   display: flex;
   flex-direction: column;
-  background: #f8f7ff;
-  border: 1px solid #e2d9f3;
+  background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(100, 60, 180, 0.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
 .match-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 44px rgba(100, 60, 180, 0.18);
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.07), 0 12px 30px rgba(124,58,237,0.1);
 }
 
+/* Cabecera oscura */
 .match-hero {
-  min-height: 210px;
+  padding: 13px 16px 16px;
+  background: linear-gradient(150deg, #1B1428 0%, #25193C 100%);
+  position: relative;
+  overflow: hidden;
+  color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 24px 20px 20px;
-  color: #ffffff;
-  background: #16051f;
+  gap: 12px;
+}
+.match-competition {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #A78BFA;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.match-competition-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #A78BFA;
+  flex: none;
+}
+.match-teams {
+  display: grid;
+  grid-template-columns: 1fr 36px 1fr;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+.match-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.match-team-name {
+  color: rgba(255,255,255,0.88);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.25;
+}
+.match-flag-img {
+  width: 40px;
+  height: 27px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.match-flag-fallback {
+  width: 40px;
+  height: 27px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.match-vs-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.match-vs-circle > span {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.3);
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
 }
 
+/* Cuerpo blanco */
+.match-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 13px 16px 16px;
+}
+.match-info-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 11px;
+}
+.match-info-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #46404F;
+  font-size: 12px;
+  font-weight: 500;
+}
+.match-info-row.is-highlight {
+  color: #7C3AED;
+  font-weight: 600;
+}
+.match-divider {
+  height: 1px;
+  background: #F0EEF5;
+  margin-bottom: 11px;
+}
+.match-prices {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 11px;
+}
+.match-price-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #B0ACBA;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.match-price-from {
+  font-size: 22px;
+  font-weight: 800;
+  color: #130F1E;
+  letter-spacing: -0.8px;
+  line-height: 1;
+  display: block;
+}
+.match-price-to {
+  font-size: 15px;
+  font-weight: 700;
+  color: #8C8699;
+  letter-spacing: -0.3px;
+  line-height: 1;
+  display: block;
+}
+.match-cta {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #7C3AED, #9333EA);
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(124,58,237,0.28);
+  transition: all 0.2s ease;
+  margin-top: auto;
+}
+.match-cta:hover {
+  box-shadow: 0 5px 18px rgba(124,58,237,0.42);
+  transform: translateY(-1px);
+}
+
+/* ── Estilos legacy (usados por CompraDetalle y TeamBadge) ─────── */
 .competition {
   display: flex;
   align-items: center;
@@ -479,12 +645,7 @@
   color: #c084fc;
   font-size: 16px;
 }
-
-.trophy-icon {
-  width: 20px;
-  height: 20px;
-}
-
+.trophy-icon { width: 20px; height: 20px; }
 .teams-row {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -492,7 +653,6 @@
   gap: 14px;
   min-height: 128px;
 }
-
 .team {
   display: grid;
   justify-items: center;
@@ -501,7 +661,6 @@
   color: #ffffff;
   font-size: 16px;
 }
-
 .team-avatar {
   width: 78px;
   height: 78px;
@@ -510,15 +669,10 @@
   border: 2px solid #a855f7;
   border-radius: 50%;
   color: #ffffff;
-  background:
-    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.22), transparent 36%),
-    linear-gradient(135deg, #3b0764, #111111);
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.22), transparent 36%), linear-gradient(135deg, #3b0764, #111111);
   font-size: 24px;
   font-weight: 850;
 }
-
-/* Banderita del equipo: recuadro rectangular redondeado con la proporcion de la bandera
-   (3:2), asi se ve completa, sin franjas blancas ni recorte. Reemplaza al circulo de iniciales. */
 .team-avatar.team-flag {
   width: 84px;
   height: 56px;
@@ -527,7 +681,6 @@
   background: #fff;
   padding: 0;
 }
-
 .team span {
   max-width: 100%;
   height: 42px;
@@ -539,63 +692,8 @@
   overflow-wrap: anywhere;
   text-align: center;
 }
-
-.versus {
-  color: #ffffff;
-  font-size: 29px;
-  font-weight: 500;
-}
-
-.match-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 22px 20px 20px;
-}
-
-.match-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 14px;
-  color: #687083;
-  font-size: 17px;
-}
-
-.match-info.is-highlight {
-  color: #8a22e6;
-}
-
-.line-icon {
-  width: 20px;
-  height: 20px;
-  flex: 0 0 auto;
-}
-
-.price-block {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid #e2d9f3;
-}
-
-.price-block span {
-  display: block;
-  color: #687083;
-  font-size: 16px;
-}
-
-.price-block strong {
-  display: block;
-  margin-top: 8px;
-  color: #08080b;
-  font-size: 27px;
-  line-height: 1;
-  font-weight: 500;
-}
-
+.versus { color: #ffffff; font-size: 29px; font-weight: 500; }
+.line-icon { width: 20px; height: 20px; flex: 0 0 auto; }
 .buy-button {
   width: 100%;
   height: 50px;
@@ -608,13 +706,10 @@
   font-size: 18px;
   font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 10px 28px rgba(155, 45, 238, 0.4);
+  box-shadow: 0 10px 28px rgba(155,45,238,0.4);
   transition: background 0.15s ease;
 }
-
-.buy-button:hover {
-  background: #8a22e6;
-}
+.buy-button:hover { background: #8a22e6; }
 
 .matches-status {
   margin: 0;
@@ -2109,416 +2204,521 @@
   }
 }
 
-/* ===== Pantalla de compra (detalle) ===== */
+/* ===== Pantalla de compra (detalle) — nuevo diseño ===== */
 
-.compra-view {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
+.compra-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: #F6F5F8;
 }
 
-.compra-topbar {
+/* Barra sticky superior */
+.compra-topbar-new {
+  height: 56px;
+  background: #100E16;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  margin-bottom: 28px;
-  padding: 20px 24px;
-  color: #ffffff;
-  background: #16051f;
-  border-radius: 14px;
+  padding: 0 28px;
+  flex: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
-
-.compra-topbar-brand {
+.compra-topbar-brand-new {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+.compra-topbar-logo-new {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  flex: none;
+}
+.compra-topbar-title {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.compra-topbar-sub {
+  color: rgba(255,255,255,0.38);
+  font-size: 10.5px;
+  font-weight: 500;
+}
+.compra-topbar-volver {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  background: transparent;
+  cursor: pointer;
+  color: rgba(255,255,255,0.65);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.compra-topbar-volver:hover {
+  border-color: rgba(255,255,255,0.28);
+  color: #fff;
+}
+
+/* Layout principal */
+.compra-layout-new {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  padding: 20px 28px 40px;
+  align-content: start;
+}
+.compra-left {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
-.compra-topbar-logo {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: #9b2dee;
-}
-
-.compra-topbar-logo .trophy-icon {
-  width: 28px;
-  height: 28px;
-  color: #ffffff;
-}
-
-.compra-topbar-brand strong {
-  display: block;
-  font-size: 24px;
-  line-height: 1.1;
-}
-
-.compra-topbar-brand span {
-  display: block;
-  margin-top: 4px;
-  color: #cdb6e6;
-  font-size: 15px;
-}
-
-.compra-volver {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 46px;
-  padding: 0 20px;
-  border: 0;
-  border-radius: 12px;
-  color: #ffffff;
-  background: #303030;
-  font: inherit;
-  font-size: 16px;
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.compra-volver:hover {
-  background: #3d3d3d;
-}
-
-.compra-volver .line-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.compra-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 28px;
-  align-items: start;
-}
-
-.compra-main {
-  display: grid;
-  gap: 24px;
-  min-width: 0;
-}
-
-.compra-match-card {
-  overflow: hidden;
-  background: #ffffff;
-  border: 1px solid #d7d9e2;
+/* Card del partido en compra */
+.compra-match-card-new {
+  background: #fff;
   border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.09);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04);
 }
-
-.compra-match-hero {
-  padding: 26px 24px;
-  color: #ffffff;
-  background: #16051f;
-  text-align: center;
+.compra-match-hero-new {
+  padding: 16px 20px 20px;
+  background: linear-gradient(150deg, #1B1428 0%, #25193C 100%);
+  position: relative;
+  overflow: hidden;
 }
-
-.compra-match-hero .competition {
-  justify-content: center;
-  margin-bottom: 14px;
-}
-
-.compra-match-hero h2 {
-  margin: 0;
-  font-size: 32px;
-  line-height: 1.12;
-}
-
-.compra-match-info {
+.compra-teams-new {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  padding: 24px;
+  grid-template-columns: 1fr 48px 1fr;
+  align-items: center;
+  gap: 6px;
+  position: relative;
 }
-
+.compra-flag {
+  width: 44px;
+  height: 29px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+.compra-flag-fb {
+  width: 44px;
+  height: 29px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.compra-team-name {
+  color: rgba(255,255,255,0.92);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: -0.2px;
+}
+.compra-match-info-row {
+  padding: 14px 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: center;
+}
 .compra-info-block {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 0;
+  gap: 7px;
 }
-
-.compra-info-icon {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  color: #9b2dee;
-}
-
-.compra-info-icon .line-icon {
-  width: 22px;
-  height: 22px;
-}
-
-.compra-info-text {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
 .compra-info-label {
-  color: #8a8f9c;
-  font-size: 14px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #B0ACBA;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+  display: block;
+}
+.compra-info-block strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #2D2638;
+  display: block;
 }
 
-.compra-info-text strong {
-  color: #08080b;
-  font-size: 17px;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.compra-section {
-  padding: 24px;
-  background: #ffffff;
-  border: 1px solid #d7d9e2;
+/* Card de sectores */
+.compra-sectores-card {
+  background: #fff;
   border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.07);
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04);
 }
-
-.compra-section h3 {
-  margin: 0 0 20px;
-  color: #09090b;
-  font-size: 22px;
+.compra-sectores-header {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid #F0EEF5;
 }
-
-.sector-grid {
+.compra-sectores-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #130F1E;
+  letter-spacing: -0.2px;
+}
+.compra-sectores-sub {
+  font-size: 12px;
+  font-weight: 500;
+  color: #9490A0;
+  margin-top: 3px;
+}
+.compra-progress-wrap {
+  padding: 12px 20px 0;
+}
+.compra-progress-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #9490A0;
+}
+.compra-progress-track {
+  height: 5px;
+  background: #F0EEF5;
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.compra-progress-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.3s ease, background 0.2s;
+}
+.compra-sector-grid {
+  padding: 0 14px 16px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
-.sector-card {
-  display: grid;
-  gap: 12px;
-  padding: 18px;
-  text-align: left;
-  border: 2px solid #d7d9e2;
-  border-radius: 12px;
-  background: #ffffff;
-  font: inherit;
-  cursor: pointer;
-  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+/* Sector card nueva */
+.sector-card-new {
+  border-radius: 11px;
+  border: 1.5px solid #E8E6EF;
+  background: #fff;
+  padding: 14px 16px;
+  transition: all 0.18s;
+  position: relative;
+  overflow: hidden;
 }
-
-.sector-card:hover:not(:disabled) {
-  border-color: #b97ef0;
+.sector-card-new.is-selected {
+  border-color: #C4B5FD;
+  border-width: 2px;
+  background: #FDFCFF;
 }
-
-.sector-card.is-selected {
-  border-color: #9b2dee;
-  background: #faf5ff;
-  box-shadow: 0 0 0 3px rgba(155, 45, 238, 0.16);
+.sector-card-new.is-sold-out {
+  opacity: 0.5;
 }
-
-.sector-card.is-sold-out {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.sector-card-top {
+.sector-card-top-new {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  margin-bottom: 10px;
+  position: relative;
 }
-
-.sector-name {
-  color: #08080b;
-  font-size: 18px;
-  font-weight: 750;
-}
-
-.sector-price {
-  display: grid;
-  justify-items: end;
-  color: #8a22e6;
-  font-size: 22px;
+.sector-name-new {
+  font-size: 14px;
   font-weight: 800;
+  color: #130F1E;
+  letter-spacing: -0.2px;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+.sector-avail-new {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9490A0;
+}
+.sector-price-new {
+  font-size: 18px;
+  font-weight: 800;
+  color: #7C3AED;
+  letter-spacing: -0.5px;
   line-height: 1;
 }
-
-.sector-price small {
-  margin-top: 4px;
-  color: #8a8f9c;
+.sector-price-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: #B0ACBA;
+}
+.sector-add-btn {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1.5px solid #E2E0E8;
+  background: transparent;
+  cursor: pointer;
+  color: #5B4E70;
+  font-family: inherit;
   font-size: 12px;
-  font-weight: 600;
-}
-
-.sector-stock {
-  color: #687083;
-  font-size: 14px;
-}
-
-.qty-stepper {
+  font-weight: 700;
+  transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 26px;
+  gap: 5px;
 }
-
-.qty-stepper button {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #cfd2dc;
-  border-radius: 12px;
-  background: #f3f4f7;
-  color: #111111;
-  font-size: 26px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 150ms ease, border-color 150ms ease;
+.sector-add-btn:hover:not(:disabled) {
+  background: rgba(124,58,237,0.04);
+  border-color: #C4B5FD;
+  color: #7C3AED;
 }
-
-.qty-stepper button:hover:not(:disabled) {
-  border-color: #9b2dee;
-  background: #faf5ff;
-}
-
-.qty-stepper button:disabled {
-  opacity: 0.5;
+.sector-add-btn:disabled {
+  background: #F8F7FB;
+  color: #C4B5FD;
   cursor: not-allowed;
+  border-color: #ECEAF2;
 }
-
-.qty-value {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  min-width: 70px;
-}
-
-.qty-value strong {
-  color: #08080b;
-  font-size: 32px;
-  line-height: 1;
-}
-
-.qty-value span {
-  color: #8a8f9c;
-  font-size: 14px;
-}
-
-.qty-hint {
-  margin: 18px 0 0;
-  color: #8a8f9c;
-  font-size: 14px;
-  text-align: center;
-}
-
-.resumen-card {
-  position: sticky;
-  top: 28px;
-  padding: 24px;
-  background: #ffffff;
-  border: 1px solid #d7d9e2;
-  border-radius: 14px;
-  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.08);
-}
-
-.resumen-card h3 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 20px;
-  color: #09090b;
-  font-size: 21px;
-}
-
-.resumen-card h3 .line-icon {
-  width: 22px;
-  height: 22px;
-  color: #9b2dee;
-}
-
-.resumen-empty {
-  margin: 24px 0;
-  color: #8a8f9c;
-  font-size: 15px;
-  text-align: center;
-}
-
-.resumen-rows {
-  display: grid;
-  gap: 14px;
-  margin: 0 0 18px;
-  padding: 0 0 18px;
-  border-bottom: 1px solid #e3e5ec;
-}
-
-.resumen-rows div {
+.sector-qty-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  background: #F5F3FF;
+  border-radius: 9px;
+  padding: 6px 10px;
+  border: 1px solid rgba(124,58,237,0.12);
 }
-
-.resumen-rows dt {
-  color: #687083;
-  font-size: 15px;
-}
-
-.resumen-rows dd {
-  margin: 0;
-  color: #08080b;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.resumen-total {
+.sector-qty-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1.5px solid #C4B5FD;
+  background: #fff;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 18px;
+  justify-content: center;
+  transition: all 0.15s;
+  flex: none;
 }
-
-.resumen-total span {
-  color: #08080b;
-  font-size: 19px;
-  font-weight: 750;
+.sector-qty-btn:hover:not(:disabled) {
+  background: #EDE9FE;
 }
-
-.resumen-total strong {
-  color: #08080b;
-  font-size: 30px;
-  line-height: 1;
-}
-
-.resumen-confirmar {
-  width: 100%;
-  height: 56px;
-  border: 0;
-  border-radius: 12px;
-  color: #ffffff;
-  background: #9b2dee;
-  font: inherit;
+.sector-qty-val {
   font-size: 18px;
   font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 10px 22px rgba(155, 45, 238, 0.24);
-}
-
-.resumen-confirmar:hover:not(:disabled) {
-  background: #8a22e6;
-}
-
-.resumen-confirmar:disabled {
-  opacity: 0.72;
-  cursor: not-allowed;
-}
-
-.resumen-ssl {
-  margin: 12px 0 0;
-  color: #8a8f9c;
-  font-size: 13px;
+  color: #7C3AED;
+  letter-spacing: -0.5px;
+  line-height: 1;
   text-align: center;
 }
+.sector-qty-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #A78BFA;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+/* Panel resumen */
+.compra-resumen-aside {
+  position: sticky;
+  top: 76px;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.compra-resumen-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04);
+}
+.compra-resumen-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid #F0EEF5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.compra-resumen-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #EDE9FE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.compra-resumen-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #130F1E;
+  letter-spacing: -0.2px;
+}
+.compra-resumen-empty {
+  padding: 28px 20px;
+  text-align: center;
+}
+.compra-resumen-empty-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #F8F7FB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+.compra-resumen-empty-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #B0ACBA;
+  line-height: 1.4;
+}
+.compra-resumen-items {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.compra-resumen-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #FDFCFF;
+  border-radius: 9px;
+  border: 1.5px solid #EDE9FE;
+}
+.compra-resumen-item-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #2D2638;
+  margin-bottom: 2px;
+}
+.compra-resumen-item-qty {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9490A0;
+}
+.compra-resumen-item-sub {
+  font-size: 14px;
+  font-weight: 800;
+  color: #130F1E;
+  letter-spacing: -0.3px;
+}
+.compra-resumen-divider {
+  height: 1px;
+  background: #F0EEF5;
+  margin: 0 16px;
+}
+.compra-resumen-totals {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.compra-resumen-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+  color: #9490A0;
+}
+.compra-resumen-row span:last-child {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #2D2638;
+}
+.compra-resumen-row.is-total {
+  font-size: 13px;
+  font-weight: 800;
+  color: #130F1E;
+}
+.compra-resumen-row.is-total strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: #7C3AED;
+  letter-spacing: -0.5px;
+}
+.compra-resumen-cta-wrap {
+  padding: 0 14px 14px;
+}
+.compra-resumen-cta {
+  width: 100%;
+  padding: 13px;
+  border-radius: 11px;
+  border: none;
+  background: linear-gradient(135deg, #7C3AED, #9333EA);
+  cursor: pointer;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 14px rgba(124,58,237,0.32);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.compra-resumen-cta:hover:not(:disabled) {
+  box-shadow: 0 6px 22px rgba(124,58,237,0.45);
+  transform: translateY(-1px);
+}
+.compra-resumen-cta:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+.compra-resumen-timer {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #B0ACBA;
+}
+.compra-max-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  background: #FFF7ED;
+  border-radius: 10px;
+  border: 1px solid rgba(245,158,11,0.2);
+  font-size: 12px;
+  font-weight: 600;
+  color: #92400E;
+  line-height: 1.4;
+}
+
+/* Clases legacy (usadas por PagoEntrada y otros) */
+.compra-view { width: 100%; max-width: 1180px; margin: 0 auto; }
+.resumen-card { position: sticky; top: 28px; padding: 24px; background: #fff; border: 1px solid #d7d9e2; border-radius: 14px; }
+.resumen-confirmar { width: 100%; height: 56px; border: 0; border-radius: 12px; color: #fff; background: #9b2dee; font: inherit; font-size: 18px; font-weight: 800; cursor: pointer; }
+.resumen-confirmar:hover:not(:disabled) { background: #8a22e6; }
+.resumen-confirmar:disabled { opacity: 0.72; cursor: not-allowed; }
+.resumen-ssl { margin: 12px 0 0; color: #8a8f9c; font-size: 13px; text-align: center; }
 
 /* ===== Pantalla de compra exitosa ===== */
 

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import './CodigoQr.css'
-import qrIcon from '../assets/qr.png'
 
 function CodigoQr() {
   const [entradas, setEntradas] = useState([])
@@ -126,61 +125,26 @@ useEffect(() => {
     return `${horas}:${minutos}`
   }
 
-  if (loading) {
-    return (
-      <div className="qr-page">
-        <h1>Códigos QR</h1>
-        <p className="qr-subtitle">Accede a los códigos QR de tus entradas</p>
-        <p className="qr-message">Cargando entradas...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="qr-page">
-        <h1>Códigos QRs</h1>
-        <p className="qr-subtitle">Accede a los códigos QR de tus entradas</p>
-        <p className="qr-error">{error}</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="qr-page">
-      <h1>Códigos QR</h1>
-      <p className="qr-subtitle">Accede a los códigos QR de tus entradas</p>
+    <div className="buy-view">
+      <header className="buy-header">
+        <div>
+          <h1 id="dashboard-title">Códigos QR</h1>
+          <p>Accedé al QR de cada entrada para ingresar al estadio</p>
+        </div>
+      </header>
+      <div className="filters-divider" />
 
-      {entradas.length === 0 ? (
-        <p className="qr-message">No tenés entradas activas para generar QR.</p>
-      ) : (
-        <div className="qr-grid">
+      {loading && <p className="matches-status">Cargando entradas...</p>}
+      {error && <p className="matches-status is-error">{error}</p>}
+      {!loading && !error && entradas.length === 0 && (
+        <p className="matches-status">No tenés entradas activas para generar QR.</p>
+      )}
+
+      {!loading && !error && entradas.length > 0 && (
+        <div className="matches-grid" style={{ marginTop: 16 }}>
           {entradas.map((entrada) => (
-            <article className="qr-card" key={entrada.idEntrada}>
-              <div className="qr-icon-circle">
-                <img src={qrIcon} className="qr-icon" alt="Imagen de un QR" />
-              </div>
-
-              <h2>
-                {entrada.equipoLocal} vs {entrada.equipoVisitante}
-              </h2>
-
-              <p className="qr-entry-id">ID Entrada: {entrada.idEntrada}</p>
-
-              <p className="qr-date">
-                {formatearFecha(entrada.fechaEncuentro)} - {formatearHora(entrada.fechaEncuentro)}
-              </p>
-
-              <p className="qr-sector">{entrada.sector}</p>
-
-              <button
-                type="button"
-                className="qr-button"
-                onClick={() => abrirModalQr(entrada)}
-              >
-                Ver QR
-              </button>
-            </article>
+            <QrCard key={entrada.idEntrada} entrada={entrada} formatearFecha={formatearFecha} formatearHora={formatearHora} onVerQr={abrirModalQr} />
           ))}
         </div>
       )}
@@ -188,11 +152,17 @@ useEffect(() => {
       {modalAbierto && entradaSeleccionada && (
         <div className="qr-modal-backdrop" onClick={cerrarModalQr}>
           <div className="qr-modal" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="qr-modal-close" onClick={cerrarModalQr}>
-              ×
-            </button>
+            <button type="button" className="qr-modal-close" onClick={cerrarModalQr}>×</button>
 
-            <p className="qr-modal-ticket">Entrada #{entradaSeleccionada.idEntrada}</p>
+            <div className="qr-modal-header">
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#A78BFA', letterSpacing: 0.6, textTransform: 'uppercase', marginBottom: 4 }}>Entrada #{entradaSeleccionada.idEntrada}</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: '#130F1E' }}>
+                {entradaSeleccionada.equipoLocal} vs {entradaSeleccionada.equipoVisitante}
+              </div>
+              <div style={{ fontSize: 12.5, color: '#6B6480', marginTop: 4 }}>
+                {formatearFecha(entradaSeleccionada.fechaEncuentro)} · {formatearHora(entradaSeleccionada.fechaEncuentro)} · {entradaSeleccionada.sector}
+              </div>
+            </div>
 
             <div className="qr-modal-code-box">
               {qrLoading && !qrContenido ? (
@@ -200,44 +170,76 @@ useEffect(() => {
               ) : qrError ? (
                 <p className="qr-error">{qrError}</p>
               ) : qrContenido ? (
-                <QRCode value={qrContenido} size={390} />
+                <QRCode value={qrContenido} size={300} />
               ) : null}
             </div>
 
-            <div className="qr-modal-info">
-              <div>
-                <span>Partido:</span>
-                <strong>
-                  {entradaSeleccionada.equipoLocal} vs {entradaSeleccionada.equipoVisitante}
-                </strong>
-              </div>
-
-              <div>
-                <span>Fecha:</span>
-                <strong>
-                  {formatearFecha(entradaSeleccionada.fechaEncuentro)} - {formatearHora(entradaSeleccionada.fechaEncuentro)}
-                </strong>
-              </div>
-
-              <div>
-                <span>Sección:</span>
-                <strong>{entradaSeleccionada.sector}</strong>
-              </div>
-
-              <div>
-                <span>Estado:</span>
-                <strong>{entradaSeleccionada.estado}</strong>
-              </div>
-            </div>
-
-            <p className="qr-modal-refresh">
-              El QR se actualiza automáticamente cada 25 segundos.
-            </p>
+            <p className="qr-modal-refresh">Se actualiza automáticamente cada 25 segundos.</p>
           </div>
         </div>
       )}
     </div>
   )
+}
+
+function QrCard({ entrada, formatearFecha, formatearHora, onVerQr }) {
+  return (
+    <article className="match-card">
+      <div className="match-hero">
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% -10%, rgba(124,58,237,0.14) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div className="match-competition" style={{ marginBottom: 10 }}>
+          <span className="match-competition-dot" />
+          Copa Mundial FIFA 2026
+          <span style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 9.5, fontWeight: 700, padding: '2px 9px', borderRadius: 100 }}>
+            {entrada.sector}
+          </span>
+        </div>
+        <div className="match-teams">
+          <div className="match-team">
+            <span className="match-flag-fallback" style={{ fontSize: 9 }}>{entrada.equipoLocal.slice(0, 3).toUpperCase()}</span>
+            <span className="match-team-name">{entrada.equipoLocal}</span>
+          </div>
+          <div className="match-vs-circle"><span>VS</span></div>
+          <div className="match-team">
+            <span className="match-flag-fallback" style={{ fontSize: 9 }}>{entrada.equipoVisitante.slice(0, 3).toUpperCase()}</span>
+            <span className="match-team-name">{entrada.equipoVisitante}</span>
+          </div>
+        </div>
+      </div>
+      <div className="match-body">
+        <div className="match-info-rows">
+          <div className="match-info-row">
+            <QrCalSvg />
+            {formatearFecha(entrada.fechaEncuentro)} · {formatearHora(entrada.fechaEncuentro)}
+          </div>
+          <div className="match-info-row" style={{ color: '#A78BFA', fontWeight: 700, fontSize: 11 }}>
+            <QrTickSvg />
+            ID #{entrada.idEntrada}
+          </div>
+        </div>
+        <div className="match-divider" />
+        <button
+          type="button"
+          className="match-cta"
+          onClick={() => onVerQr(entrada)}
+          style={{ marginTop: 'auto' }}
+        >
+          <QrSvg />
+          Ver código QR
+        </button>
+      </div>
+    </article>
+  )
+}
+
+function QrCalSvg() {
+  return <svg viewBox="0 0 14 14" width="11" height="11" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" style={{ flex: 'none' }} aria-hidden="true"><rect x="1.5" y="2" width="11" height="10" rx="1.5" /><line x1="1.5" y1="5.5" x2="12.5" y2="5.5" /><line x1="4.5" y1="1" x2="4.5" y2="3.5" /><line x1="9.5" y1="1" x2="9.5" y2="3.5" /></svg>
+}
+function QrTickSvg() {
+  return <svg viewBox="0 0 14 14" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ flex: 'none' }} aria-hidden="true"><path d="M2 6.5A1.5 1.5 0 0 1 3.5 5h7A1.5 1.5 0 0 1 12 6.5v.5a1 1 0 0 0 0 2v.5A1.5 1.5 0 0 1 10.5 11h-7A1.5 1.5 0 0 1 2 9.5V9a1 1 0 0 0 0-2v-.5z" /></svg>
+}
+function QrSvg() {
+  return <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }} aria-hidden="true"><rect x="1" y="1" width="5" height="5" rx="1" /><rect x="10" y="1" width="5" height="5" rx="1" /><rect x="1" y="10" width="5" height="5" rx="1" /><rect x="2.5" y="2.5" width="2" height="2" /><rect x="11.5" y="2.5" width="2" height="2" /><rect x="2.5" y="11.5" width="2" height="2" /><path d="M10 10h2v2h-2zM12 12h3M12 10v3M10 12v3" /></svg>
 }
 
 export default CodigoQr
