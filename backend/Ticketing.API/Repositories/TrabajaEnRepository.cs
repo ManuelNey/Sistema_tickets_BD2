@@ -23,15 +23,15 @@ public class TrabajaEnRepository : ITrabajaEnRepository
         await using var command = new NpgsqlCommand(
             @"SELECT
                 te.funcionario_mail,
-                te.fk_habilita_id,
+                h.id AS fk_habilita_id,
                 s.id_sector,
                 s.nombre AS sector_nombre,
                 p.nombre AS nombre_funcionario,
                 p.apellido AS apellido_funcionario
-            FROM trabaja_en te
-            JOIN habilita h ON te.fk_habilita_id = h.id
+            FROM habilita h
             JOIN sector s ON h.fk_sector = s.id_sector
-            JOIN persona p ON te.funcionario_mail = p.mail
+            LEFT JOIN trabaja_en te ON te.fk_habilita_id = h.id
+            LEFT JOIN persona p ON te.funcionario_mail = p.mail
             WHERE h.fk_encuentro = @encuentroId
             ORDER BY s.nombre, p.apellido, p.nombre;", connection);
 
@@ -43,12 +43,23 @@ public class TrabajaEnRepository : ITrabajaEnRepository
         {
             asignaciones.Add(new TrabajaEnDto
             {
-                FuncionarioMail = reader.GetString(reader.GetOrdinal("funcionario_mail")),
+                FuncionarioMail = reader.IsDBNull(reader.GetOrdinal("funcionario_mail"))
+                    ? ""
+                    : reader.GetString(reader.GetOrdinal("funcionario_mail")),
+
                 HabilitaId = reader.GetInt32(reader.GetOrdinal("fk_habilita_id")),
+
                 SectorId = reader.GetInt32(reader.GetOrdinal("id_sector")),
+
                 SectorNombre = reader.GetString(reader.GetOrdinal("sector_nombre")),
-                NombreFuncionario = reader.GetString(reader.GetOrdinal("nombre_funcionario")),
-                ApellidoFuncionario = reader.GetString(reader.GetOrdinal("apellido_funcionario"))
+
+                NombreFuncionario = reader.IsDBNull(reader.GetOrdinal("nombre_funcionario"))
+                    ? ""
+                    : reader.GetString(reader.GetOrdinal("nombre_funcionario")),
+
+                ApellidoFuncionario = reader.IsDBNull(reader.GetOrdinal("apellido_funcionario"))
+                    ? ""
+                    : reader.GetString(reader.GetOrdinal("apellido_funcionario"))
             });
         }
 

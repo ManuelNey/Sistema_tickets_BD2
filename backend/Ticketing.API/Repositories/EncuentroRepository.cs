@@ -93,6 +93,10 @@ public class EncuentroRepository : IEncuentroRepository
 
         public async Task<EncuentroDto?> CreateAsync(CrearEncuentroDto encuentro, string mailAdmin, int paisSedeId)
         {
+            if (encuentro.EquipoLocalId == encuentro.EquipoVisitanteId)
+            {
+                return null;
+            }
             await using var connection = _connectionFactory.CreateConnection();
             await connection.OpenAsync();
 
