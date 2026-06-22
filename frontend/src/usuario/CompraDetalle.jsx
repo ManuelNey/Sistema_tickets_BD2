@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { flagUrl } from './teamFlags'
-import { calcularTotales, fetchComisionVigente, formatDate, formatPrice, formatTime } from './format'
+import { fetchComisionVigente, formatDate, formatPrice, formatTime } from './format'
 
 const MAX_ENTRADAS = 5
 
@@ -82,7 +82,7 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
     setCart(c => {
       const next = (c[idHabilita] ?? 0) - 1
       if (next <= 0) {
-        const { [idHabilita]: _, ...rest } = c
+        const { [idHabilita]: _removed, ...rest } = c
         return rest
       }
       return { ...c, [idHabilita]: next }

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import './CodigoQr.css'
-import qrIcon from '../assets/qr.png'
 
 function CodigoQr() {
   const [entradas, setEntradas] = useState([])
