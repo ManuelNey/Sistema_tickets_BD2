@@ -254,17 +254,36 @@ public class EntradaRepository : IEntradaRepository
         // Crear transferencias pendientes
         foreach (var idEntrada in listaIds)
         {
+            await using var cmdCantidadTransferencias = new NpgsqlCommand(@"
+                SELECT COUNT(fk_entrada_id) as transferencias
+                FROM transferencia
+                WHERE fk_entrada_id = @idEntrada
+                AND estado = 'aceptada';",
+                connection,
+                transaction);
+
+            cmdCantidadTransferencias.Parameters.AddWithValue("@idEntrada", idEntrada);
+
+            var cantidadTransferencias = Convert.ToInt32(
+                await cmdCantidadTransferencias.ExecuteScalarAsync()
+            );
+
+            if (cantidadTransferencias > 2)
+            {
+                throw new InvalidOperationException("Esta entrada ya fue transferida 3 veces y no puede volver a transferirse.");
+            }
+
             await using var cmdIns = new NpgsqlCommand(@"
                 INSERT INTO transferencia
                     (estado,
-                     fk_usuario_mail_emisor,
-                     fk_usuario_mail_receptor,
-                     fk_entrada_id)
+                    fk_usuario_mail_emisor,
+                    fk_usuario_mail_receptor,
+                    fk_entrada_id)
                 VALUES
                     ('pendiente',
-                     @emisor,
-                     @receptor,
-                     @idEntrada);",
+                    @emisor,
+                    @receptor,
+                    @idEntrada);",
                 connection,
                 transaction);
 
