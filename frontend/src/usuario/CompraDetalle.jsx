@@ -82,8 +82,9 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
     setCart(c => {
       const next = (c[idHabilita] ?? 0) - 1
       if (next <= 0) {
-        const { [idHabilita]: _removed, ...rest } = c
-        return rest
+        const next = { ...c }
+        delete next[idHabilita]
+        return next
       }
       return { ...c, [idHabilita]: next }
     })
