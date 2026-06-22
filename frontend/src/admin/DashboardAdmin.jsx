@@ -74,6 +74,10 @@ function DashboardAdmin() {
     0
   )
   const porcentajeCanceladas = getPorcentajeCanceladas(canceladas)
+  const cantidadCanceladas = getCantidadCanceladas(canceladas)
+  const cantidadTotal = getCantidadTotal(canceladas)
+  const montoPerdido = getMontoPerdido(canceladas)
+  const ingresosTotales = getIngresosTotales(canceladas)
   const maxEncuentros = Math.max(...topEncuentros.map(getVendidas), 1)
   const maxEstadios = Math.max(...topEstadios.map(getEstadioVendidas), 1)
   const maxCompradores = Math.max(...topUsuarios.map(getCantidadUsuario), 1)
@@ -136,7 +140,7 @@ function DashboardAdmin() {
           icon={<MoneyIcon />}
           colorClass="is-green"
           label="Ingresos Totales"
-          value="Pendiente"
+          value={formatMoney(ingresosTotales)}
         />
         <KpiCard
           icon={<AlertIcon />}
@@ -330,11 +334,17 @@ function DashboardAdmin() {
             <span className="canceladas-kpi-label">tasa de cancelacion</span>
           </div>
           <div className="canceladas-kpi">
-            <span className="canceladas-kpi-value is-amber">Pendiente</span>
+            <span className="canceladas-kpi-value is-amber">
+              {formatCount(cantidadCanceladas)}
+            </span>
             <span className="canceladas-kpi-label">total canceladas</span>
           </div>
           <div className="canceladas-kpi">
-            <span className="canceladas-kpi-value">Pendiente</span>
+            <span className="canceladas-kpi-value">{formatCount(cantidadTotal)}</span>
+            <span className="canceladas-kpi-label">compras totales</span>
+          </div>
+          <div className="canceladas-kpi">
+            <span className="canceladas-kpi-value">{formatMoney(montoPerdido)}</span>
             <span className="canceladas-kpi-label">monto perdido</span>
           </div>
         </div>
@@ -385,7 +395,23 @@ function getCantidadUsuario(usuario) {
 }
 
 function getPorcentajeCanceladas(canceladas) {
-  return canceladas?.porcentaje ?? canceladas?.Porcentaje ?? 0
+  return canceladas?.porcentajeCanceladas ?? canceladas?.PorcentajeCanceladas ?? 0
+}
+
+function getCantidadCanceladas(canceladas) {
+  return canceladas?.cantidadCanceladas ?? canceladas?.CantidadCanceladas ?? 0
+}
+
+function getCantidadTotal(canceladas) {
+  return canceladas?.cantidadTotal ?? canceladas?.CantidadTotal ?? 0
+}
+
+function getMontoPerdido(canceladas) {
+  return canceladas?.montoPerdido ?? canceladas?.MontoPerdido ?? 0
+}
+
+function getIngresosTotales(canceladas) {
+  return canceladas?.ingresosTotales ?? canceladas?.IngresosTotales ?? 0
 }
 
 function avatarColor(email, index) {
@@ -404,6 +430,12 @@ function formatDecimal(value) {
   return new Intl.NumberFormat('es-UY', {
     maximumFractionDigits: 1,
   }).format(value ?? 0)
+}
+
+function formatMoney(value) {
+  return `$${new Intl.NumberFormat('es-UY', {
+    maximumFractionDigits: 0,
+  }).format(value ?? 0)}`
 }
 
 function buildStatsUrl(endpoint, rangoFechas) {
