@@ -111,34 +111,73 @@ public class EstadisticasRepository : IEstadisticasRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        await using var command = new NpgsqlCommand(
-            @"SELECT
-                COUNT(*) FILTER (WHERE estado = 'cancelada') AS canceladas,
-                COUNT(*) AS total
-            FROM compra
+        await using var cmdTotal= new NpgsqlCommand(
+            @"SELECT COUNT(*) as total
+            FROM compra 
             WHERE (@desde IS NULL OR fecha >= @desde)
+            AND (@hasta IS NULL OR fecha < @hasta);",connection);
+
+        AddDateRangeParameters(cmdTotal, desde, hasta);
+        var totales = Convert.ToInt32(await cmdTotal.ExecuteScalarAsync());
+
+        await using var cmdCanceladas = new NpgsqlCommand(
+            @"SELECT COUNT(*) AS canceladas
+            FROM compra
+            WHERE estado = 'cancelada'
+            AND (@desde IS NULL OR fecha >= @desde)
             AND (@hasta IS NULL OR fecha < @hasta);", connection);
 
-        AddDateRangeParameters(command, desde, hasta);
+        AddDateRangeParameters(cmdCanceladas, desde, hasta);
+        var canceladas = Convert.ToInt32(await cmdCanceladas.ExecuteScalarAsync());
+        
+        await using var cmdMontoPerdido = new NpgsqlCommand(
+            @"SELECT SUM(monto_total) as monto_total
+            FROM compra 
+            WHERE estado = 'cancelada'
+            AND (@desde IS NULL OR fecha >= @desde)
+            AND (@hasta IS NULL OR fecha < @hasta);", connection);
 
-        await using var reader = await command.ExecuteReaderAsync();
+        AddDateRangeParameters(cmdMontoPerdido, desde, hasta);
+        var resultadoMonto = await cmdMontoPerdido.ExecuteScalarAsync();
 
-        if (!await reader.ReadAsync())
+        decimal montoPerdido = 0;
+
+        if (resultadoMonto != null && resultadoMonto != DBNull.Value)
         {
-            return new PorcentajeCanceladasDto { Porcentaje = 0 };
+            montoPerdido = Convert.ToDecimal(resultadoMonto);
         }
 
-        var canceladas = Convert.ToInt32(reader.GetInt64(reader.GetOrdinal("canceladas")));
-        var totales = Convert.ToInt32(reader.GetInt64(reader.GetOrdinal("total")));
+        await using var cmdMontoGanado = new NpgsqlCommand(
+            @"SELECT SUM(monto_total) as monto_total
+            FROM compra 
+            WHERE estado = 'pagada'
+            AND (@desde IS NULL OR fecha >= @desde)
+            AND (@hasta IS NULL OR fecha < @hasta);", connection);
 
-        if (totales == 0)
+        AddDateRangeParameters(cmdMontoGanado, desde, hasta);
+        var resultadoIngresos = await cmdMontoGanado.ExecuteScalarAsync();
+
+        decimal ingresosTotales = 0;
+
+        if (resultadoIngresos != null && resultadoIngresos != DBNull.Value)
         {
-            return new PorcentajeCanceladasDto { Porcentaje = 0 };
+            ingresosTotales = Convert.ToDecimal(resultadoIngresos);
+        }
+
+        decimal porcentaje = 0;
+
+        if (totales > 0)
+        {
+            porcentaje = canceladas * 100m / totales;
         }
 
         return new PorcentajeCanceladasDto
         {
-            Porcentaje = ((float)canceladas / totales) * 100
+            CantidadCanceladas = canceladas,
+            CantidadTotal = totales,
+            PorcentajeCanceladas = porcentaje,
+            MontoPerdido = montoPerdido,
+            IngresosTotales= ingresosTotales
         };
     }
 
