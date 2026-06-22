@@ -4,6 +4,9 @@ namespace Ticketing.API.Repositories;
 
 public interface IComisionRepository
 {
-    // Devuelve la comisión vigente hoy, o null si no hay ninguna vigente.
     Task<ComisionVigenteDto?> GetVigenteAsync();
+    Task<IReadOnlyCollection<ComisionDto>> GetAllAsync();
+    Task CreateAsync(CrearComisionDto dto);
+    // Retorna false si la comisión ya está asociada a compras (no se puede borrar).
+    Task<bool?> DeleteAsync(int id);
 }
