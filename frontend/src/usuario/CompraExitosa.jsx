@@ -3,7 +3,6 @@ import { formatDate, formatPrice, formatTime } from './format'
 
 // Es la pantalla final cuando la compra se registra correstamente.
 function CompraExitosa({ resumen, onIrAMisEntradas, onVolver }) {
-  const cantidad = resumen.cantidad ?? resumen.idsEntradas?.length ?? 1
   const handleIrAMisEntradas = onIrAMisEntradas ?? onVolver
 
   return (
@@ -39,16 +38,12 @@ function CompraExitosa({ resumen, onIrAMisEntradas, onVolver }) {
           />
 
           <div className="exito-rows">
-            <div>
-              <span>Seccion</span>
-              <strong>{resumen.sector}</strong>
-            </div>
-            <div>
-              <span>Cantidad</span>
-              <strong>
-                {cantidad} {cantidad === 1 ? 'entrada' : 'entradas'}
-              </strong>
-            </div>
+            {(resumen.sectores ?? []).map(s => (
+              <div key={s.sector}>
+                <span>{s.sector}</span>
+                <strong>{s.cantidad} {s.cantidad === 1 ? 'entrada' : 'entradas'}</strong>
+              </div>
+            ))}
           </div>
 
           <div className="exito-total">

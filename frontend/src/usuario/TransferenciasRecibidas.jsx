@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import SidebarIcon from '../shared/SidebarIcon'
 import './reserva.css'
 
 const tabs = [
@@ -77,17 +76,19 @@ function TransferenciasRecibidas() {
   }
 
   return (
-    <div className="reservas-view transferencias-view">
+    <div className="buy-view">
       <header className="buy-header">
-        <h1 id="dashboard-title">Transferencias Recibidas</h1>
-        <p>Historial de entradas que otros usuarios te enviaron</p>
+        <div>
+          <h1 id="dashboard-title">Transferencias Recibidas</h1>
+          <p>Historial de entradas que otros usuarios te enviaron</p>
+        </div>
       </header>
 
-      <div className="reservas-tabs" role="tablist">
+      <div className="reservas-tabs-new" role="tablist" style={{ marginBottom: 0 }}>
         {tabs.map((currentTab) => (
           <button
             aria-selected={tab === currentTab.id}
-            className={`reservas-tab ${tab === currentTab.id ? 'is-active' : ''}`}
+            className={`reservas-tab-new ${tab === currentTab.id ? 'is-active' : ''}`}
             key={currentTab.id}
             onClick={() => setTab(currentTab.id)}
             role="tab"
@@ -97,6 +98,7 @@ function TransferenciasRecibidas() {
           </button>
         ))}
       </div>
+      <div className="filters-divider" style={{ marginTop: 16 }} />
 
       {loading && <p className="matches-status">Cargando transferencias...</p>}
       {!loading && error && <p className="matches-status is-error">{error}</p>}
@@ -107,7 +109,7 @@ function TransferenciasRecibidas() {
       )}
 
       {!loading && !error && transferenciasFiltradas.length > 0 && (
-        <div className="transferencias-list">
+        <div className="reservas-list-new" style={{ marginTop: 16 }}>
           {transferenciasFiltradas.map((transferencia) => (
             <TransferenciaRecibidaCard
               isResolving={resolvingId === transferencia.id}
@@ -125,88 +127,99 @@ function TransferenciasRecibidas() {
 function TransferenciaRecibidaCard({ isResolving, onResolve, transferencia }) {
   const estado = normalizeStatus(transferencia.estado)
   const cantidad = transferencia.cantidadEntradas ?? 1
+  const stMap = {
+    pendiente: { bg: '#FFF7ED', border: 'rgba(245,158,11,0.25)', dot: '#F59E0B', color: '#92400E', label: 'Pendiente' },
+    aceptada:  { bg: '#F0FDF4', border: 'rgba(34,197,94,0.25)',   dot: '#22C55E', color: '#15803D', label: 'Aceptada' },
+    rechazada: { bg: '#FEF2F2', border: 'rgba(239,68,68,0.25)',   dot: '#EF4444', color: '#B91C1C', label: 'Rechazada' },
+  }
+  const st = stMap[estado] ?? stMap.pendiente
 
   return (
-    <article className="transferencia-card">
-      <div className="transferencia-icon" aria-hidden="true">
-        <SidebarIcon name="inbox" />
+    <article className="reserva-card-new">
+      <div className="reserva-card-head-new">
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 70% 50%, rgba(124,58,237,0.1) 0%, transparent 60%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'relative' }}>
+          <div className="reserva-card-comp">
+            <span className="match-competition-dot" />
+            Copa Mundial FIFA 2026
+          </div>
+          <div className="reserva-card-title">{transferencia.equipoLocal} vs {transferencia.equipoVisitante}</div>
+        </div>
+        <div style={{ position: 'relative', textAlign: 'right' }}>
+          <div className="reserva-card-id-label">Transferencia</div>
+          <div className="reserva-card-id">{formatTransferCode(transferencia.id)}</div>
+        </div>
       </div>
 
-      <div className="transferencia-main">
-        <div className="transferencia-title-row">
-          <div>
-            <h2>
-              {transferencia.equipoLocal} vs {transferencia.equipoVisitante}
-            </h2>
-            <p>ID: {formatTransferCode(transferencia.id)}</p>
+      <div className="reserva-card-body-new">
+        <div>
+          <div className="reserva-card-info-new">
+            <div className="reserva-info-row-new">
+              <TrxUserSvg />
+              <span>Recibido de <strong style={{ color: '#130F1E' }}>{transferencia.emisor || '-'}</strong></span>
+            </div>
+            <div className="reserva-info-row-new">
+              <TrxCalSvg />
+              <span>{formatTransferDate(transferencia.fecha)}</span>
+            </div>
+            <div className="reserva-info-row-new">
+              <TrxPinSvg />
+              <span>{transferencia.nombreEstadio || '-'}</span>
+            </div>
           </div>
-          <EstadoTransferencia estado={estado} />
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <span className="reserva-sector-chip">
+              {transferencia.nombreSector || 'Sector'}
+              <span className="reserva-sector-chip-qty">× {cantidad}</span>
+            </span>
+            <span className="reserva-sector-chip" style={{ background: '#F3F4F6', borderColor: '#E5E7EB', color: '#6B7280' }}>
+              Entrada #{transferencia.idEntrada}
+            </span>
+          </div>
         </div>
 
-        <div className="transferencia-details">
-          <InfoItem label="Recibido de" value={transferencia.emisor} />
-          <InfoItem label="Fecha" value={formatTransferDate(transferencia.fecha)} icon="calendar" />
-          <InfoItem label="Estadio" value={transferencia.nombreEstadio} />
-          <InfoItem label="Sector" value={transferencia.nombreSector} />
-          <InfoItem
-            label="Cantidad"
-            value={`${cantidad} ${cantidad === 1 ? 'entrada' : 'entradas'}`}
-          />
-          <InfoItem label="Entrada" value={`#${transferencia.idEntrada}`} />
-        </div>
-
-        {estado === 'pendiente' && (
-          <div className="transferencia-actions">
-            <button
-              className="transferencia-action is-accept"
-              disabled={isResolving}
-              onClick={() => onResolve(transferencia.id, 'aceptada')}
-              type="button"
-            >
-              <SidebarIcon name="check" />
-              {isResolving ? 'Resolviendo...' : 'Aceptar'}
-            </button>
-            <button
-              className="transferencia-action is-reject"
-              disabled={isResolving}
-              onClick={() => onResolve(transferencia.id, 'rechazada')}
-              type="button"
-            >
-              <SidebarIcon name="close" />
-              Rechazar
-            </button>
+        <div className="reserva-card-side-new">
+          <div className="reserva-status-badge" style={{ background: st.bg, borderColor: st.border }}>
+            <span className="reserva-status-dot" style={{ background: st.dot }} />
+            <span style={{ color: st.color }}>{st.label}</span>
           </div>
-        )}
+
+          {estado === 'pendiente' && (
+            <div className="reserva-card-actions" style={{ marginTop: 'auto' }}>
+              <button
+                className="reserva-btn-secondary"
+                disabled={isResolving}
+                onClick={() => onResolve(transferencia.id, 'rechazada')}
+                type="button"
+                style={{ color: '#DC2626', borderColor: 'rgba(239,68,68,0.2)' }}
+              >
+                Rechazar
+              </button>
+              <button
+                className="reserva-btn-primary"
+                disabled={isResolving}
+                onClick={() => onResolve(transferencia.id, 'aceptada')}
+                type="button"
+                style={{ background: isResolving ? '#9CA3AF' : undefined }}
+              >
+                {isResolving ? 'Procesando...' : 'Aceptar'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </article>
   )
 }
 
-function InfoItem({ icon, label, value }) {
-  return (
-    <p className="transferencia-info-item">
-      <span>{label}</span>
-      <strong>
-        {icon && <SidebarIcon name={icon} />}
-        {value || '-'}
-      </strong>
-    </p>
-  )
+function TrxUserSvg() {
+  return <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" style={{ flex: 'none' }} aria-hidden="true"><circle cx="7" cy="4.5" r="2.5" /><path d="M2 12c0-2.2 2.2-4 5-4s5 1.8 5 4" /></svg>
 }
-
-function EstadoTransferencia({ estado }) {
-  const labels = {
-    pendiente: 'Pendiente',
-    aceptada: 'Aceptada',
-    rechazada: 'Rechazada',
-  }
-
-  return (
-    <span className={`transferencia-status is-${estado}`}>
-      <SidebarIcon name={estado === 'aceptada' ? 'check' : estado === 'rechazada' ? 'close' : 'inbox'} />
-      {labels[estado] ?? estado}
-    </span>
-  )
+function TrxCalSvg() {
+  return <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" style={{ flex: 'none' }} aria-hidden="true"><rect x="1.5" y="2" width="11" height="10" rx="1.5" /><line x1="1.5" y1="5.5" x2="12.5" y2="5.5" /><line x1="4.5" y1="1" x2="4.5" y2="3.5" /><line x1="9.5" y1="1" x2="9.5" y2="3.5" /></svg>
+}
+function TrxPinSvg() {
+  return <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }} aria-hidden="true"><path d="M7 13S2 8.5 2 5.5a5 5 0 0 1 10 0C12 8.5 7 13 7 13z" /><circle cx="7" cy="5.5" r="1.5" /></svg>
 }
 
 function normalizeStatus(status) {

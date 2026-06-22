@@ -4,7 +4,6 @@ import CompraDetalle from './CompraDetalle'
 import ReservaConfirmada from './ReservaConfirmada'
 import PagoEntrada from './PagoEntrada'
 import CompraExitosa from './CompraExitosa'
-import { FilterIcon } from './matchIcons'
 import './reserva.css'
 
 function ComprarEntradas({ onIrAMisEntradas }) {
@@ -135,50 +134,48 @@ function ComprarEntradas({ onIrAMisEntradas }) {
   return (
     <div className="buy-view">
       <header className="buy-header">
-        <h1 id="dashboard-title">Proximos Partidos</h1>
-        <p>Selecciona el partido y reserva tus entradas</p>
+        <div>
+          <h1 id="dashboard-title">Próximos Partidos</h1>
+          <p>Seleccioná el partido y reservá tus entradas</p>
+        </div>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#A09AAC' }}>
+          {matches.length > 0 ? `${matches.length} partidos` : ''}
+        </span>
       </header>
 
-      <section className="filters-card" aria-label="Filtros">
-        <h2>
-          <FilterIcon />
-          Filtros
-        </h2>
-
-        <div className="filters-grid">
-          <label>
-            <span>Filtrar por equipo</span>
-            <select
-              value={equipoId}
-              onChange={e => {
-                setEquipoId(e.target.value)
-                fetchMatches(e.target.value, estadioId)
-              }}
-            >
-              <option value="">Todos los equipos</option>
-              {allTeams.map(t => (
-                <option key={t.id} value={t.id}>{t.nombre}</option>
-              ))}
-            </select>
-          </label>
-
-          <label>
-            <span>Filtrar por estadio</span>
-            <select
-              value={estadioId}
-              onChange={e => {
-                setEstadioId(e.target.value)
-                fetchMatches(equipoId, e.target.value)
-              }}
-            >
-              <option value="">Todos los estadios</option>
-              {estadios.map(e => (
-                <option key={e.id} value={e.id}>{e.nombre}</option>
-              ))}
-            </select>
-          </label>
+      {/* Barra de filtros compacta */}
+      <div className="filters-inline" role="search" aria-label="Filtros">
+        <span className="filters-inline-label">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M2 4h12M4 8h8M6 12h4" />
+          </svg>
+          Filtrar por
+        </span>
+        <div className="filters-inline-sep" />
+        <div className="filters-inline-selects">
+          <select
+            value={equipoId}
+            onChange={e => { setEquipoId(e.target.value); fetchMatches(e.target.value, estadioId) }}
+            aria-label="Filtrar por equipo"
+          >
+            <option value="">Todos los equipos</option>
+            {allTeams.map(t => (
+              <option key={t.id} value={t.id}>{t.nombre}</option>
+            ))}
+          </select>
+          <select
+            value={estadioId}
+            onChange={e => { setEstadioId(e.target.value); fetchMatches(equipoId, e.target.value) }}
+            aria-label="Filtrar por estadio"
+          >
+            <option value="">Todos los estadios</option>
+            {estadios.map(e => (
+              <option key={e.id} value={e.id}>{e.nombre}</option>
+            ))}
+          </select>
         </div>
-      </section>
+      </div>
+      <div className="filters-divider" />
 
       {matchesLoading && <p className="matches-status">Cargando partidos...</p>}
       {matchesError && <p className="matches-status is-error">{matchesError}</p>}

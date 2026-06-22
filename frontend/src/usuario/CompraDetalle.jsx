@@ -1,22 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
-import { TrophyIcon } from './matchIcons'
+import { flagUrl } from './teamFlags'
 import { calcularTotales, fetchComisionVigente, formatDate, formatPrice, formatTime } from './format'
 
 const MAX_ENTRADAS = 5
 
-// Pantalla de compra: el usuario elige seccion + cantidad que quiera reservar, y luego confirma para avanzar con el pago.
+// Pantalla de compra: grid de sectores con carrito multi-sector.
+// El backend acepta una sola habilitación por POST, por eso al confirmar
+// se hacen llamadas secuenciales (una por sector seleccionado).
 function CompraDetalle({ match, onVolver, onReservaExitosa }) {
   const [sectores, setSectores] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const [idHabilitaSel, setIdHabilitaSel] = useState(null)
-  const [cantidad, setCantidad] = useState(1)
+  // cart: { [idHabilita]: cantidad }
+  const [cart, setCart] = useState({})
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  // Tasa de comisión actual vigente, se la pedimos al back para calcular el total a pagar en el resumen de la compra.
+  // Tasa de comisión vigente para el resumen
   const [comisionRate, setComisionRate] = useState(0)
 
   useEffect(() => {
@@ -27,103 +29,101 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
     const loadSectores = async () => {
       setError('')
       setLoading(true)
-
       try {
         const token = localStorage.getItem('ticketmatch-token')
-        const response = await fetch(
+        const res = await fetch(
           `http://localhost:8080/api/encuentros/${match.idEncuentro}/sectores`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
+          { headers: { Authorization: `Bearer ${token}` } }
         )
-
-        if (!response.ok) {
-          throw new Error('Sectores request failed')
-        }
-
-        const data = await response.json()
-        setSectores(data)
+        if (!res.ok) throw new Error()
+        setSectores(await res.json())
       } catch {
         setError('No se pudieron cargar los sectores')
       } finally {
         setLoading(false)
       }
     }
-
     loadSectores()
   }, [match.idEncuentro])
 
-  const sectorSeleccionado = useMemo(
-    () => sectores.find((s) => s.idHabilita === idHabilitaSel) ?? null,
-    [sectores, idHabilitaSel],
+  const totalEntradas = useMemo(
+    () => Object.values(cart).reduce((a, b) => a + b, 0),
+    [cart]
+  )
+  const maxAlcanzado = totalEntradas >= MAX_ENTRADAS
+
+  const cartItems = useMemo(
+    () =>
+      sectores
+        .filter(s => (cart[s.idHabilita] ?? 0) > 0)
+        .map(s => ({
+          idHabilita: s.idHabilita,
+          nombre: s.sector,
+          qty: cart[s.idHabilita],
+          precio: s.precio,
+          subtotal: s.precio * cart[s.idHabilita],
+        })),
+    [cart, sectores]
   )
 
-  // El tope de entradas es 5, pero por las dudas miramos también que nunca mas que los cupos disponibles del sector elegido.
-  const maxCantidad = sectorSeleccionado
-    ? Math.min(MAX_ENTRADAS, sectorSeleccionado.disponibles)
-    : MAX_ENTRADAS
+  const subtotalTotal = cartItems.reduce((a, i) => a + i.subtotal, 0)
+  const cargo = subtotalTotal * comisionRate
+  const total = subtotalTotal + cargo
 
-  const handleSelectSector = (sector) => {
-    setIdHabilitaSel(sector.idHabilita)
-    setCantidad(1)
-    setSubmitError('')
+  const addSector = (idHabilita) => {
+    if (maxAlcanzado) return
+    setCart(c => ({ ...c, [idHabilita]: 1 }))
+  }
+  const inc = (idHabilita) => {
+    if (maxAlcanzado) return
+    setCart(c => ({ ...c, [idHabilita]: (c[idHabilita] ?? 0) + 1 }))
+  }
+  const dec = (idHabilita) => {
+    setCart(c => {
+      const next = (c[idHabilita] ?? 0) - 1
+      if (next <= 0) {
+        const { [idHabilita]: _, ...rest } = c
+        return rest
+      }
+      return { ...c, [idHabilita]: next }
+    })
   }
 
-  const { subtotal, cargo, total } = calcularTotales(sectorSeleccionado?.precio, cantidad, comisionRate)
-
-  const handleReservar = async () => {
-    if (!sectorSeleccionado) {
-      return
-    }
-
+  const handleConfirmar = async () => {
+    if (cartItems.length === 0) return
     setSubmitError('')
     setSubmitting(true)
-
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const response = await fetch('http://localhost:8080/api/compra/reservar', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          idHabilita: sectorSeleccionado.idHabilita,
-          cantidad,
-        }),
-      })
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 
-      if (!response.ok) {
-        const body = await response.json().catch(() => null)
+      // Manda todos los sectores del carrito en una sola llamada; el back crea una compra con toda
+      const payload = cartItems.map(item => ({ idHabilita: item.idHabilita, cantidad: item.qty }))
+      const res = await fetch('http://localhost:8080/api/compra/reservar', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
         throw new Error(body?.message ?? 'Reserva fallida')
       }
+      const { idCompra: idCompraNueva } = await res.json()
 
-      const data = await response.json()
-      // La reserva ya se creó y el back devuelve el idCompra.
-      // Traemos el detalle real de la reserva (incluye su fecha de creación para el countdown).
-      const detalleRes = await fetch(`http://localhost:8080/api/compra/${data.idCompra}`, {
+      const detalleRes = await fetch(`http://localhost:8080/api/compra/${idCompraNueva}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-
-      if (!detalleRes.ok) {
-        throw new Error('La reserva se creó pero no se pudo obtener su detalle.')
-      }
-
+      if (!detalleRes.ok) throw new Error('No se pudo obtener el detalle de la reserva.')
       const reserva = await detalleRes.json()
-
       onReservaExitosa({
-        idCompra: reserva.idCompra,
+        idCompra: idCompraNueva,
         codigoReserva: `RSV-${String(reserva.idCompra).padStart(6, '0')}`,
         equipoLocal: reserva.equipoLocal,
         equipoVisitante: reserva.equipoVisitante,
         fecha: reserva.fechaEncuentro,
         hora: reserva.horaEncuentro,
         estadio: reserva.estadio,
-        sector: reserva.sector,
-        precioUnitario: reserva.precioUnitario,
-        cantidad: reserva.cantidad,
+        sectores: reserva.sectores,
         montoTotal: reserva.montoTotal,
         fechaReserva: reserva.fechaReserva,
       })
@@ -134,175 +134,252 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
     }
   }
 
+  const url1 = flagUrl(match.equipoLocal)
+  const url2 = flagUrl(match.equipoVisitante)
 
-  // Render principal que muestra el detalle del partido, sector y cantidad comprada.
   return (
-    <div className="compra-view">
-      <header className="compra-topbar">
-        <div className="compra-topbar-brand">
-          <span className="compra-topbar-logo">
-            <TrophyIcon />
-          </span>
+    <div className="compra-shell">
+      {/* Barra superior sticky */}
+      <div className="compra-topbar-new">
+        <div className="compra-topbar-brand-new">
+          <div className="compra-topbar-logo-new">TM</div>
           <div>
-            <strong>Reservar Entradas</strong>
-            <span>
-              {match.equipoLocal} vs {match.equipoVisitante}
-            </span>
+            <div className="compra-topbar-title">Comprar Entradas</div>
+            <div className="compra-topbar-sub">{match.equipoLocal} vs {match.equipoVisitante}</div>
           </div>
         </div>
-
-        <button className="compra-volver" type="button" onClick={onVolver}>
+        <button className="compra-topbar-volver" type="button" onClick={onVolver}>
           <BackIcon />
           Volver
         </button>
-      </header>
+      </div>
 
-      <div className="compra-layout">
-        <div className="compra-main">
-          <article className="compra-match-card">
-            <div className="compra-match-hero">
-              <p className="competition">
-                <TrophyIcon />
+      {/* Layout principal */}
+      <div className="compra-layout-new">
+        {/* Columna izquierda */}
+        <div className="compra-left">
+          {/* Card del partido */}
+          <div className="compra-match-card-new">
+            <div className="compra-match-hero-new">
+              <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% -10%, rgba(124,58,237,0.16) 0%, transparent 65%)', pointerEvents: 'none' }} />
+              <div className="match-competition" style={{ marginBottom: 14 }}>
+                <span className="match-competition-dot" />
                 Copa Mundial FIFA 2026
-              </p>
-              <h2>
-                {match.equipoLocal} vs {match.equipoVisitante}
-              </h2>
+              </div>
+              <div className="compra-teams-new">
+                <div className="match-team">
+                  {url1
+                    ? <img className="compra-flag" src={url1} alt={match.equipoLocal} />
+                    : <span className="compra-flag-fb">{match.equipoLocal.slice(0, 2).toUpperCase()}</span>
+                  }
+                  <span className="compra-team-name">{match.equipoLocal}</span>
+                </div>
+                <div className="match-vs-circle">
+                  <span>VS</span>
+                </div>
+                <div className="match-team">
+                  {url2
+                    ? <img className="compra-flag" src={url2} alt={match.equipoVisitante} />
+                    : <span className="compra-flag-fb">{match.equipoVisitante.slice(0, 2).toUpperCase()}</span>
+                  }
+                  <span className="compra-team-name">{match.equipoVisitante}</span>
+                </div>
+              </div>
+            </div>
+            <div className="compra-match-info-row">
+              <div className="compra-info-block">
+                <CalIcon />
+                <div>
+                  <span className="compra-info-label">Fecha</span>
+                  <strong>{formatDate(match.fecha)}</strong>
+                </div>
+              </div>
+              <div className="compra-info-block">
+                <ClockIcon />
+                <div>
+                  <span className="compra-info-label">Hora</span>
+                  <strong>{formatTime(match.hora)}</strong>
+                </div>
+              </div>
+              <div className="compra-info-block">
+                <PinIcon />
+                <div>
+                  <span className="compra-info-label">Estadio</span>
+                  <strong>{match.estadio}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Selector de sectores */}
+          <div className="compra-sectores-card">
+            <div className="compra-sectores-header">
+              <div className="compra-sectores-title">Seleccioná tus sectores</div>
+              <div className="compra-sectores-sub">Podés combinar sectores · Máximo {MAX_ENTRADAS} entradas en total</div>
             </div>
 
-            <div className="compra-match-info">
-              <InfoBlock icon={<CalendarIcon />} label="Fecha" value={formatDate(match.fecha)} />
-              <InfoBlock icon={<ClockIcon />} label="Hora" value={formatTime(match.hora)} />
-              <InfoBlock icon={<PinIcon />} label="Estadio" value={match.estadio} />
+            {/* Barra de progreso */}
+            <div className="compra-progress-wrap">
+              <div className="compra-progress-labels">
+                <span>Entradas seleccionadas</span>
+                <span style={{ color: maxAlcanzado ? '#D97706' : '#7C3AED', fontWeight: 800 }}>
+                  {totalEntradas} / {MAX_ENTRADAS}
+                </span>
+              </div>
+              <div className="compra-progress-track">
+                <div
+                  className="compra-progress-fill"
+                  style={{
+                    width: `${(totalEntradas / MAX_ENTRADAS) * 100}%`,
+                    background: maxAlcanzado ? '#F59E0B' : '#7C3AED',
+                  }}
+                />
+              </div>
             </div>
-          </article>
 
-          <section className="compra-section">
-            <h3>1. Selecciona la seccion del estadio</h3>
-
-            {loading && <p className="matches-status">Cargando sectores...</p>}
-            {error && <p className="matches-status is-error">{error}</p>}
+            {loading && <p className="matches-status" style={{ margin: '0 14px 16px' }}>Cargando sectores...</p>}
+            {error && <p className="matches-status is-error" style={{ margin: '0 14px 16px' }}>{error}</p>}
 
             {!loading && !error && (
-              <div className="sector-grid">
+              <div className="compra-sector-grid">
                 {sectores.length === 0 ? (
                   <p className="matches-status">No hay sectores disponibles.</p>
                 ) : (
-                  sectores.map((sector) => {
-                    const agotado = sector.disponibles <= 0
-                    const seleccionado = sector.idHabilita === idHabilitaSel
-
+                  sectores.map(sec => {
+                    const qty = cart[sec.idHabilita] ?? 0
+                    const seleccionado = qty > 0
+                    const agotado = sec.disponibles <= 0
+                    const canInc = !maxAlcanzado && !agotado
                     return (
-                      <button
-                        key={sector.idHabilita}
-                        type="button"
-                        className={`sector-card ${seleccionado ? 'is-selected' : ''} ${
-                          agotado ? 'is-sold-out' : ''
-                        }`}
-                        onClick={() => !agotado && handleSelectSector(sector)}
-                        disabled={agotado}
+                      <div
+                        key={sec.idHabilita}
+                        className={`sector-card-new ${seleccionado ? 'is-selected' : ''} ${agotado ? 'is-sold-out' : ''}`}
                       >
-                        <div className="sector-card-top">
-                          <span className="sector-name">{sector.sector}</span>
-                          <span className="sector-price">
-                            {formatPrice(sector.precio)}
-                            <small>por entrada</small>
-                          </span>
+                        {seleccionado && (
+                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(124,58,237,0.05), rgba(168,85,247,0.03))', pointerEvents: 'none', borderRadius: 'inherit' }} />
+                        )}
+                        <div className="sector-card-top-new">
+                          <div>
+                            <div className="sector-name-new">{sec.sector}</div>
+                            <div className="sector-avail-new">{agotado ? 'Agotado' : `${sec.disponibles} disponibles`}</div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div className="sector-price-new">{formatPrice(sec.precio)}</div>
+                            <div className="sector-price-label">por entrada</div>
+                          </div>
                         </div>
-                        <span className="sector-stock">
-                          {agotado ? 'Agotado' : `${sector.disponibles} entradas disponibles`}
-                        </span>
-                      </button>
+
+                        {!seleccionado ? (
+                          <button
+                            className="sector-add-btn"
+                            type="button"
+                            disabled={agotado || maxAlcanzado}
+                            onClick={() => addSector(sec.idHabilita)}
+                          >
+                            <PlusIcon />
+                            {agotado ? 'Agotado' : maxAlcanzado ? 'Límite alcanzado' : 'Agregar'}
+                          </button>
+                        ) : (
+                          <div className="sector-qty-control">
+                            <button type="button" className="sector-qty-btn" onClick={() => dec(sec.idHabilita)} aria-label="Quitar">
+                              <MinusIcon />
+                            </button>
+                            <div style={{ textAlign: 'center' }}>
+                              <div className="sector-qty-val">{qty}</div>
+                              <div className="sector-qty-label">entrada{qty !== 1 ? 's' : ''}</div>
+                            </div>
+                            <button
+                              type="button"
+                              className="sector-qty-btn"
+                              disabled={!canInc}
+                              onClick={() => canInc && inc(sec.idHabilita)}
+                              aria-label="Agregar"
+                              style={!canInc ? { opacity: 0.4, cursor: 'not-allowed', borderColor: '#ECEAF2' } : {}}
+                            >
+                              <PlusIcon />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )
                   })
                 )}
               </div>
             )}
-          </section>
-
-          <section className="compra-section">
-            <h3>2. Selecciona la cantidad de entradas</h3>
-
-            <div className="qty-stepper">
-              <button
-                type="button"
-                onClick={() => setCantidad((c) => Math.max(1, c - 1))}
-                disabled={!sectorSeleccionado || cantidad <= 1}
-                aria-label="Quitar una entrada"
-              >
-                &minus;
-              </button>
-
-              <div className="qty-value">
-                <strong>{cantidad}</strong>
-                <span>{cantidad === 1 ? 'entrada' : 'entradas'}</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setCantidad((c) => Math.min(maxCantidad, c + 1))}
-                disabled={!sectorSeleccionado || cantidad >= maxCantidad}
-                aria-label="Agregar una entrada"
-              >
-                +
-              </button>
-            </div>
-
-            <p className="qty-hint">Maximo {MAX_ENTRADAS} entradas por compra</p>
-          </section>
+          </div>
         </div>
 
-        <aside className="resumen-card">
-          <h3>
-            <CardIcon />
-            Resumen de Reserva
-          </h3>
-
-          {!sectorSeleccionado ? (
-            <p className="resumen-empty">Selecciona una seccion para continuar</p>
-          ) : (
-            <>
-              <dl className="resumen-rows">
-                <div>
-                  <dt>Seccion</dt>
-                  <dd>{sectorSeleccionado.sector}</dd>
-                </div>
-                <div>
-                  <dt>Precio unitario</dt>
-                  <dd>{formatPrice(sectorSeleccionado.precio)}</dd>
-                </div>
-                <div>
-                  <dt>Cantidad</dt>
-                  <dd>{cantidad}</dd>
-                </div>
-                <div>
-                  <dt>Subtotal</dt>
-                  <dd>{formatPrice(subtotal)}</dd>
-                </div>
-                <div>
-                  <dt>Cargo por servicio ({Math.round(comisionRate * 100)}%)</dt>
-                  <dd>{formatPrice(cargo)}</dd>
-                </div>
-              </dl>
-
-              <div className="resumen-total">
-                <span>Total a reservar</span>
-                <strong>{formatPrice(total)}</strong>
+        {/* Columna derecha: resumen sticky */}
+        <aside className="compra-resumen-aside">
+          <div className="compra-resumen-card">
+            <div className="compra-resumen-header">
+              <div className="compra-resumen-icon">
+                <TicketSmIcon />
               </div>
+              <span className="compra-resumen-title">Resumen de Compra</span>
+            </div>
 
-              {submitError && <p className="modal-error">{submitError}</p>}
+            {cartItems.length === 0 ? (
+              <div className="compra-resumen-empty">
+                <div className="compra-resumen-empty-icon">
+                  <TicketGrayIcon />
+                </div>
+                <div className="compra-resumen-empty-text">Seleccioná al menos<br />un sector para continuar</div>
+              </div>
+            ) : (
+              <>
+                <div className="compra-resumen-items">
+                  {cartItems.map(item => (
+                    <div key={item.idHabilita} className="compra-resumen-item">
+                      <div>
+                        <div className="compra-resumen-item-name">{item.nombre}</div>
+                        <div className="compra-resumen-item-qty">{item.qty} × {formatPrice(item.precio)}</div>
+                      </div>
+                      <div className="compra-resumen-item-sub">{formatPrice(item.subtotal)}</div>
+                    </div>
+                  ))}
+                </div>
 
-              <button
-                className="resumen-confirmar"
-                type="button"
-                onClick={handleReservar}
-                disabled={submitting}
-              >
-                {submitting ? 'Reservando...' : 'Reservar entradas'}
-              </button>
+                <div className="compra-resumen-divider" />
 
-              <p className="resumen-ssl">Pago seguro con cifrado SSL</p>
-            </>
+                <div className="compra-resumen-totals">
+                  <div className="compra-resumen-row">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(subtotalTotal)}</span>
+                  </div>
+                  <div className="compra-resumen-row">
+                    <span>Comisión ({Math.round(comisionRate * 100)}%)</span>
+                    <span>{formatPrice(cargo)}</span>
+                  </div>
+                  <div className="compra-resumen-divider" style={{ margin: '4px 0' }} />
+                  <div className="compra-resumen-row is-total">
+                    <span>Total</span>
+                    <strong>{formatPrice(total)}</strong>
+                  </div>
+                </div>
+
+                <div className="compra-resumen-cta-wrap">
+                  {submitError && <p className="modal-error" style={{ marginBottom: 8 }}>{submitError}</p>}
+                  <button
+                    className="compra-resumen-cta"
+                    type="button"
+                    onClick={handleConfirmar}
+                    disabled={submitting}
+                  >
+                    <LockIcon />
+                    {submitting ? 'Reservando...' : 'Confirmar Reserva'}
+                  </button>
+                  <div className="compra-resumen-timer">Tenés 28 min para completar el pago</div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {maxAlcanzado && (
+            <div className="compra-max-warning">
+              <WarnIcon />
+              <span>Límite alcanzado. Máximo {MAX_ENTRADAS} entradas por compra.</span>
+            </div>
           )}
         </aside>
       </div>
@@ -310,58 +387,75 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
   )
 }
 
-function InfoBlock({ icon, label, value }) {
-  return (
-    <p className="compra-info-block">
-      <span className="compra-info-icon">{icon}</span>
-      <span className="compra-info-text">
-        <span className="compra-info-label">{label}</span>
-        <strong>{value}</strong>
-      </span>
-    </p>
-  )
-}
-
+/* ── Iconos ───────────────────────────────────────────────────── */
 function BackIcon() {
   return (
-    <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M15 6l-6 6 6 6" />
+    <svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 2L4 6l4 4" />
     </svg>
   )
 }
-
-function CalendarIcon() {
+function CalIcon() {
   return (
-    <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 5h12v14H6z" />
-      <path d="M8 3v4M16 3v4M6 9h12" />
+    <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="#A78BFA" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+      <rect x="1.5" y="2" width="11" height="10" rx="1.5" /><line x1="1.5" y1="5.5" x2="12.5" y2="5.5" /><line x1="4.5" y1="1" x2="4.5" y2="3.5" /><line x1="9.5" y1="1" x2="9.5" y2="3.5" />
     </svg>
   )
 }
-
 function ClockIcon() {
   return (
-    <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
-      <path d="M12 7v5l3 2" />
+    <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="#A78BFA" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+      <circle cx="7" cy="7" r="5.5" /><polyline points="7 4.5 7 7 9 8.5" />
     </svg>
   )
 }
-
 function PinIcon() {
   return (
-    <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 21s6-5.2 6-11a6 6 0 1 0-12 0c0 5.8 6 11 6 11Z" />
-      <path d="M12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+    <svg viewBox="0 0 14 14" width="12" height="12" fill="none" stroke="#A78BFA" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 13S2 8.5 2 5.5a5 5 0 0 1 10 0C12 8.5 7 13 7 13z" /><circle cx="7" cy="5.5" r="1.5" />
     </svg>
   )
 }
-
-function CardIcon() {
+function PlusIcon() {
   return (
-    <svg className="line-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 6h18v12H3z" />
-      <path d="M3 10h18" />
+    <svg viewBox="0 0 12 12" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <line x1="6" y1="1" x2="6" y2="11" /><line x1="1" y1="6" x2="11" y2="6" />
+    </svg>
+  )
+}
+function MinusIcon() {
+  return (
+    <svg viewBox="0 0 10 2" width="10" height="2" fill="none" stroke="#7C3AED" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <line x1="1" y1="1" x2="9" y2="1" />
+    </svg>
+  )
+}
+function TicketSmIcon() {
+  return (
+    <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#7C3AED" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <path d="M2 6.5A1.5 1.5 0 0 1 3.5 5h7A1.5 1.5 0 0 1 12 6.5v.4a1 1 0 0 0 0 2v.5A1.5 1.5 0 0 1 10.5 11h-7A1.5 1.5 0 0 1 2 9.5V9a1 1 0 0 0 0-2v-.5z" />
+      <path d="M6 5v6" strokeDasharray="1.4 1.4" />
+    </svg>
+  )
+}
+function TicketGrayIcon() {
+  return (
+    <svg viewBox="0 0 18 18" width="20" height="20" fill="none" stroke="#C4B5FD" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+      <path d="M2 8.5A1.5 1.5 0 0 1 3.5 7h11A1.5 1.5 0 0 1 16 8.5v.5a1.2 1.2 0 0 0 0 2.4v.5A1.5 1.5 0 0 1 14.5 13h-11A1.5 1.5 0 0 1 2 11.5V11a1.2 1.2 0 0 0 0-2.4V8.5z" />
+    </svg>
+  )
+}
+function LockIcon() {
+  return (
+    <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+      <rect x="1.5" y="4" width="11" height="9" rx="1.5" /><path d="M4.5 4V3a2.5 2.5 0 0 1 5 0v1" />
+    </svg>
+  )
+}
+function WarnIcon() {
+  return (
+    <svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="#D97706" strokeWidth="1.5" strokeLinecap="round" style={{ flex: 'none', marginTop: 1 }} aria-hidden="true">
+      <circle cx="7" cy="7" r="5.5" /><line x1="7" y1="4.5" x2="7" y2="7.5" /><circle cx="7" cy="9.5" r="0.6" fill="#D97706" />
     </svg>
   )
 }

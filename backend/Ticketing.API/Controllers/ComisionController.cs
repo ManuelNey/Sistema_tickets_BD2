@@ -51,6 +51,7 @@ public class ComisionController : ControllerBase
         return Created(string.Empty, null);
     }
 
+    // Elimina una comisión solo si no tiene compras asociadas. Si tiene compras asociadas no se elimina
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult> Delete(int id)
