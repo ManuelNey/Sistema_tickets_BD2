@@ -65,18 +65,23 @@ public class TransferenciaController : ControllerBase
             return Unauthorized();
         }
 
-        var transferenciaResuelta = await _transferenciaRepository.ResolverTransferencia(
-            id,
-            transferencia,
-            mailReceptorClaim
-        );
-
-        if (transferenciaResuelta == null)
+        try
         {
-            return NotFound();
-        }
+            var transferenciaResuelta = await _transferenciaRepository.ResolverTransferencia(
+                id,
+                transferencia,
+                mailReceptorClaim
+            );
 
-        return Ok(transferenciaResuelta);
+            if (transferenciaResuelta == null)
+                return NotFound();
+
+            return Ok(transferenciaResuelta);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
     }
 
 }

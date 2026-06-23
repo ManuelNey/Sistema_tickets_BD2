@@ -255,12 +255,6 @@ function ReservaCard({ reserva, onPagar, onCancelar }) {
                 <button className="reserva-btn-primary" type="button" onClick={onPagar}>Pagar ahora</button>
               </>
             )}
-            {esPagada && (
-              <>
-                <button className="reserva-btn-secondary" type="button">Ver detalle</button>
-                <button className="reserva-btn-primary" type="button">Ver QR</button>
-              </>
-            )}
           </div>
         </div>
       </div>
