@@ -522,9 +522,17 @@ function EditDeviceModal({
   onRemoveFuncionario,
   onSubmit,
 }) {
+  const [selectKey, setSelectKey] = useState(0)
+
   const funcionariosDisponibles = funcionarios.filter(
     (funcionario) => !form.funcionarios.includes(funcionario.mail)
   )
+
+  function handleAddFuncionario(mail) {
+    if (!mail) return
+    setSelectKey((k) => k + 1)
+    onAddFuncionario(mail)
+  }
 
   return (
     <div className="modal-backdrop" role="presentation">
@@ -554,9 +562,9 @@ function EditDeviceModal({
           <label>
             <span>Agregar Funcionario</span>
             <select
+              key={selectKey}
               disabled={funcionariosLoading}
-              value={form.funcionarioSeleccionado}
-              onChange={(event) => onAddFuncionario(event.target.value)}
+              onChange={(event) => handleAddFuncionario(event.target.value)}
             >
               <option value="">
                 {funcionariosLoading ? 'Cargando funcionarios...' : 'Selecciona un funcionario'}

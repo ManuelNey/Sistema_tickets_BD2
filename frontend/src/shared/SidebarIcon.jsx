@@ -126,6 +126,13 @@ function SidebarIcon({ name }) {
         <path d="M3 6h18M3 12h18M3 18h18" />
       </>
     ),
+    percent: (
+      <>
+        <circle cx="8" cy="8" r="3" />
+        <circle cx="16" cy="16" r="3" />
+        <line x1="20" y1="4" x2="4" y2="20" />
+      </>
+    ),
     profile: (
       <>
         <circle cx="12" cy="8" r="4" />

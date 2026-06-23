@@ -99,6 +99,8 @@ public class CompraRepository : ICompraRepository
         return true;
     }
 
+    // Permite reservar múltiples sectores en una sola compra. 
+    // Se pasa una lista con los sectores y cantidades a reservar.
     public async Task<int> ReservarAsync(List<ReservarEntradaRequest> items, string mail)
     {
         if (items == null || items.Count == 0)
@@ -131,13 +133,13 @@ public class CompraRepository : ICompraRepository
                 GROUP BY s.capacidad_maxima, h.precio;", connection);
             cmdCheck.Parameters.AddWithValue("@id_habilita", item.IdHabilita);
 
-            await using var rdr = await cmdCheck.ExecuteReaderAsync();
-            if (!await rdr.ReadAsync())
+            await using var lectura = await cmdCheck.ExecuteReaderAsync();
+            if (!await lectura.ReadAsync())
                 throw new KeyNotFoundException($"La habilitación {item.IdHabilita} no existe");
 
-            var disponibles = rdr.GetInt32(rdr.GetOrdinal("disponibles"));
-            var precio = rdr.GetDecimal(rdr.GetOrdinal("precio"));
-            await rdr.CloseAsync();
+            var disponibles = lectura.GetInt32(lectura.GetOrdinal("disponibles"));
+            var precio = lectura.GetDecimal(lectura.GetOrdinal("precio"));
+            await lectura.CloseAsync();
 
             if (disponibles < item.Cantidad)
                 throw new InvalidOperationException($"No hay cupos suficientes en el sector {item.IdHabilita}");
@@ -214,7 +216,7 @@ public class CompraRepository : ICompraRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        // Primera query: datos de la compra (sin sector).
+        // Primero obtenemos la info de la compra, encuentro y estadio. Una sola fila por eso el group by.
         await using var cmdCompra = new NpgsqlCommand(@"
             SELECT
                 c.id_compra,
@@ -238,7 +240,7 @@ public class CompraRepository : ICompraRepository
         cmdCompra.Parameters.AddWithValue("@mail", mail);
         cmdCompra.Parameters.AddWithValue("@idCompra", idCompra);
 
-        CompraDetalleDto? dto = null;
+        CompraDetalleDto? dto = null; // variable para almacenar el resultado de la primera consulta
         await using (var reader = await cmdCompra.ExecuteReaderAsync())
         {
             if (!await reader.ReadAsync()) return null;
@@ -257,7 +259,8 @@ public class CompraRepository : ICompraRepository
             };
         }
 
-        // Segunda query: sectores y cantidades de esa compra.
+        // Luego obtenemos los sectores y cantidades asociados a la compra.
+        // Esto puede devolver varias filas, una por cada sector.
         await using var cmdSectores = new NpgsqlCommand(@"
             SELECT s.nombre AS sector, COUNT(e.id_entrada) AS cantidad
             FROM entrada e
@@ -281,13 +284,14 @@ public class CompraRepository : ICompraRepository
     }
 
     // Listado de las compras/reservas del usuario autenticado, de la más reciente a la más vieja.
-    // Si llega un 'estado' (pendiente/pagada/cancelada) filtra solo ese estado; si llega null devuelve todas.
+    // Si llega un 'estado' (pendiente/pagada/cancelada) filtra solo ese estado. 
+    // Si no llega estado, devuelve todas.
     public async Task<List<CompraDetalleDto>> GetMisReservasAsync(string mail, string? estado = null)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        // Primera query: una fila por compra, sin sector.
+        // Primera query para obtener las compras del usuario, con info de encuentro y estadio. 
         await using var cmdCompras = new NpgsqlCommand(@"
             SELECT
                 c.id_compra,
@@ -306,7 +310,7 @@ public class CompraRepository : ICompraRepository
             JOIN equipo   ev  ON en.fk_equipo_visitante = ev.id_equipo
             JOIN estadio  es  ON en.fk_estadio          = es.id_estadio
             WHERE c.fk_usuario_mail = @mail
-              AND c.estado = @estado
+            AND (@estado IS NULL OR c.estado = @estado)
             GROUP BY c.id_compra, c.estado, c.monto_total, c.fecha,
                      el.nombre, ev.nombre, en.fecha, es.nombre
             ORDER BY c.fecha DESC;", connection);

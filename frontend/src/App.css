@@ -630,6 +630,10 @@
   box-shadow: 0 3px 10px rgba(124,58,237,0.28);
   transition: all 0.2s ease;
   margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
 }
 .match-cta:hover {
   box-shadow: 0 5px 18px rgba(124,58,237,0.42);
