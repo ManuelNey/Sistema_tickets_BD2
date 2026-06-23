@@ -173,7 +173,6 @@ function MisReservas({ onIrAMisEntradas }) {
 function ReservaCard({ reserva, onPagar, onCancelar }) {
   const [expirada, setExpirada] = useState(false)
   const esPendiente = reserva.estado === 'pendiente'
-  const esPagada = reserva.estado === 'pagada'
   const expiraMs = getExpiracion(reserva.fechaReserva)
 
   const statusMap = {
