@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import SidebarIcon from '../shared/SidebarIcon'
+import { flagUrl } from '../usuario/teamFlags'
 
 const emptyEventForm = {
   equipoLocalId: '',
@@ -602,12 +603,12 @@ function EncuentroCard({ adminCountryId, encuentro, onEdit, onFuncionarios }) {
 
         <div className="ac-vs-grid">
           <div className="ac-team">
-            <span className="ac-team-flag">{getTeamFlag(localName)}</span>
+            <TeamFlag name={localName} />
             <span className="ac-team-name">{localName}</span>
           </div>
           <div className="ac-vs-circle">VS</div>
           <div className="ac-team">
-            <span className="ac-team-flag">{getTeamFlag(visitName)}</span>
+            <TeamFlag name={visitName} />
             <span className="ac-team-name">{visitName}</span>
           </div>
         </div>
@@ -664,47 +665,25 @@ function EncuentroCard({ adminCountryId, encuentro, onEdit, onFuncionarios }) {
   )
 }
 
-const TEAM_FLAGS = {
-  'argentina': '🇦🇷', 'brazil': '🇧🇷', 'brasil': '🇧🇷',
-  'france': '🇫🇷', 'francia': '🇫🇷',
-  'germany': '🇩🇪', 'alemania': '🇩🇪',
-  'spain': '🇪🇸', 'españa': '🇪🇸',
-  'portugal': '🇵🇹',
-  'england': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'inglaterra': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  'mexico': '🇲🇽', 'méxico': '🇲🇽',
-  'usa': '🇺🇸', 'estados unidos': '🇺🇸', 'united states': '🇺🇸',
-  'canada': '🇨🇦', 'canadá': '🇨🇦',
-  'japan': '🇯🇵', 'japón': '🇯🇵', 'japon': '🇯🇵',
-  'south korea': '🇰🇷', 'corea del sur': '🇰🇷', 'corea': '🇰🇷',
-  'morocco': '🇲🇦', 'marruecos': '🇲🇦',
-  'senegal': '🇸🇳', 'ghana': '🇬🇭', 'nigeria': '🇳🇬',
-  'cameroon': '🇨🇲', 'camerún': '🇨🇲',
-  'netherlands': '🇳🇱', 'países bajos': '🇳🇱', 'holanda': '🇳🇱',
-  'belgium': '🇧🇪', 'bélgica': '🇧🇪',
-  'switzerland': '🇨🇭', 'suiza': '🇨🇭',
-  'denmark': '🇩🇰', 'dinamarca': '🇩🇰',
-  'croatia': '🇭🇷', 'croacia': '🇭🇷',
-  'poland': '🇵🇱', 'polonia': '🇵🇱',
-  'serbia': '🇷🇸', 'austria': '🇦🇹',
-  'colombia': '🇨🇴', 'uruguay': '🇺🇾', 'chile': '🇨🇱',
-  'ecuador': '🇪🇨', 'venezuela': '🇻🇪',
-  'peru': '🇵🇪', 'perú': '🇵🇪',
-  'bolivia': '🇧🇴', 'paraguay': '🇵🇾',
-  'costa rica': '🇨🇷',
-  'panama': '🇵🇦', 'panamá': '🇵🇦',
-  'jamaica': '🇯🇲',
-  'australia': '🇦🇺', 'iran': '🇮🇷',
-  'saudi arabia': '🇸🇦', 'arabia saudita': '🇸🇦',
-  'qatar': '🇶🇦', 'turkey': '🇹🇷', 'turquía': '🇹🇷',
-  'ukraine': '🇺🇦', 'ucrania': '🇺🇦',
-  'mali': '🇲🇱', 'egypt': '🇪🇬', 'egipto': '🇪🇬',
-  'indonesia': '🇮🇩',
-  'nueva zelanda': '🇳🇿', 'new zealand': '🇳🇿',
-}
+function TeamFlag({ name }) {
+  const [imgError, setImgError] = useState(false)
+  const src = flagUrl(name)
 
-function getTeamFlag(name) {
-  if (!name) return '⚽'
-  return TEAM_FLAGS[name.toLowerCase().trim()] ?? '⚽'
+  if (!name) return null
+
+  if (src && !imgError) {
+    return (
+      <img
+        className="ac-team-flag-img"
+        src={src}
+        alt={`Bandera de ${name}`}
+        loading="lazy"
+        onError={() => setImgError(true)}
+      />
+    )
+  }
+
+  return <span className="ac-team-flag-fb">{name.slice(0, 2).toUpperCase()}</span>
 }
 
 function PlusIconE() {
@@ -856,7 +835,9 @@ function FuncionariosModal({ encuentro, onClose }) {
       <section className="func-modal" aria-labelledby="func-modal-title" role="dialog">
         <div className="func-modal-head">
           <div>
-            <span className="func-modal-match">{localName} vs {visitName}</span>
+            <span className="func-modal-match">
+              <TeamFlag name={localName} /> {localName} vs <TeamFlag name={visitName} /> {visitName}
+            </span>
             <h2 id="func-modal-title">Funcionarios por sector</h2>
           </div>
           <button className="modal-close" type="button" onClick={onClose} aria-label="Cerrar">

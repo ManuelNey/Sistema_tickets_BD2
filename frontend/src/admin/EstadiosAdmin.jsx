@@ -287,7 +287,7 @@ function StadiumCard({ adminCountryId, onDelete, onDetails, onOpenSectors, stadi
       <div className="ac-card-head">
         <div className="ac-stadium-meta">
           <span className="ac-stadium-location">
-            <span>{countryFlag}</span>
+            {countryFlag ? <img className="ac-flag-img" src={countryFlag} alt="" /> : null}
             {stadium.ciudad}, {countryName}
           </span>
           <span className="ac-badge-fifa">
@@ -295,7 +295,9 @@ function StadiumCard({ adminCountryId, onDelete, onDetails, onOpenSectors, stadi
             FIFA 2026
           </span>
         </div>
-        <div className="ac-stadium-name">{stadium.nombre}</div>
+        <div className="ac-stadium-name">
+          {stadium.nombre}
+        </div>
       </div>
 
       <div className="ac-card-body">
@@ -339,8 +341,9 @@ function StadiumCard({ adminCountryId, onDelete, onDetails, onOpenSectors, stadi
 }
 
 function getCountryFlag(paisSedeId) {
-  const flags = { 1: '🇨🇦', 2: '🇲🇽', 3: '🇺🇸' }
-  return flags[Number(paisSedeId)] ?? '🌐'
+  const flags = { 1: 'ca', 2: 'mx', 3: 'us' }
+  const code = flags[Number(paisSedeId)]
+  return code ? `https://flagcdn.com/w160/${code}.png` : null
 }
 
 function PlusIcon() {

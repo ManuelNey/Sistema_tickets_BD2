@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
+import { flagUrl } from './teamFlags'
 import './CodigoQr.css'
 
 function CodigoQr() {
@@ -196,12 +197,12 @@ function QrCard({ entrada, formatearFecha, formatearHora, onVerQr }) {
         </div>
         <div className="match-teams">
           <div className="match-team">
-            <span className="match-flag-fallback" style={{ fontSize: 9 }}>{entrada.equipoLocal.slice(0, 3).toUpperCase()}</span>
+            <FlagOrInitials name={entrada.equipoLocal} />
             <span className="match-team-name">{entrada.equipoLocal}</span>
           </div>
           <div className="match-vs-circle"><span>VS</span></div>
           <div className="match-team">
-            <span className="match-flag-fallback" style={{ fontSize: 9 }}>{entrada.equipoVisitante.slice(0, 3).toUpperCase()}</span>
+            <FlagOrInitials name={entrada.equipoVisitante} />
             <span className="match-team-name">{entrada.equipoVisitante}</span>
           </div>
         </div>
@@ -229,6 +230,27 @@ function QrCard({ entrada, formatearFecha, formatearHora, onVerQr }) {
         </button>
       </div>
     </article>
+  )
+}
+
+function FlagOrInitials({ name }) {
+  const [imgError, setImgError] = useState(false)
+  const url = flagUrl(name)
+  if (url && !imgError) {
+    return (
+      <img
+        className="match-flag-img"
+        src={url}
+        alt={name}
+        loading="lazy"
+        onError={() => setImgError(true)}
+      />
+    )
+  }
+  return (
+    <span className="match-flag-fallback" style={{ fontSize: 9 }}>
+      {name.slice(0, 2).toUpperCase()}
+    </span>
   )
 }
 

@@ -296,6 +296,22 @@
   position: relative;
 }
 
+.ac-stadium-flag {
+  width: 22px;
+  height: auto;
+  vertical-align: middle;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+
+.ac-flag-img {
+  width: 14px;
+  height: auto;
+  vertical-align: middle;
+  border-radius: 1px;
+  margin-right: 3px;
+}
+
 /* Stat boxes */
 .ac-stats-grid {
   display: grid;
@@ -395,7 +411,25 @@
   gap: 6px;
 }
 
-.ac-team-flag { font-size: 28px; line-height: 1; }
+.ac-team-flag-img {
+  width: 36px;
+  height: 24px;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+.ac-team-flag-fb {
+  width: 36px;
+  height: 24px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .ac-team-name {
   color: rgba(255,255,255,0.9);
@@ -837,13 +871,22 @@
 }
 
 .func-modal-match {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 600;
   color: #7C3AED;
   margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
+  flex-wrap: wrap;
+}
+
+.func-modal-match .ac-team-flag-img,
+.func-modal-match .ac-team-flag-fb {
+  width: 24px;
+  height: 16px;
 }
 
 .func-modal-head h2 {

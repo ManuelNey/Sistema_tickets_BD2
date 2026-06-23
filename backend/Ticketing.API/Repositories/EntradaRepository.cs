@@ -98,7 +98,7 @@ public class EntradaRepository : IEntradaRepository
         await connection.OpenAsync();
 
         await using var cmd = new NpgsqlCommand(@" 
-            SELECT e.id_entrada AS IdEntrada, equipo_local.nombre AS EquipoLocal, equipo_visitante.nombre AS EquipoVisitante,
+            SELECT e.id_entrada AS IdEntrada, equipo_local.pais AS EquipoLocal, equipo_visitante.pais AS EquipoVisitante,
                 enc.fecha AS FechaEncuentro, s.nombre AS Sector, e.estado AS Estado
                 FROM entrada e INNER JOIN habilita h ON h.id = e.fk_habilita_id 
                     INNER JOIN encuentro enc ON enc.id_encuentro = h.fk_encuentro

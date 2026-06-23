@@ -8,6 +8,5 @@ public interface ICompraRepository
     Task<bool> ConfirmarCompraAsync(int idCompra, string mail);
     Task<bool> CancelarCompraAsync(int idCompra, string mail);
     Task<CompraDetalleDto?> GetCompraDetalleAsync(int idCompra, string mail);
-    // estado: si viene null devuelve todas; si viene 'pendiente'/'pagada'/'cancelada' filtra por ese estado.
     Task<List<CompraDetalleDto>> GetMisReservasAsync(string mail, string? estado = null);
 }
