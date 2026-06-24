@@ -14,7 +14,7 @@ import {
   Image
 } from 'react-native'
 
-  const API_URL = 'http://10.226.50.104:8080'
+  const API_URL = 'http://10.140.24.139:8080'
 
 export default function LoginScreen() {
   const router = useRouter()
