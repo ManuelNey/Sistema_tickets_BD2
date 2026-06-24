@@ -38,6 +38,10 @@ function MisReservas({ onIrAMisEntradas }) {
   const [pedidoSel, setPedidoSel] = useState(null)
   const [resumen, setResumen] = useState(null)
 
+  const [confirmarCancelar, setConfirmarCancelar] = useState(null) // reserva a cancelar
+  const [cancelando, setCancelando] = useState(false)
+  const [errorCancelar, setErrorCancelar] = useState('')
+
   const cargar = async () => {
     //Al cargar se le hace un fetch al endpoint de mis-reservas segun la solapa activa.
     setLoading(true)
@@ -70,18 +74,29 @@ function MisReservas({ onIrAMisEntradas }) {
     setView('pago')
   }
 
-  const handleCancelar = async (reserva) => {
+  const handleCancelar = (reserva) => {
+    setConfirmarCancelar(reserva)
+    setErrorCancelar('')
+  }
+
+  const confirmarCancelacion = async () => {
+    if (!confirmarCancelar || cancelando) return
+    setCancelando(true)
+    setErrorCancelar('')
     try {
-      //Sirve para si se toca el boton de cancelar.
       const token = localStorage.getItem('ticketmatch-token')
-      await fetch(`http://localhost:8080/api/compra/${reserva.idCompra}/cancelar`, {
+      const res = await fetch(`http://localhost:8080/api/compra/${confirmarCancelar.idCompra}/cancelar`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })
+      if (!res.ok) throw new Error()
+      setConfirmarCancelar(null)
+      cargar()
     } catch {
-      // cachear error de que no se puede cancelar
+      setErrorCancelar('No se pudo cancelar la reserva. Intentá de nuevo.')
+    } finally {
+      setCancelando(false)
     }
-    cargar()
   }
 
   if (view === 'pago' && pedidoSel) {
@@ -115,57 +130,88 @@ function MisReservas({ onIrAMisEntradas }) {
 
   // vista principal con el listado de reservas
   return (
-    <div className="buy-view">
-      <div style={{ paddingBottom: 0 }}>
-        <header className="buy-header">
-          <div>
-            <h1 id="dashboard-title">Mis Reservas</h1>
-            <p>Historial de reservas y estado de pago</p>
+    <>
+      {/* Modal de confirmación de cancelación */}
+      {confirmarCancelar && (
+        <div className="rv-modal-overlay" onClick={() => !cancelando && setConfirmarCancelar(null)}>
+          <div className="rv-modal" onClick={e => e.stopPropagation()}>
+            <div className="rv-modal-icon rv-modal-icon--warn">
+              <svg viewBox="0 0 20 20" width="26" height="26" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M10 3L2 17h16L10 3z" /><line x1="10" y1="9" x2="10" y2="13" /><circle cx="10" cy="16" r="0.5" fill="#fff" />
+              </svg>
+            </div>
+            <h2 className="rv-modal-title">¿Cancelar reserva?</h2>
+            <p className="rv-modal-sub">
+              Vas a cancelar la reserva de <strong>{confirmarCancelar.equipoLocal} vs {confirmarCancelar.equipoVisitante}</strong>.
+              Esta acción no se puede deshacer.
+            </p>
+            {errorCancelar && (
+              <div className="rv-modal-error">{errorCancelar}</div>
+            )}
+            <div className="rv-modal-actions">
+              <button className="rv-modal-btn-back" type="button" onClick={() => setConfirmarCancelar(null)} disabled={cancelando}>
+                Volver
+              </button>
+              <button className="rv-modal-btn-danger" type="button" onClick={confirmarCancelacion} disabled={cancelando}>
+                {cancelando ? 'Cancelando...' : 'Sí, cancelar'}
+              </button>
+            </div>
           </div>
-        </header>
-
-        <div className="reservas-tabs-new" role="tablist">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'pendientes'}
-            className={`reservas-tab-new ${tab === 'pendientes' ? 'is-active' : ''}`}
-            onClick={() => setTab('pendientes')}
-          >
-            Pendientes de pago
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'pagadas'}
-            className={`reservas-tab-new ${tab === 'pagadas' ? 'is-active' : ''}`}
-            onClick={() => setTab('pagadas')}
-          >
-            Pagadas
-          </button>
         </div>
-        <div className="filters-divider" />
-      </div>
-
-      {loading && <p className="matches-status">Cargando reservas...</p>}
-      {!loading && error && <p className="matches-status is-error">{error}</p>}
-      {!loading && !error && reservas.length === 0 && (
-        <p className="matches-status">
-          {tab === 'pendientes' ? 'No tenes reservas pendientes de pago.' : 'Todavia no tenes compras pagadas.'}
-        </p>
       )}
 
-      <div className="reservas-list-new">
-        {reservas.map((r) => (
-          <ReservaCard
-            key={r.idCompra}
-            reserva={r}
-            onPagar={() => handlePagar(r)}
-            onCancelar={() => handleCancelar(r)}
-          />
-        ))}
+      <div className="buy-view">
+        <div style={{ paddingBottom: 0 }}>
+          <header className="buy-header">
+            <div>
+              <h1 id="dashboard-title">Mis Reservas</h1>
+              <p>Historial de reservas y estado de pago</p>
+            </div>
+          </header>
+
+          <div className="reservas-tabs-new" role="tablist">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'pendientes'}
+              className={`reservas-tab-new ${tab === 'pendientes' ? 'is-active' : ''}`}
+              onClick={() => setTab('pendientes')}
+            >
+              Pendientes de pago
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === 'pagadas'}
+              className={`reservas-tab-new ${tab === 'pagadas' ? 'is-active' : ''}`}
+              onClick={() => setTab('pagadas')}
+            >
+              Pagadas
+            </button>
+          </div>
+          <div className="filters-divider" />
+        </div>
+
+        {loading && <p className="matches-status">Cargando reservas...</p>}
+        {!loading && error && <p className="matches-status is-error">{error}</p>}
+        {!loading && !error && reservas.length === 0 && (
+          <p className="matches-status">
+            {tab === 'pendientes' ? 'No tenes reservas pendientes de pago.' : 'Todavia no tenes compras pagadas.'}
+          </p>
+        )}
+
+        <div className="reservas-list-new">
+          {reservas.map((r) => (
+            <ReservaCard
+              key={r.idCompra}
+              reserva={r}
+              onPagar={() => handlePagar(r)}
+              onCancelar={() => handleCancelar(r)}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
