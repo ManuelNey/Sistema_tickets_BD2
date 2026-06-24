@@ -14,6 +14,12 @@ function MiPerfil({ user }) {
   const [telefonos, setTelefonos] = useState(() => user?.telefonos || [])
   const [nuevoTelefono, setNuevoTelefono] = useState('')
 
+  const [passwords, setPasswords] = useState({
+    contrasenaActual: '',
+    nuevaContrasena: '',
+    confirmarNuevaContrasena: '',
+  })
+
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const [mensajeExito, setMensajeExito] = useState('')
@@ -28,21 +34,21 @@ function MiPerfil({ user }) {
 
   const fechaNacimiento = perfil?.fechaNacimiento
     ? new Date(`${perfil.fechaNacimiento}T00:00:00`).toLocaleDateString(
-      'es-UY',
-      {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }
-    )
+        'es-UY',
+        {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }
+      )
     : 'No registrada'
 
   const fechaRegistro = perfil?.fechaRegistro
     ? new Date(perfil.fechaRegistro).toLocaleDateString('es-UY', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
     : 'No registrada'
 
   const actualizarCampo = (event) => {
@@ -50,6 +56,15 @@ function MiPerfil({ user }) {
 
     setPerfil((perfilActual) => ({
       ...perfilActual,
+      [name]: value,
+    }))
+  }
+
+  const actualizarPassword = (event) => {
+    const { name, value } = event.target
+
+    setPasswords((passwordsActuales) => ({
+      ...passwordsActuales,
       [name]: value,
     }))
   }
@@ -68,7 +83,7 @@ function MiPerfil({ user }) {
     }
 
     if (!/^\d+$/.test(telefonoLimpio)) {
-      setError('El telefono solo puede contener numeros.')
+      setError('El teléfono solo puede contener números.')
       return
     }
 
@@ -98,6 +113,11 @@ function MiPerfil({ user }) {
     setPerfil(user || {})
     setTelefonos(user?.telefonos || [])
     setNuevoTelefono('')
+    setPasswords({
+      contrasenaActual: '',
+      nuevaContrasena: '',
+      confirmarNuevaContrasena: '',
+    })
     setError('')
     setMensajeExito('')
     setEditandoSeccion(null)
@@ -118,13 +138,45 @@ function MiPerfil({ user }) {
     )
 
     if (telefonoInvalido) {
-      setError('El telefono solo puede contener numeros.')
+      setError('El teléfono solo puede contener números.')
       setGuardando(false)
       return
     }
 
+    const quiereCambiarContrasena =
+      passwords.contrasenaActual.trim() ||
+      passwords.nuevaContrasena.trim() ||
+      passwords.confirmarNuevaContrasena.trim()
+
+    if (quiereCambiarContrasena) {
+      if (!passwords.contrasenaActual.trim()) {
+        setError('Debés ingresar la contraseña actual.')
+        setGuardando(false)
+        return
+      }
+
+      if (!passwords.nuevaContrasena.trim()) {
+        setError('Debés ingresar la nueva contraseña.')
+        setGuardando(false)
+        return
+      }
+
+      if (passwords.nuevaContrasena.length < 6) {
+        setError('La nueva contraseña debe tener al menos 6 caracteres.')
+        setGuardando(false)
+        return
+      }
+
+      if (passwords.nuevaContrasena !== passwords.confirmarNuevaContrasena) {
+        setError('La nueva contraseña y su confirmación no coinciden.')
+        setGuardando(false)
+        return
+      }
+    }
+
     try {
       const token = localStorage.getItem('ticketmatch-token')
+
       const perfilActualizado = {
         nombre: perfil.nombre || '',
         apellido: perfil.apellido || '',
@@ -138,6 +190,15 @@ function MiPerfil({ user }) {
         numeroCasa: perfil.numeroCasa || '',
         codigoPostal: perfil.codigoPostal || '',
         telefonos,
+        contrasenaActual: quiereCambiarContrasena
+          ? passwords.contrasenaActual
+          : null,
+        nuevaContrasena: quiereCambiarContrasena
+          ? passwords.nuevaContrasena
+          : null,
+        confirmarNuevaContrasena: quiereCambiarContrasena
+          ? passwords.confirmarNuevaContrasena
+          : null,
       }
 
       const response = await fetch(
@@ -152,27 +213,54 @@ function MiPerfil({ user }) {
         }
       )
 
-      if (!response.ok) {
-        const responseText = await response.text()
+      let respuesta = null
 
+      try {
+        respuesta = await response.json()
+      } catch {
+        respuesta = null
+      }
+
+      if (!response.ok) {
         throw new Error(
-          responseText || 'No se pudieron guardar los cambios.'
+          respuesta?.message ||
+            respuesta?.title ||
+            'No se pudieron guardar los cambios.'
         )
       }
 
-      updateUser(perfilActualizado)
-      setPerfil((perfilActual) => ({
-        ...perfilActual,
+      const usuarioActualizado = {
+        ...perfil,
         ...perfilActualizado,
-      }))
+        mail: perfil.mail,
+      }
+
+      delete usuarioActualizado.contrasenaActual
+      delete usuarioActualizado.nuevaContrasena
+      delete usuarioActualizado.confirmarNuevaContrasena
+
+      updateUser(usuarioActualizado)
+
+      setPerfil(usuarioActualizado)
       setTelefonos(perfilActualizado.telefonos)
 
-      setMensajeExito('Cambios guardados correctamente.')
+      setPasswords({
+        contrasenaActual: '',
+        nuevaContrasena: '',
+        confirmarNuevaContrasena: '',
+      })
+
+      setMensajeExito(
+        quiereCambiarContrasena
+          ? 'Perfil y contraseña actualizados correctamente.'
+          : 'Cambios guardados correctamente.'
+      )
+
       setEditandoSeccion(null)
     } catch (errorGuardado) {
       setError(
         errorGuardado.message ||
-        'Ocurrió un error al guardar los cambios.'
+          'Ocurrió un error al guardar los cambios.'
       )
     } finally {
       setGuardando(false)
@@ -450,7 +538,7 @@ function MiPerfil({ user }) {
                 onChange={(event) =>
                   setNuevoTelefono(event.target.value)
                 }
-                placeholder="+598 99 123 456"
+                placeholder="099123456"
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') {
                     event.preventDefault()
@@ -471,6 +559,52 @@ function MiPerfil({ user }) {
           )}
         </div>
       </section>
+
+      <EditableCard
+        icon="lock"
+        title="Seguridad"
+        editando={estaEditando('seguridad')}
+        guardando={guardando}
+        onEditar={() => abrirEdicion('seguridad')}
+        onGuardar={guardarCambios}
+        onCancelar={cancelarCambios}
+      >
+        {estaEditando('seguridad') ? (
+          <div className="perfil-form-grid">
+            <ProfileInput
+              label="Contraseña actual"
+              name="contrasenaActual"
+              type="password"
+              value={passwords.contrasenaActual}
+              onChange={actualizarPassword}
+            />
+
+            <ProfileInput
+              label="Nueva contraseña"
+              name="nuevaContrasena"
+              type="password"
+              value={passwords.nuevaContrasena}
+              onChange={actualizarPassword}
+            />
+
+            <ProfileInput
+              label="Confirmar nueva contraseña"
+              name="confirmarNuevaContrasena"
+              type="password"
+              value={passwords.confirmarNuevaContrasena}
+              onChange={actualizarPassword}
+            />
+          </div>
+        ) : (
+          <>
+            <InfoRow label="Contraseña" value="••••••••" />
+            <InfoRow
+              label="Estado"
+              value="Podés cambiar tu contraseña desde esta sección"
+            />
+          </>
+        )}
+      </EditableCard>
     </section>
   )
 }
