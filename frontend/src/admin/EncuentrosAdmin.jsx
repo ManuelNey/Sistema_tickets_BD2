@@ -859,7 +859,8 @@ function FuncionariosModal({ adminCountryId, encuentro, onClose }) {
         headers: getAuthHeaders(),
       })
       if (!res.ok) throw new Error()
-      setAsignaciones((prev) => prev.filter((r) => !(r.habilitaId === habilitaId && r.funcionarioMail === mail)))
+      const updated = await fetch(`http://localhost:8080/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() })
+      setAsignaciones(await updated.json())
     } catch {
       setError('No se pudo quitar el funcionario')
     } finally {
