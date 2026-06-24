@@ -13,13 +13,12 @@ public class PostgresConnectionFactory : IPostgresConnectionFactory
 
     public PostgresConnectionFactory(IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
     {
-        _httpContextAccessor = httpContextAccessor;
-
-        // Cadena base: usada por endpoints públicos (login, registro, health)
+       _httpContextAccessor = httpContextAccessor; 
+       // Usamos httpContextAccessor para acceder al contexto HTTP actual y leer los claims del usuario.
+       // Leemos las cadenas de conexión desde la configuración. Si no están configuradas, usamos la cadena de postgres por defecto.
+       
         _csPostgres     = configuration.GetConnectionString("TicketingDb")
             ?? throw new InvalidOperationException("Cadena de conexion 'TicketingDb' no configurada.");
-
-        // Cadenas por rol: si no están configuradas caen al usuario base
         _csUsuario      = configuration.GetConnectionString("TicketingDb_Usuario")     ?? _csPostgres;
         _csFuncionario  = configuration.GetConnectionString("TicketingDb_Funcionario") ?? _csPostgres;
         _csAdmin        = configuration.GetConnectionString("TicketingDb_Admin")       ?? _csPostgres;
@@ -29,16 +28,28 @@ public class PostgresConnectionFactory : IPostgresConnectionFactory
     // Si no hay contexto HTTP (o el usuario no está autenticado) usa postgres.
     public NpgsqlConnection CreateConnection()
     {
+        // Crea la conexion en base a el rol del usuario obtenido del claim "rol" en el JWT.
         var rol = _httpContextAccessor.HttpContext?
             .User.FindFirstValue("rol");
         return CreateConnection(rol);
     }
 
-    public NpgsqlConnection CreateConnection(string? rol) => rol switch
+    // Crea la conexión a la bd en base a el rol del usuario.
+    public NpgsqlConnection CreateConnection(string? rol)
     {
-        "admin"       => new NpgsqlConnection(_csAdmin),
-        "funcionario" => new NpgsqlConnection(_csFuncionario),
-        "usuario"     => new NpgsqlConnection(_csUsuario),
-        _             => new NpgsqlConnection(_csPostgres),
-    };
+        switch (rol)
+        {
+            case "admin":
+                return new NpgsqlConnection(_csAdmin);
+
+            case "funcionario":
+                return new NpgsqlConnection(_csFuncionario);
+
+            case "usuario":
+                return new NpgsqlConnection(_csUsuario);
+
+            default:
+                return new NpgsqlConnection(_csPostgres);
+        }
+    }
 }

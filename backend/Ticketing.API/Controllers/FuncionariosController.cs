@@ -44,7 +44,7 @@ public class FuncionariosController : ControllerBase
             string.IsNullOrWhiteSpace(dto.Nombre) ||
             string.IsNullOrWhiteSpace(dto.Apellido) ||
             string.IsNullOrWhiteSpace(dto.Contrasena))
-            return BadRequest(new { message = "Todos los campos son obligatorios." });
+            return BadRequest(new { message = "Todos los campos son obligatorios. Por favor, complete todos los campos." });
 
         if (dto.Contrasena.Length < 6)
             return BadRequest(new { message = "La contraseña debe tener al menos 6 caracteres." });

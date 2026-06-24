@@ -101,7 +101,7 @@ public class FuncionarioRepository : IFuncionarioRepository
 
             await cmdPersona.ExecuteNonQueryAsync();
 
-            // numero_legajo es SERIAL — la BD lo asigna automáticamente.
+            // nos guardamos el numero_legajo que asignó la BD al nuevo funcionario
             await using var cmdFuncionario = new NpgsqlCommand(@"
                 INSERT INTO funcionario (persona_mail)
                 VALUES (@mail)

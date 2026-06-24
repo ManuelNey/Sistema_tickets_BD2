@@ -42,6 +42,7 @@ public class DispositivoController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "admin")]
     // GET /api/Dispositivos
     public async Task<ActionResult<IReadOnlyCollection<DispositivoDto>>> GetDispositivos()
     {
