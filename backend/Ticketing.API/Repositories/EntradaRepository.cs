@@ -105,8 +105,9 @@ public class EntradaRepository : IEntradaRepository
                     INNER JOIN equipo equipo_local ON equipo_local.id_equipo = enc.fk_equipo_local 
                     INNER JOIN equipo equipo_visitante ON equipo_visitante.id_equipo = enc.fk_equipo_visitante
                     INNER JOIN sector s ON s.id_sector = h.fk_sector
-                        WHERE e.estado = 'activa' AND e.fk_usuario_mail = @mail 
-                        ORDER BY enc.fecha, e.id_entrada;
+                        WHERE e.estado = 'activa'
+                        AND e.fk_usuario_mail = @mail
+                        AND enc.estado IN ('programado', 'en_juego');
             ", connection);
         cmd.Parameters.AddWithValue("@mail", mail);
         await using var reader = await cmd.ExecuteReaderAsync();
