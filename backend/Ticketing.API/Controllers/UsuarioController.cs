@@ -70,24 +70,93 @@ public class UsuarioController : ControllerBase
         return Ok(usuario);
     }
 
-    [HttpPut("perfil/{mail}")]
-    [Authorize]
-    public async Task<IActionResult> ActualizarPerfil(
-        string mail,
-        [FromBody] ActualizarPerfilDto perfil
-    )
+  [HttpPut("perfil/{mail}")]
+[Authorize]
+public async Task<IActionResult> ActualizarPerfil(
+    string mail,
+    [FromBody] ActualizarPerfilDto perfil
+)
+{
+    if (!ModelState.IsValid)
+        return BadRequest(ModelState);
+
+    var mailToken = User.FindFirstValue("mail");
+
+    if (mailToken != mail)
+        return Forbid();
+
+    var quiereCambiarContrasena =
+        !string.IsNullOrWhiteSpace(perfil.ContrasenaActual) ||
+        !string.IsNullOrWhiteSpace(perfil.NuevaContrasena) ||
+        !string.IsNullOrWhiteSpace(perfil.ConfirmarNuevaContrasena);
+
+    if (quiereCambiarContrasena)
     {
-        var mailToken = User.FindFirstValue("mail");
-        if (mailToken != mail)
-            return Forbid();
+        if (string.IsNullOrWhiteSpace(perfil.ContrasenaActual))
+        {
+            return BadRequest(new
+            {
+                message = "Debés ingresar la contraseña actual."
+            });
+        }
 
-        var actualizado = await _usuarioRepository.UpdateProfileAsync(mail, perfil);
+        if (string.IsNullOrWhiteSpace(perfil.NuevaContrasena))
+        {
+            return BadRequest(new
+            {
+                message = "Debés ingresar la nueva contraseña."
+            });
+        }
 
-        if (!actualizado)
-            return NotFound(new { message = "No se encontró el usuario." });
+        if (perfil.NuevaContrasena.Length < 6)
+        {
+            return BadRequest(new
+            {
+                message = "La nueva contraseña debe tener al menos 6 caracteres."
+            });
+        }
 
-        return NoContent();
+        if (perfil.NuevaContrasena != perfil.ConfirmarNuevaContrasena)
+        {
+            return BadRequest(new
+            {
+                message = "La nueva contraseña y su confirmación no coinciden."
+            });
+        }
+
+        var contrasenaActualCorrecta =
+            await _usuarioRepository.ValidarContrasenaActualAsync(
+                mail,
+                perfil.ContrasenaActual
+            );
+
+        if (!contrasenaActualCorrecta)
+        {
+            return BadRequest(new
+            {
+                message = "La contraseña actual es incorrecta."
+            });
+        }
     }
 
+    var actualizado = await _usuarioRepository.UpdateProfileAsync(
+        mail,
+        perfil
+    );
 
+    if (!actualizado)
+    {
+        return NotFound(new
+        {
+            message = "No se encontró el usuario."
+        });
+    }
+
+    return Ok(new
+    {
+        message = quiereCambiarContrasena
+            ? "Perfil y contraseña actualizados correctamente."
+            : "Perfil actualizado correctamente."
+    });
+}
 }
