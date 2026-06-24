@@ -75,9 +75,11 @@ function ValidacionesAdmin({ user }) {
   }, [])
 
   useEffect(() => {
-    cargarResumen()
-    cargarDropdowns()
-    cargarLista(filtrosActivos, 1)
+    async function cargarDatosIniciales() {
+      await Promise.all([cargarResumen(), cargarDropdowns()])
+      await cargarLista(filtrosActivos, 1)
+    }
+    cargarDatosIniciales()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const buscar = () => {
