@@ -25,7 +25,6 @@ const eventStatusOptions = [
 ]
 
 const eventStatusTabs = [
-  { value: 'todos', label: 'Todos' },
   { value: 'programado', label: 'Programados' },
   { value: 'en_juego', label: 'En juego' },
   { value: 'cancelado', label: 'Cancelados' },
@@ -109,7 +108,7 @@ function EncuentrosAdmin({ user }) {
   const [sectors, setSectors] = useState([])
   const [sectorsLoading, setSectorsLoading] = useState(false)
   const [selectedSectors, setSelectedSectors] = useState({})
-  const [statusFilter, setStatusFilter] = useState('todos')
+  const [statusFilter, setStatusFilter] = useState('programado')
   const [searchQuery, setSearchQuery] = useState('')
   const [funcionariosEncuentro, setFuncionariosEncuentro] = useState(null)
   const adminCountryId = getAdminCountryId(user)
@@ -485,9 +484,8 @@ function EncuentrosAdmin({ user }) {
     }
   }
 
-  const filteredEncuentros = sortEncuentrosByPermission(
-    getVisibleEncuentros(encuentros, statusFilter),
-    adminCountryId
+  const filteredEncuentros = sortEncuentrosByDate(
+    getVisibleEncuentros(encuentros, statusFilter)
   ).filter((e) => {
     const q = searchQuery.trim().toLowerCase()
     if (!q) return true
@@ -1340,17 +1338,8 @@ function getAllowedStatusOptions(currentStatus) {
   return []
 }
 
-function sortEncuentrosByPermission(encuentros, adminCountryId) {
-  return [...encuentros].sort((first, second) => {
-    const firstOwnCountry = Number(first.pais) === adminCountryId
-    const secondOwnCountry = Number(second.pais) === adminCountryId
-
-    if (firstOwnCountry === secondOwnCountry) {
-      return new Date(first.fecha) - new Date(second.fecha)
-    }
-
-    return firstOwnCountry ? -1 : 1
-  })
+function sortEncuentrosByDate(encuentros) {
+  return [...encuentros].sort((first, second) => new Date(first.fecha) - new Date(second.fecha))
 }
 
 function mergeEncounterDetail(encuentro, detalle) {

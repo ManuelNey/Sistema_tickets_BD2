@@ -18,7 +18,7 @@ export default function QrScannerScreen() {
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null)
 
 
-  const API_URL = 'http://10.226.50.104:8080'
+  const API_URL = 'http://10.140.24.139:8080'
 
   if (!permission) return null
 
