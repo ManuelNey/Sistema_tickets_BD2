@@ -40,6 +40,7 @@ public class ComisionRepository : IComisionRepository
         };
     }
 
+    //Muestra todas las comisiones
     public async Task<IReadOnlyCollection<ComisionDto>> GetAllAsync()
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -69,6 +70,7 @@ public class ComisionRepository : IComisionRepository
         return result;
     }
 
+    //Crea una nueva comision
     public async Task CreateAsync(CrearComisionDto dto)
     {
         await using var connection = _connectionFactory.CreateConnection();

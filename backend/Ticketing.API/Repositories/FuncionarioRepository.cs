@@ -16,6 +16,7 @@ public class FuncionarioRepository : IFuncionarioRepository
         _passwordService = passwordService;
     }
 
+    // Obtiene todos los funcionarios junto con sus datos principales
     public async Task<IReadOnlyCollection<FuncionarioDto>> GetAllAsync()
     {
         var funcionarios = new List<FuncionarioDto>();
@@ -23,6 +24,7 @@ public class FuncionarioRepository : IFuncionarioRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Consulta los datos de persona relacionados con cada funcionario
         await using var cmd = new NpgsqlCommand(@"
             SELECT p.mail, p.nombre, p.apellido,
                    f.numero_legajo,
@@ -35,6 +37,7 @@ public class FuncionarioRepository : IFuncionarioRepository
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
+        // Convierte cada resultado en un DTO para devolverlo a la API
         while (await reader.ReadAsync())
         {
             funcionarios.Add(new FuncionarioDto

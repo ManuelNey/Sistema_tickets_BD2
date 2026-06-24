@@ -17,6 +17,7 @@ public class DispositivoController : ControllerBase
         _dispositivoRepository = dispositivoRepository;
     }
 
+    // Obtiene el correo del funcionario desde el token
     [HttpPost("check")]
     [Authorize(Roles = "funcionario")]
     public async Task<IActionResult> CheckDevice([FromBody] CheckDeviceDto dto)
@@ -26,6 +27,7 @@ public class DispositivoController : ControllerBase
         if (mail == null)
             return Unauthorized(new { message = "Funcionario no autenticado" });
 
+        // Valida que se haya enviado un identificador de dispositivo
         if (string.IsNullOrWhiteSpace(dto.DeviceId))
             return BadRequest(new { message = "Dispositivo no informado" });
 
@@ -41,9 +43,9 @@ public class DispositivoController : ControllerBase
         });
     }
 
+    // Obtiene todos los dispositivos registrados
     [HttpGet]
     [Authorize(Roles = "admin")]
-    // GET /api/Dispositivos
     public async Task<ActionResult<IReadOnlyCollection<DispositivoDto>>> GetDispositivos()
     {
         var dispositivos = await _dispositivoRepository.GetDispositivos();
@@ -51,6 +53,7 @@ public class DispositivoController : ControllerBase
         return Ok(dispositivos);
     }
 
+    // Registra un nuevo dispositivo
     [HttpPost("registro")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<DispositivoDto>> CreateAsync([FromBody] CrearDispositivoDto dispositivo)
@@ -65,6 +68,7 @@ public class DispositivoController : ControllerBase
         return dispositivoCreado;
     }
 
+    // Actualiza los datos y asignaciones de un dispositivo
     [HttpPut("{numeroDispositivo}")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<DispositivoDto>> UpdateAsync(
@@ -84,6 +88,7 @@ public class DispositivoController : ControllerBase
         return Ok(dispositivoActualizado);
     }
 
+    // Elimina un dispositivo y sus asignaciones
     [HttpDelete("{numeroDispositivo}")]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> DeleteAsync(string numeroDispositivo)

@@ -18,18 +18,19 @@ public class SectoresController : ControllerBase
     {
         _sectorRepository = sectorRepository;
     }
+
+    // Obtiene los sectores pertenecientes a un estadio
     [HttpGet("{id:int}")]
     [Authorize (Roles = "admin,usuario")]
-    // GET /api/sectores/{id_estadio}
     public async Task<ActionResult<IReadOnlyCollection<SectorDto>>> GetAll(int id)
     {
         var sectores = await _sectorRepository.GetAllAsync(id);
         return Ok(sectores);
     }
 
+    // Registra un sector dentro de un estadio del país sede del administrador
     [HttpPost("registro")]
     [Authorize(Roles = "admin")]
-    // POST /api/sectores/registro
     public async Task<ActionResult<SectorDto>> CreateAsync([FromBody] CrearSectorDto sector)
     {
         var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
@@ -41,6 +42,7 @@ public class SectoresController : ControllerBase
 
         var sectorCreado = await _sectorRepository.CreateAsync(sector, paisSedeId);
 
+        // Puede fallar si el estadio no pertenece al país o ya tiene el máximo de sectores
         if (sectorCreado == null)
         {
             return Forbid();
@@ -49,9 +51,9 @@ public class SectoresController : ControllerBase
         return CreatedAtAction(nameof(GetAll), new { id = sectorCreado.Id }, sectorCreado);
     }
 
+    // Actualiza los datos de un sector
     [HttpPut("{id:int}")]
     [Authorize(Roles = "admin")]
-    // PUT /api/sectores/{id}
     public async Task<ActionResult<SectorDto>> UpdateAsync(int id, [FromBody] ActualizarSectorDto sector)
     {
         var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
@@ -61,6 +63,7 @@ public class SectoresController : ControllerBase
             return Forbid();
         }
 
+        // El repositorio valida que el sector pertenezca a un estadio de su país
         var sectorActualizado = await _sectorRepository.UpdateAsync(id, sector, paisSedeId);
 
         if (sectorActualizado == null)
@@ -71,9 +74,9 @@ public class SectoresController : ControllerBase
         return Ok(sectorActualizado);
     }
 
+    // Elimina un sector de un estadio
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "admin")]
-    // Delete /api/sectores/{id}
     public async Task<IActionResult> DeleteAsync(int id)
     {
         var paisSedeClaim = User.FindFirst("pais_sede")?.Value;

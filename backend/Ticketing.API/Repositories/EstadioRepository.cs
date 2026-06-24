@@ -47,11 +47,13 @@ public class EstadioRepository : IEstadioRepository
         return estadios;
     }
 
+    // Crea un estadio asociado al país sede indicado
     public async Task<EstadioDto> CreateAsync(CrearEstadioDto estadio, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Inserta el estadio y devuelve sus datos generados
         await using var command = new NpgsqlCommand(
             @"INSERT INTO estadio(nombre, ciudad, fk_pais_sede)
             VALUES (@nombre, @ciudad, @paisSedeId)
@@ -77,11 +79,13 @@ public class EstadioRepository : IEstadioRepository
         };
     }
 
+     // Actualiza un estadio solo si pertenece al país sede indicado
     public async Task<EstadioDto?> UpdateAsync(int id, ActualizarEstadioDto estadio, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // El filtro por país evita modificar estadios de otra sede
         await using var command = new NpgsqlCommand(
             @"UPDATE estadio
             SET nombre = @nuevoNombre,
@@ -111,6 +115,7 @@ public class EstadioRepository : IEstadioRepository
         };
     }
 
+    // Elimina un estadio únicamente si corresponde al país sede indicado
     public async Task<bool> DeleteAsync(int id, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -129,6 +134,7 @@ public class EstadioRepository : IEstadioRepository
         return affectedRows > 0;
     }
 
+    // Obtiene los estadios vinculados al país sede de un administrador
     public async Task<IReadOnlyCollection<EstadioDto>> GetEstadiosAdmin(int paisSedeId)
     {
         var estadios = new List<EstadioDto>();

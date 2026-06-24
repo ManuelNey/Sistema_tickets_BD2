@@ -13,6 +13,7 @@ public class TrabajaEnRepository : ITrabajaEnRepository
         _connectionFactory = connectionFactory;
     }
 
+    // Obtiene los sectores habilitados de un encuentro y sus funcionarios asignados
     public async Task<IReadOnlyCollection<TrabajaEnDto>> GetByEncuentroAsync(int encuentroId)
     {
         var asignaciones = new List<TrabajaEnDto>();
@@ -20,6 +21,7 @@ public class TrabajaEnRepository : ITrabajaEnRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // LEFT JOIN permite mostrar también sectores que todavía no tienen funcionario
         await using var command = new NpgsqlCommand(
             @"SELECT
                 te.funcionario_mail,
@@ -39,6 +41,7 @@ public class TrabajaEnRepository : ITrabajaEnRepository
 
         await using var reader = await command.ExecuteReaderAsync();
 
+        // Convierte cada fila obtenida a un DTO de asignación
         while (await reader.ReadAsync())
         {
             asignaciones.Add(new TrabajaEnDto
@@ -66,11 +69,13 @@ public class TrabajaEnRepository : ITrabajaEnRepository
         return asignaciones;
     }
 
+    // Crea una nueva relación entre un funcionario y una habilitación
     public async Task<bool> CreateAsync(CrearTrabajaEnDto asignacion)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // ON CONFLICT evita duplicar una asignación ya existente
         await using var command = new NpgsqlCommand(
             @"INSERT INTO trabaja_en (funcionario_mail, fk_habilita_id)
             VALUES (@funcionarioMail, @habilitaId)
@@ -84,6 +89,7 @@ public class TrabajaEnRepository : ITrabajaEnRepository
         return affectedRows > 0;
     }
 
+    // Elimina la relación de un funcionario con una habilitación específica
     public async Task<bool> DeleteAsync(string funcionarioMail, int habilitaId)
     {
         await using var connection = _connectionFactory.CreateConnection();

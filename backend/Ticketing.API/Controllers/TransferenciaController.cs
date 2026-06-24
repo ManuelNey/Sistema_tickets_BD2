@@ -19,10 +19,9 @@ public class TransferenciaController : ControllerBase
         _transferenciaRepository = transferenciaRepository;
     }
 
-
+    // Obtiene las transferencias enviadas por el usuario autenticado
     [HttpGet]
     [Authorize (Roles = "usuario")]
-
     public async Task<ActionResult<IReadOnlyCollection<TransferenciasEnviadasDto>>> GetAllAsync()
     {
         var mailEmisorClaim = User.FindFirst("mail")?.Value;
@@ -35,10 +34,10 @@ public class TransferenciaController : ControllerBase
         var transferencias = await _transferenciaRepository.GetAllAsync(mailEmisorClaim);
         return Ok(transferencias);
     }
-
+    
+    // Obtiene las transferencias recibidas por el usuario autenticado
     [HttpGet("recibidas")]
     [Authorize (Roles = "usuario")]
-
     public async Task<ActionResult<IReadOnlyCollection<TransferenciasRecibidasDto>>> GetAllRecibidas()
     {
         var mailReceptorClaim = User.FindFirst("mail")?.Value;
@@ -52,6 +51,7 @@ public class TransferenciaController : ControllerBase
         return Ok(transferencias);
     }
 
+    // Permite aceptar o rechazar una transferencia pendiente
     [HttpPut("{id:int}/resolver")]
     [Authorize(Roles = "usuario")]
     public async Task<ActionResult<ResolverTransferenciaDto>> ResolverTransferencia(
@@ -65,8 +65,8 @@ public class TransferenciaController : ControllerBase
             return Unauthorized();
         }
 
-        try
-        {
+        try{
+            // El repositorio valida que la transferencia pertenezca al receptor
             var transferenciaResuelta = await _transferenciaRepository.ResolverTransferencia(
                 id,
                 transferencia,
@@ -78,8 +78,8 @@ public class TransferenciaController : ControllerBase
 
             return Ok(transferenciaResuelta);
         }
-        catch (InvalidOperationException ex)
-        {
+        catch (InvalidOperationException ex){
+            // Devuelve conflicto cuando la transferencia no puede resolverse
             return Conflict(new { message = ex.Message });
         }
     }
