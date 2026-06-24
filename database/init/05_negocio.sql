@@ -10,27 +10,27 @@ INSERT INTO comision (porcentaje, fecha_inicio, fecha_fin) VALUES
 
 -- Compras en marzo 2026 → fk_comision=2 (7.50%, vigente 2026-01-01 / 2026-06-30).
 -- Compras 6, 9, 15, 18 en estado 'pendiente' → sin entradas generadas.
-INSERT INTO compra (fecha, hora, estado, monto_total, fk_comision, fk_usuario_mail) VALUES
-('2026-03-01 10:15:00', '10:15:00', 'pagada',   500.00,  2, 'usuario1@mail.com'),
-('2026-03-02 14:30:00', '14:30:00', 'pagada',   1200.00, 2, 'usuario2@mail.com'),
-('2026-03-03 18:45:00', '18:45:00', 'pagada',   800.00,  2, 'usuario3@mail.com'),
-('2026-03-04 09:20:00', '09:20:00', 'pagada',   950.00,  2, 'usuario4@mail.com'),
-('2026-03-05 16:10:00', '16:10:00', 'pagada',   1500.00, 2, 'usuario5@mail.com'),
-('2026-03-06 11:05:00', '11:05:00', 'pendiente',650.00,  2, 'usuario6@mail.com'),
-('2026-03-07 13:40:00', '13:40:00', 'pagada',   2100.00, 2, 'usuario7@mail.com'),
-('2026-03-08 17:25:00', '17:25:00', 'pagada',   1800.00, 2, 'usuario8@mail.com'),
-('2026-03-09 19:15:00', '19:15:00', 'pendiente',700.00,  2, 'usuario9@mail.com'),
-('2026-03-10 15:50:00', '15:50:00', 'pagada',   2400.00, 2, 'usuario10@mail.com'),
-('2026-03-11 10:00:00', '10:00:00', 'pagada',   1100.00, 2, 'usuario1@mail.com'),
-('2026-03-12 12:30:00', '12:30:00', 'pagada',   850.00,  2, 'usuario2@mail.com'),
-('2026-03-13 14:45:00', '14:45:00', 'pagada',   3200.00, 2, 'usuario3@mail.com'),
-('2026-03-14 18:10:00', '18:10:00', 'pagada',   1450.00, 2, 'usuario4@mail.com'),
-('2026-03-15 20:20:00', '20:20:00', 'pendiente',900.00,  2, 'usuario5@mail.com'),
-('2026-03-16 09:35:00', '09:35:00', 'pagada',   1750.00, 2, 'usuario6@mail.com'),
-('2026-03-17 11:50:00', '11:50:00', 'pagada',   2600.00, 2, 'usuario7@mail.com'),
-('2026-03-18 16:15:00', '16:15:00', 'pendiente',1000.00, 2, 'usuario8@mail.com'),
-('2026-03-19 18:40:00', '18:40:00', 'pagada',   2800.00, 2, 'usuario9@mail.com'),
-('2026-03-20 21:00:00', '21:00:00', 'pagada',   3500.00, 2, 'usuario10@mail.com');
+INSERT INTO compra (fecha, estado, monto_total, fk_comision, fk_usuario_mail) VALUES
+('2026-03-01 10:15:00', 'pagada',   500.00,  2, 'usuario1@mail.com'),
+('2026-03-02 14:30:00', 'pagada',   1200.00, 2, 'usuario2@mail.com'),
+('2026-03-03 18:45:00', 'pagada',   800.00,  2, 'usuario3@mail.com'),
+('2026-03-04 09:20:00', 'pagada',   950.00,  2, 'usuario4@mail.com'),
+('2026-03-05 16:10:00', 'pagada',   1500.00, 2, 'usuario5@mail.com'),
+('2026-03-06 11:05:00', 'pendiente',650.00,  2, 'usuario6@mail.com'),
+('2026-03-07 13:40:00', 'pagada',   2100.00, 2, 'usuario7@mail.com'),
+('2026-03-08 17:25:00', 'pagada',   1800.00, 2, 'usuario8@mail.com'),
+('2026-03-09 19:15:00', 'pendiente',700.00,  2, 'usuario9@mail.com'),
+('2026-03-10 15:50:00', 'pagada',   2400.00, 2, 'usuario10@mail.com'),
+('2026-03-11 10:00:00', 'pagada',   1100.00, 2, 'usuario1@mail.com'),
+('2026-03-12 12:30:00', 'pagada',   850.00,  2, 'usuario2@mail.com'),
+('2026-03-13 14:45:00', 'pagada',   3200.00, 2, 'usuario3@mail.com'),
+('2026-03-14 18:10:00', 'pagada',   1450.00, 2, 'usuario4@mail.com'),
+('2026-03-15 20:20:00', 'pendiente',900.00,  2, 'usuario5@mail.com'),
+('2026-03-16 09:35:00', 'pagada',   1750.00, 2, 'usuario6@mail.com'),
+('2026-03-17 11:50:00', 'pagada',   2600.00, 2, 'usuario7@mail.com'),
+('2026-03-18 16:15:00', 'pendiente',1000.00, 2, 'usuario8@mail.com'),
+('2026-03-19 18:40:00', 'pagada',   2800.00, 2, 'usuario9@mail.com'),
+('2026-03-20 21:00:00', 'pagada',   3500.00, 2, 'usuario10@mail.com');
 
 -- Entradas generadas para compras pagadas (IDs de habilita 1-20 segun orden de insercion en 04_operacion.sql).
 -- Van aca, DESPUES de las compras, por la FK entrada.fk_compra_id -> compra.id_compra.

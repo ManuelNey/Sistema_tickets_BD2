@@ -18,6 +18,8 @@ public class EncuentrosController : ControllerBase
         _encuentroRepository = encuentroRepository;
     }
 
+    // Devuelve los sectores habilitados para un encuentro específico.
+    // Incluye información como precio y cupos disponibles.
     [HttpGet("{idEncuentro:int}/sectores")]
     [Authorize(Roles = "admin,usuario")]
     // GET /api/encuentros/{idEncuentro}/sectores
@@ -28,6 +30,7 @@ public class EncuentrosController : ControllerBase
         return Ok(sectores);
     }
 
+     // Devuelve todos los encuentros registrados en el sistema.
     [HttpGet]
     // GET /api/encuentros
     public async Task<ActionResult<IReadOnlyCollection<EncuentroDto>>> GetAllEncuentros()
@@ -36,37 +39,56 @@ public class EncuentrosController : ControllerBase
         return Ok(encuentros);
     }
 
+    // Crea un nuevo encuentro.
+    // Solo puede ser ejecutado por administradores.
     [HttpPost("registro")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<EncuentroDto>> CreateAsync([FromBody] CrearEncuentroDto encuentro)
     {
+        // Se obtiene el mail del administrador desde el token.
         var mailAdmin = User.FindFirst("mail")?.Value;
+        // Se obtiene el país sede del administrador desde el token.
         var paisSedeClaim = User.FindFirst("pais_sede")?.Value;
 
+        // Si no hay mail en el token, no se permite crear el encuentro.
         if (string.IsNullOrWhiteSpace(mailAdmin))
         {
             return Forbid();
         }
 
+        // Si el país sede no es válido, no se permite la operación.
         if (!int.TryParse(paisSedeClaim, out var paisSedeId))
         {
             return Forbid();
         }
 
-        var encuentroCreado = await _encuentroRepository.CreateAsync(encuentro, mailAdmin, paisSedeId);
+        try
+        {   
+            // Se delega la creación del encuentro al repositorio.
+            var encuentroCreado = await _encuentroRepository.CreateAsync(encuentro, mailAdmin, paisSedeId);
 
-        if (encuentroCreado == null)
-        {
-            return Forbid();
+             // Si el repositorio devuelve null, significa que el admin no tiene permiso
+            // para crear el encuentro en ese estadio.
+            if (encuentroCreado == null)
+            {
+                return Forbid();
+            }
+
+            return CreatedAtAction(
+                nameof(GetAllEncuentros),
+                new { id = encuentroCreado.Id },
+                encuentroCreado
+            );
         }
-
-        return CreatedAtAction(
-            nameof(GetAllEncuentros),
-            new { id = encuentroCreado.Id },
-            encuentroCreado
-        );
+        catch (InvalidOperationException ex)
+        {
+            // Errores de validación del negocio, como conflictos de horario.
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
+    // Modifica un encuentro existente.
+    // Solo los administradores pueden ejecutar esta acción.
     [HttpPut("{id:int}")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<EncuentroDto>> UpdateAsync(int id, [FromBody] ActualizarEncuentroDto encuentro)
@@ -85,9 +107,10 @@ public class EncuentrosController : ControllerBase
             return Forbid();
         }
 
-
+         // Se delega la modificación al repositorio.
         var encuentroActualizado = await _encuentroRepository.UpdateAsync(id, encuentro, paisSedeId, mailAdmin);
 
+        // Si no se pudo actualizar, se devuelve NotFound.
         if (encuentroActualizado == null)
         {
             return NotFound();
@@ -96,6 +119,7 @@ public class EncuentrosController : ControllerBase
         return Ok(encuentroActualizado);
     }
 
+    // Devuelve el detalle de un encuentro por su id.
     [HttpGet("{idEncuentro:int}")]
     // GET /api/encuentros/id
     public async Task<ActionResult<IReadOnlyCollection<EncuentroDetalleDto>>> GetEncuentroById(int idEncuentro)
