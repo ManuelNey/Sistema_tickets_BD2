@@ -30,7 +30,15 @@ public class TrabajaEnController : ControllerBase
     [Authorize(Roles = "admin")]
     public async Task<ActionResult> Create([FromBody] CrearTrabajaEnDto asignacion)
     {
-        var creada = await _trabajaEnRepository.CreateAsync(asignacion);
+        //Si el encentro no es del pais sede del admin, entonces no lo puede modificar
+        var paisSedeIdClaim = User.FindFirst("pais_sede")?.Value;
+
+        if (!int.TryParse(paisSedeIdClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var creada = await _trabajaEnRepository.CreateAsync(asignacion, paisSedeId);
 
         if (!creada)
         {
@@ -48,7 +56,15 @@ public class TrabajaEnController : ControllerBase
         [FromQuery] int habilitaId
     )
     {
-        var eliminado = await _trabajaEnRepository.DeleteAsync(funcionarioMail, habilitaId);
+        var paisSedeIdClaim = User.FindFirst("pais_sede")?.Value;
+
+        //Si el encuentro no es del pais sede del admin, no puede eliminar funcionarios de este
+        if (!int.TryParse(paisSedeIdClaim, out var paisSedeId))
+        {
+            return Forbid();
+        }
+
+        var eliminado = await _trabajaEnRepository.DeleteAsync(funcionarioMail, habilitaId, paisSedeId);
 
         if (!eliminado)
         {

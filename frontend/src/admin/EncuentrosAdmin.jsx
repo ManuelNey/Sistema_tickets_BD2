@@ -580,6 +580,7 @@ function EncuentrosAdmin({ user }) {
 
       {funcionariosEncuentro && (
         <FuncionariosModal
+          adminCountryId={adminCountryId}
           encuentro={funcionariosEncuentro}
           onClose={() => setFuncionariosEncuentro(null)}
         />
@@ -776,15 +777,19 @@ function FuncIconE() {
   )
 }
 
-function FuncionariosModal({ encuentro, onClose }) {
+function FuncionariosModal({ adminCountryId, encuentro, onClose }) {
   const [asignaciones, setAsignaciones] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [todos, setTodos] = useState([])
   const [saving, setSaving] = useState(false)
+  const [selectedFuncionarios, setSelectedFuncionarios] = useState({})
 
   const localName = encuentro.equipoLocalNombre ?? `Equipo #${encuentro.equipoLocal}`
   const visitName = encuentro.equipoVisitanteNombre ?? `Equipo #${encuentro.equipoVisitante}`
+  const canManageFuncionarios =
+    getEncounterCountryId(encuentro) === adminCountryId &&
+    ['programado', 'en_juego'].includes(encuentro.estado)
 
   // Carga asignaciones y lista de todos los funcionarios
   useEffect(() => {
@@ -841,6 +846,7 @@ function FuncionariosModal({ encuentro, onClose }) {
     } catch {
       setError('No se pudo asignar el funcionario')
     } finally {
+      setSelectedFuncionarios((current) => ({ ...current, [habilitaId]: '' }))
       setSaving(false)
     }
   }
@@ -901,30 +907,38 @@ function FuncionariosModal({ encuentro, onClose }) {
                         <li key={f.mail} className="func-row">
                           <span>{f.nombre} {f.apellido}</span>
                           <span className="func-mail">{f.mail}</span>
-                          <button
-                            className="func-btn-remove"
-                            type="button"
-                            disabled={saving}
-                            onClick={() => desasignar(sector.habilitaId, f.mail)}
-                          >
-                            Quitar
-                          </button>
+                          {canManageFuncionarios && (
+                            <button
+                              className="func-btn-remove"
+                              type="button"
+                              disabled={saving}
+                              onClick={() => desasignar(sector.habilitaId, f.mail)}
+                            >
+                              Quitar
+                            </button>
+                          )}
                         </li>
                       ))}
                     </ul>
                   )}
 
-                  {disponibles.length > 0 && (
+                  {canManageFuncionarios && disponibles.length > 0 && (
                     <div className="func-add-row">
                       <select
                         className="func-select"
-                        defaultValue=""
+                        value={selectedFuncionarios[sector.habilitaId] ?? ''}
                         disabled={saving}
-                        onChange={(e) => { if (e.target.value) asignar(sector.habilitaId, e.target.value) }}
+                        onChange={(e) => {
+                          const mail = e.target.value
+                          setSelectedFuncionarios((current) => ({ ...current, [sector.habilitaId]: mail }))
+                          if (mail) asignar(sector.habilitaId, mail)
+                        }}
                       >
                         <option value="" disabled>Agregar funcionario...</option>
                         {disponibles.map((f) => (
-                          <option key={f.mail} value={f.mail}>{f.nombre} {f.apellido}</option>
+                          <option key={f.mail} value={f.mail}>
+                            {f.nombre} {f.apellido} - {f.mail}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -1313,7 +1327,14 @@ function getVisibleEncuentros(encuentros, statusFilter) {
 }
 
 function canEditEncounter(encuentro, adminCountryId) {
-  return Number(encuentro.pais) === adminCountryId && encuentro.estado !== 'finalizado'
+  return getEncounterCountryId(encuentro) === adminCountryId && encuentro.estado !== 'finalizado'
+}
+
+function getEncounterCountryId(encuentro) {
+  const countryId = encuentro?.pais ?? encuentro?.paisId ?? encuentro?.pais_sede ?? encuentro?.Pais ?? encuentro?.PaisId
+  const parsedCountryId = Number(countryId)
+
+  return Number.isInteger(parsedCountryId) ? parsedCountryId : null
 }
 
 function canEditMainEventData(encuentro) {

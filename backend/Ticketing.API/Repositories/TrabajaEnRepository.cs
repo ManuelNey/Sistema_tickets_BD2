@@ -70,19 +70,30 @@ public class TrabajaEnRepository : ITrabajaEnRepository
     }
 
     // Crea una nueva relación entre un funcionario y una habilitación
-    public async Task<bool> CreateAsync(CrearTrabajaEnDto asignacion)
+    public async Task<bool> CreateAsync(CrearTrabajaEnDto asignacion, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
         // ON CONFLICT evita duplicar una asignación ya existente
+        //Además revisamos que para asignar un funcioario, el encuentro
+        //debe estar 'programado'
+        //Y si además el encuentro no es en un estadio del pais del admin
+        //entonces no lo puede modificar
         await using var command = new NpgsqlCommand(
             @"INSERT INTO trabaja_en (funcionario_mail, fk_habilita_id)
-            VALUES (@funcionarioMail, @habilitaId)
+            SELECT @funcionarioMail, h.id
+            FROM habilita h
+            JOIN encuentro e ON e.id_encuentro = h.fk_encuentro
+            JOIN estadio es ON es.id_estadio = e.fk_estadio
+            WHERE h.id = @habilitaId
+            AND es.fk_pais_sede = @paisSedeId
+            AND e.estado IN ('programado', 'en_juego')
             ON CONFLICT DO NOTHING;", connection);
 
         command.Parameters.AddWithValue("@funcionarioMail", asignacion.FuncionarioMail);
         command.Parameters.AddWithValue("@habilitaId", asignacion.HabilitaId);
+        command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
 
         var affectedRows = await command.ExecuteNonQueryAsync();
 
@@ -90,18 +101,28 @@ public class TrabajaEnRepository : ITrabajaEnRepository
     }
 
     // Elimina la relación de un funcionario con una habilitación específica
-    public async Task<bool> DeleteAsync(string funcionarioMail, int habilitaId)
+    public async Task<bool> DeleteAsync(string funcionarioMail, int habilitaId, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        //Si el encuentro no es en un estadio del pais del admin
+        //entonces no lo puede modificar
+        //y además el estado no es porgramado 
         await using var command = new NpgsqlCommand(
-            @"DELETE FROM trabaja_en
-            WHERE funcionario_mail = @funcionarioMail
-            AND fk_habilita_id = @habilitaId;", connection);
+            @"DELETE FROM trabaja_en te
+            USING habilita h
+            JOIN encuentro e ON e.id_encuentro = h.fk_encuentro
+            JOIN estadio es ON es.id_estadio = e.fk_estadio
+            WHERE te.fk_habilita_id = h.id
+            AND te.funcionario_mail = @funcionarioMail
+            AND te.fk_habilita_id = @habilitaId
+            AND es.fk_pais_sede = @paisSedeId
+            AND e.estado IN ('programado', 'en_juego');", connection);
 
         command.Parameters.AddWithValue("@funcionarioMail", funcionarioMail);
         command.Parameters.AddWithValue("@habilitaId", habilitaId);
+        command.Parameters.AddWithValue("@paisSedeId", paisSedeId);
 
         var affectedRows = await command.ExecuteNonQueryAsync();
 
