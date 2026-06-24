@@ -65,7 +65,7 @@ function MisEntradas({ onIrAEnviadas }) {
       <header className="buy-header">
         <div>
           <h1 id="dashboard-title">Mis Entradas</h1>
-          <p>Entradas que compraste · {grupos.length > 0 ? `${grupos.length} en total` : ''}</p>
+          <p>Entradas actualmente en tu posesión, agrupadas por encuentro y sector· {grupos.length > 0 ? `${grupos.length} en total` : ''}</p>
         </div>
       </header>
       <div className="filters-divider" />

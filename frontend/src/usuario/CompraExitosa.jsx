@@ -52,10 +52,6 @@ function CompraExitosa({ resumen, onIrAMisEntradas, onVolver }) {
           </div>
         </div>
 
-        <p className="exito-nota">
-          Se ha enviado un correo electronico de confirmacion con tus entradas en formato QR.
-          Presenta el codigo QR en la entrada del estadio.
-        </p>
 
         <div className="exito-actions">
           <button className="exito-home" type="button" onClick={handleIrAMisEntradas}>
