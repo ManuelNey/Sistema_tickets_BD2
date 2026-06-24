@@ -53,7 +53,7 @@ export async function fetchComisionVigente() {
   }
 }
 
-// La reserva expira 30 minutos despues de creada. Devuelve el timestamp (ms) de expiracion.
+// La reserva expira 15 minutos despues de creada. Devuelve el timestamp (ms) de expiracion.
 export function getExpiracion(fechaReserva) {
-  return new Date(fechaReserva).getTime() + 30 * 60 * 1000
+  return new Date(fechaReserva).getTime() + 15 * 60 * 1000
 }

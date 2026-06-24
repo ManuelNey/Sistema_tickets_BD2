@@ -51,6 +51,7 @@ public class EncuentroRepository : IEncuentroRepository
         return sectores;
     }
 
+     // Devuelve todos los encuentros registrados.
     public async Task<IReadOnlyCollection<EncuentroDto>> GetAllEncuentros()
         {
             await using var connection = _connectionFactory.CreateConnection();
@@ -91,20 +92,26 @@ public class EncuentroRepository : IEncuentroRepository
             
         }
 
+        // Crea un nuevo encuentro y habilita los sectores seleccionados.
+        // También valida reglas de negocio antes de insertar.
         public async Task<EncuentroDto?> CreateAsync(CrearEncuentroDto encuentro, string mailAdmin, int paisSedeId)
         {
+            // Valida que el equipo local y visitante no sean el mismo.
             if (encuentro.EquipoLocalId == encuentro.EquipoVisitanteId)
             {
-                return null;
+                throw new InvalidOperationException("El equipo local y el visitante no pueden ser el mismo.");
             }
             await using var connection = _connectionFactory.CreateConnection();
             await connection.OpenAsync();
 
+            // Se utiliza una transacción para asegurar que el encuentro y sus sectores
+            // se creen juntos. Si algo falla, no se guarda nada parcialmente.
             await using var transaction = await connection.BeginTransactionAsync();
 
             try
             {
-                // Valido que el admin cree encuentros solo en estadios de su pais.
+                // Valida que el estadio pertenezca al país sede del administrador.
+                // Si no pertenece, se devuelve null para que el controller responda Forbid.
                 await using var checkCommand = new NpgsqlCommand(
                     @"SELECT COUNT(*)
                     FROM estadio
@@ -141,8 +148,7 @@ public class EncuentroRepository : IEncuentroRepository
 
                 if (encuentrosEnRango > 0)
                 {
-                    await transaction.RollbackAsync();
-                    return null;
+                    throw new InvalidOperationException("Ya existe un encuentro en ese estadio dentro de un rango de 4 horas.");
                 }
 
                 // Valido que ninguno de los equipos/paises juegue otro encuentro dentro del rango de 4 horas.
@@ -168,8 +174,7 @@ public class EncuentroRepository : IEncuentroRepository
 
                 if (equiposEnRango > 0)
                 {
-                    await transaction.RollbackAsync();
-                    return null;
+                    throw new InvalidOperationException("Uno de los equipos ya tiene un encuentro dentro de un rango de 4 horas.");
                 }
 
                 // Si esta todo OK, creo el encuentro.
@@ -216,6 +221,7 @@ public class EncuentroRepository : IEncuentroRepository
 
                 await reader.DisposeAsync();
 
+                // Se recorren los sectores seleccionados por el administrador.
                 foreach (var sector in encuentro.Sectores)
                 {
                     // Valido que el sector pertenezca al estadio del encuentro.
@@ -234,8 +240,7 @@ public class EncuentroRepository : IEncuentroRepository
 
                     if (sectorCount == 0)
                     {
-                        await transaction.RollbackAsync();
-                        return null;
+                        throw new InvalidOperationException("Uno de los sectores seleccionados no pertenece al estadio del encuentro.");
                     }
 
                     await using var cmdSector = new NpgsqlCommand(
@@ -259,23 +264,26 @@ public class EncuentroRepository : IEncuentroRepository
 
                     await cmdSector.ExecuteNonQueryAsync();
                 }
-
+                // Si todo salió bien, confirma la transacción.
                 await transaction.CommitAsync();
 
                 return encuentroCreado;
             }
             catch
             {
+                // Si ocurre cualquier error, revierte los cambios realizados.
                 await transaction.RollbackAsync();
                 throw;
             }
         }
 
+    // Actualiza los datos o el estado de un encuentro existente.
     public async Task<EncuentroDto?> UpdateAsync(int id, ActualizarEncuentroDto encuentro, int paisSedeId, string mailAdmin)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Se obtiene el estado actual del encuentro
         await using var estadoCommand = new NpgsqlCommand(
             @"SELECT estado
             FROM encuentro
@@ -314,6 +322,7 @@ public class EncuentroRepository : IEncuentroRepository
             return null;
         }
 
+        // Si el encuentro está en juego, solo se permite pasarlo a finalizado.
         if (estadoActual == "en_juego")
         {
             await using var command = new NpgsqlCommand(
@@ -349,7 +358,7 @@ public class EncuentroRepository : IEncuentroRepository
 
         try
         {
-            //Si el pási del admin co coincide con el pais del estadio, entonces no se modifica
+            //Si el pási del admin no coincide con el pais del estadio, entonces no se modifica
             await using var command = new NpgsqlCommand(
                 @"UPDATE encuentro e
                 SET
@@ -485,6 +494,7 @@ public class EncuentroRepository : IEncuentroRepository
         
     }
 
+    // Devuelve el detalle completo de un encuentro por id.
     public async Task<EncuentroDetalleDto> GetEncuentroById(int idEncuentro)
     {
         await using var connection = _connectionFactory.CreateConnection();

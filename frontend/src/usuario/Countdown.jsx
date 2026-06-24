@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
 // Muestra el tiempo restante hasta que expire la reserva.
-// Cuando llega a 0 dispara onExpire una sola vez.
-function Countdown({ expiraMs, onExpire }) {
+// Es solo informativo: la cancelacion real la maneja el backend.
+function Countdown({ expiraMs }) {
   const [restanteMs, setRestanteMs] = useState(() => Math.max(0, expiraMs - Date.now()))
 
   useEffect(() => {
@@ -11,11 +11,10 @@ function Countdown({ expiraMs, onExpire }) {
       setRestanteMs(ms)
       if (ms <= 0) {
         clearInterval(id)
-        onExpire?.()
       }
     }, 1000)
     return () => clearInterval(id)
-  }, [expiraMs, onExpire])
+  }, [expiraMs])
 
   const totalSeg = Math.floor(restanteMs / 1000)
   const mm = String(Math.floor(totalSeg / 60)).padStart(2, '0')

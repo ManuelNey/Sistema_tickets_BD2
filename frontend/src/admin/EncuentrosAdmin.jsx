@@ -57,6 +57,38 @@ async function loadEncounterDetail(encounterId) {
   }
 }
 
+async function getResponseErrorMessage(response, fallbackMessage) {
+  let detail
+
+  try {
+    const contentType = response.headers.get('content-type') ?? ''
+
+    if (contentType.includes('application/json')) {
+      const data = await response.json()
+      detail = data?.message ?? data?.title ?? data?.detail ?? data?.error ?? ''
+    } else {
+      detail = await response.text()
+    }
+  } catch {
+    detail = ''
+  }
+
+  detail = String(detail).trim()
+
+  if (detail) {
+    return detail
+  }
+
+  if (response.status === 401 || response.status === 403) {
+    return 'No tenes permiso para crear este encuentro o el estadio no pertenece a tu pais sede.'
+  }
+
+  if (response.status === 400 || response.status === 409) {
+    return 'No se pudo crear el encuentro porque hay datos invalidos o existe un conflicto de horario.'
+  }
+
+  return `${fallbackMessage} (error ${response.status})`
+}
 function EncuentrosAdmin({ user }) {
   const [encuentros, setEncuentros] = useState([])
   const [encuentrosError, setEncuentrosError] = useState('')
@@ -326,13 +358,14 @@ function EncuentrosAdmin({ user }) {
       })
 
       if (!response.ok) {
-        throw new Error('Create event failed')
+        const message = await getResponseErrorMessage(response, 'No se pudo crear el encuentro')
+        throw new Error(message)
       }
 
       await loadEncuentros()
       closeCreateEvent()
-    } catch {
-      setEventFormError('No se pudo crear el encuentro')
+    } catch (error) {
+      setEventFormError(error.message || 'No se pudo crear el encuentro')
     } finally {
       setEventSaving(false)
     }

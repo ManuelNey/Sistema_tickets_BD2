@@ -1,10 +1,8 @@
-import { useState } from 'react'
 import Countdown from './Countdown'
 import { formatDate, formatPrice, formatTime, getExpiracion } from './format'
 
-// Pantalla "Reserva Confirmada": resumen + cuenta regresiva de 30 min para pagar.
+// Pantalla "Reserva Confirmada": resumen + cuenta regresiva informativa para pagar.
 function ReservaConfirmada({ pedido, onPagar, onPagarMasTarde }) {
-  const [expirada, setExpirada] = useState(false)
   const total = pedido.montoTotal
   const expiraMs = getExpiracion(pedido.fechaReserva)
 
@@ -15,10 +13,10 @@ function ReservaConfirmada({ pedido, onPagar, onPagarMasTarde }) {
       </div>
 
       <h1>¡Reserva confirmada!</h1>
-      <p className="confirmada-sub">Tenés 30 minutos para pagar o la reserva se cancela.</p>
+      <p className="confirmada-sub">Tenes 15 minutos para pagar antes de que el sistema cancele la reserva.</p>
 
       
-      <Countdown expiraMs={expiraMs} onExpire={() => setExpirada(true)} />
+      <Countdown expiraMs={expiraMs} />
 
       <article className="resumen-card" style={{ textAlign: 'left', marginTop: '1.5rem' }}>
         <h3>
@@ -63,9 +61,9 @@ function ReservaConfirmada({ pedido, onPagar, onPagarMasTarde }) {
       <p className="confirmada-codigo">Reserva: {pedido.codigoReserva}</p>
 
       <div className="confirmada-actions">
-        <button className="btn-primary" type="button" onClick={() => onPagar(pedido)} disabled={expirada}>
+        <button className="btn-primary" type="button" onClick={() => onPagar(pedido)}>
           <CardIcon />
-          {expirada ? 'Reserva expirada' : 'Pagar ahora'}
+          Pagar ahora
         </button>
         <button className="btn-secondary" type="button" onClick={onPagarMasTarde}>
           <ClockIcon />
