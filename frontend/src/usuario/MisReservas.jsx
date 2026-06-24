@@ -173,7 +173,6 @@ function MisReservas({ onIrAMisEntradas }) {
 function ReservaCard({ reserva, onPagar, onCancelar }) {
   const [expirada, setExpirada] = useState(false)
   const esPendiente = reserva.estado === 'pendiente'
-  const esPagada = reserva.estado === 'pagada'
   const expiraMs = getExpiracion(reserva.fechaReserva)
 
   const statusMap = {
@@ -253,12 +252,6 @@ function ReservaCard({ reserva, onPagar, onCancelar }) {
               <>
                 <button className="reserva-btn-secondary" type="button" onClick={onCancelar}>Cancelar</button>
                 <button className="reserva-btn-primary" type="button" onClick={onPagar}>Pagar ahora</button>
-              </>
-            )}
-            {esPagada && (
-              <>
-                <button className="reserva-btn-secondary" type="button">Ver detalle</button>
-                <button className="reserva-btn-primary" type="button">Ver QR</button>
               </>
             )}
           </div>

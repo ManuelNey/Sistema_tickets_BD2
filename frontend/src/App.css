@@ -283,10 +283,14 @@
   transition: background 150ms ease, color 150ms ease;
 }
 
-.sidebar-tab:hover,
-.logout-button:hover {
+.sidebar-tab:hover {
   background: #272727;
   color: #e9e9ee;
+}
+
+.logout-button:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
 }
 
 .sidebar-tab.is-active {
@@ -306,12 +310,7 @@
 }
 
 .logout-button {
-  width: calc(100% - 16px);
-  min-height: 42px;
   margin: auto 8px 14px;
-  border-radius: 8px;
-  background: #303030;
-  color: #ffffff;
 }
 
 .dashboard-content {

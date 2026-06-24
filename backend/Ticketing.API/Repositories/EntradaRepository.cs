@@ -158,6 +158,7 @@ public class EntradaRepository : IEntradaRepository
             JOIN sector   s   ON h.fk_sector            = s.id_sector
             WHERE e.fk_usuario_mail = @mail
               AND e.estado IN ('activa', 'transferida')
+              AND en.estado IN ('programado', 'en_juego')
             GROUP BY h.id, el.pais, ev.pais, en.fecha, es.nombre, es.ciudad, s.nombre
             ORDER BY en.fecha;", connection);
         cmd.Parameters.AddWithValue("@mail", mail);

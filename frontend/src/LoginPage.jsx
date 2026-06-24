@@ -39,6 +39,12 @@ function LoginPage({ onRegister }) {
         throw new Error(data?.message || 'Login failed')
       }
 
+      const usuario = data?.usuario || data?.Usuario || data
+      if (usuario?.rol === 'funcionario') {
+        setError('Los funcionarios deben iniciar sesión desde la app móvil.')
+        return
+      }
+
       login(data)
     } catch {
       setError('No se pudo iniciar sesión')

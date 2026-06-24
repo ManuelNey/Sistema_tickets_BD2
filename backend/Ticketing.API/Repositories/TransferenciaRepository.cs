@@ -136,6 +136,28 @@ public class TransferenciaRepository : ITransferenciaRepository
     await using var connection = _connectionFactory.CreateConnection();
     await connection.OpenAsync();
 
+    // Verificamos que la transferencia existe, es del receptor y está pendiente,
+    // y de paso obtenemos el estado del encuentro para bloquear partidos ya terminados.
+    await using var cmdCheck = new NpgsqlCommand(@"
+        SELECT en.estado
+        FROM transferencia t
+        JOIN entrada    e  ON t.fk_entrada_id   = e.id_entrada
+        JOIN habilita   h  ON e.fk_habilita_id  = h.id
+        JOIN encuentro  en ON h.fk_encuentro    = en.id_encuentro
+        WHERE t.id_transferencia          = @idTransferencia
+          AND t.fk_usuario_mail_receptor  = @mailReceptor
+          AND t.estado                    = 'pendiente';", connection);
+    cmdCheck.Parameters.AddWithValue("@idTransferencia", id);
+    cmdCheck.Parameters.AddWithValue("@mailReceptor", mailReceptor);
+
+    await using (var checkReader = await cmdCheck.ExecuteReaderAsync())
+    {
+        if (!await checkReader.ReadAsync()) return null;
+        var estadoEncuentro = checkReader.GetString(0);
+        if (estadoEncuentro is "finalizado" or "cancelado")
+            throw new InvalidOperationException("El partido ya finalizó o fue cancelado");
+    }
+
     await using var command = new NpgsqlCommand(
         @"UPDATE transferencia
         SET estado = @nuevoEstado

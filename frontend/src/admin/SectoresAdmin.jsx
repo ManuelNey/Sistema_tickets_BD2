@@ -162,6 +162,7 @@ function SectoresAdmin({ onBack, stadium, user }) {
   const formattedCapacity = new Intl.NumberFormat('es-UY').format(totalCapacity)
   const canManageSectors = Number(stadium.paisSedeId) === getAdminCountryId(user)
   const countryName = getStadiumCountryName(stadium)
+  const atSectorLimit = sectors.length >= 4
 
   const countryFlag = getSectorCountryFlag(stadium.paisSedeId)
 
@@ -173,10 +174,23 @@ function SectoresAdmin({ onBack, stadium, user }) {
           Volver a estadios
         </button>
         {canManageSectors && (
-          <button className="ac-btn-primary" type="button" onClick={openCreateSector}>
-            <PlusIconS />
-            Crear Sector
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <button
+              className="ac-btn-primary"
+              type="button"
+              onClick={openCreateSector}
+              disabled={atSectorLimit}
+              title={atSectorLimit ? 'Máximo de 4 sectores por estadio alcanzado' : undefined}
+            >
+              <PlusIconS />
+              Crear Sector
+            </button>
+            {atSectorLimit && (
+              <span style={{ fontSize: 11, color: '#EF4444' }}>
+                Límite de 4 sectores por estadio alcanzado
+              </span>
+            )}
+          </div>
         )}
       </div>
 
