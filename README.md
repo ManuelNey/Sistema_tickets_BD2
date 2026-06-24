@@ -170,7 +170,10 @@ Esto funciona porque `Program.cs` configura `RoleClaimType = "rol"` en los pará
 | `admin1@mail.com` | `Password123` | admin | Canadá (1) |
 | `admin2@mail.com` | `Password123` | admin | México (2) |
 | `admin3@mail.com` | `Password123` | admin | USA (3) |
-| `funcionario1@mail.com` | `Password123` | funcionario | — |
+| `func1@mail.com` | `Password123` | funcionario | — |
+| `func2@mail.com` | `Password123` | funcionario | — |
+| `func3@mail.com` | `Password123` | funcionario | — |
+
 
 ---
 
@@ -269,7 +272,11 @@ Sistema_tickets_BD2/
 │       ├── 03_usuarios.sql
 │       ├── 04_operacion.sql
 │       └── 05_negocio.sql
+│       └── 06_triggers.sql
+│       └── 07_grants.sql
+│       └── 08_trabaja_en.sql
 ├── frontend/                  → React + Vite 
+├── mobile/                    → React Native + Vite 
 ├── scripts/                   → bootstrap, reset-db, reset-backend, reset-all (.ps1 y .sh)
 └── docker-compose.yml
 ```
@@ -323,4 +330,3 @@ public class EjemploRepository : IEjemploRepository {
 ```
 
 ---
-"# Presentacion_ADA_TFU5" 
