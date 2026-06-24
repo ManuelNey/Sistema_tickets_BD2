@@ -65,6 +65,18 @@ function FuncionariosAdmin() {
   const submitForm = async (e) => {
     e.preventDefault()
     setFormError('')
+
+    if (!form.nombre.trim())          return setFormError('El nombre es requerido.')
+    if (!form.apellido.trim())        return setFormError('El apellido es requerido.')
+    if (!form.mail.trim())            return setFormError('El mail es requerido.')
+    if (!/\S+@\S+\.\S+/.test(form.mail)) return setFormError('El mail no es válido.')
+    if (!form.contrasena)             return setFormError('La contraseña es requerida.')
+    if (form.contrasena.length < 6)   return setFormError('La contraseña debe tener al menos 6 caracteres.')
+    if (!form.numeroDocumento.trim()) return setFormError('El número de documento es requerido.')
+    if (!form.localidad.trim())       return setFormError('La localidad es requerida.')
+    if (!form.calle.trim())           return setFormError('La calle es requerida.')
+    if (!form.numeroCasa.trim())      return setFormError('El número de casa es requerido.')
+
     setGuardando(true)
     try {
       const body = {
@@ -190,7 +202,7 @@ function FuncionariosAdmin() {
             </div>
 
             {/* Cuerpo modal */}
-            <form onSubmit={submitForm} style={{ overflowY: 'auto', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <form id="form-funcionario" onSubmit={submitForm} style={{ overflowY: 'auto', padding: '18px 22px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
               {/* Sección: Cuenta */}
               <Seccion icono={<IconUser />} titulo="Cuenta">
@@ -273,7 +285,7 @@ function FuncionariosAdmin() {
             <div style={{ padding: '12px 22px 18px', borderTop: '1px solid #F0EEF5', flex: 'none' }}>
               <button
                 type="submit"
-                form=""
+                form="form-funcionario"
                 onClick={submitForm}
                 disabled={guardando}
                 style={{ ...estilos.btnPrimario, width: '100%', justifyContent: 'center', padding: 13, fontSize: 14, opacity: guardando ? 0.7 : 1 }}

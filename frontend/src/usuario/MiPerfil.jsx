@@ -7,6 +7,7 @@ function MiPerfil({ user }) {
   const { updateUser } = useAuth()
 
   const [perfil, setPerfil] = useState(() => user || {})
+  const [perfilGuardado, setPerfilGuardado] = useState(() => user || {})
   const [editandoSeccion, setEditandoSeccion] = useState(null)
   const [telefonos, setTelefonos] = useState(() => user?.telefonos || [])
   const [nuevoTelefono, setNuevoTelefono] = useState('')
@@ -16,8 +17,8 @@ function MiPerfil({ user }) {
   const [mensajeExito, setMensajeExito] = useState('')
 
   const estaEditando = (s) => editandoSeccion === s
-  const nombreCompleto = `${perfil?.nombre || ''} ${perfil?.apellido || ''}`.trim()
-  const iniciales = `${perfil?.nombre?.[0] || ''}${perfil?.apellido?.[0] || ''}`.toUpperCase()
+  const nombreCompleto = `${perfilGuardado?.nombre || ''} ${perfilGuardado?.apellido || ''}`.trim()
+  const iniciales = `${perfilGuardado?.nombre?.[0] || ''}${perfilGuardado?.apellido?.[0] || ''}`.toUpperCase()
 
   const fechaNacimiento = perfil?.fechaNacimiento
     ? new Date(`${perfil.fechaNacimiento}T00:00:00`).toLocaleDateString('es-UY', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -56,8 +57,8 @@ function MiPerfil({ user }) {
   const eliminarTelefono = (tel) => setTelefonos((t) => t.filter((x) => x !== tel))
 
   const cancelarCambios = () => {
-    setPerfil(user || {})
-    setTelefonos(user?.telefonos || [])
+    setPerfil(perfilGuardado)
+    setTelefonos(perfilGuardado?.telefonos || [])
     setNuevoTelefono('')
     setPasswords({ contrasenaActual: '', nuevaContrasena: '', confirmarNuevaContrasena: '' })
     setError('')
@@ -113,6 +114,7 @@ function MiPerfil({ user }) {
 
       updateUser(actualizado)
       setPerfil(actualizado)
+      setPerfilGuardado(actualizado)
       setTelefonos(body.telefonos)
       setPasswords({ contrasenaActual: '', nuevaContrasena: '', confirmarNuevaContrasena: '' })
       setMensajeExito(quiereCambiarPass ? 'Perfil y contraseña actualizados.' : 'Cambios guardados correctamente.')
