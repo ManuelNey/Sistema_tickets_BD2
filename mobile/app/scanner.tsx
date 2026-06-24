@@ -6,7 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  View
+  View,
 } from 'react-native'
 
 export default function QrScannerScreen() {
@@ -16,6 +16,7 @@ export default function QrScannerScreen() {
   const [loading, setLoading] = useState(false)
   const [resultMessage, setResultMessage] = useState<string | null>(null)
   const [isSuccess, setIsSuccess] = useState<boolean | null>(null)
+
   const API_URL = 'http://192.168.1.23:8080'
 
   if (!permission) return null
@@ -24,6 +25,7 @@ export default function QrScannerScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.title}>Permiso de cámara</Text>
+
         <Text style={styles.subtitle}>
           Necesitamos acceder a la cámara para escanear entradas.
         </Text>
@@ -47,18 +49,20 @@ export default function QrScannerScreen() {
   const handleContinuar = async () => {
     try {
       setLoading(true)
+      setResultMessage(null)
+      setIsSuccess(null)
 
       const tokenLogin = await AsyncStorage.getItem('ticketmatch-token')
 
       if (!tokenLogin) {
         setIsSuccess(false)
-        setResultMessage('No hay sesión iniciada.')
+        setResultMessage('No hay sesión iniciada como funcionario.')
         return
       }
 
       if (!endpoint) {
         setIsSuccess(false)
-        setResultMessage('No hay QR escaneado.')
+        setResultMessage('No hay ningún código QR escaneado.')
         return
       }
 
@@ -70,12 +74,21 @@ export default function QrScannerScreen() {
         return
       }
 
-      const url = `${API_URL}${endpoint}&deviceId=${encodeURIComponent(deviceId)}`
+      // endpoint viene desde el QR:
+      // /api/Entradas/ScanQr?token=...
+      const separador = endpoint.includes('?') ? '&' : '?'
+
+      const url =
+        `${API_URL}${endpoint}` +
+        `${separador}deviceId=${encodeURIComponent(deviceId)}`
+
+      console.log('URL A CONSULTAR:', url)
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${tokenLogin}`,
+          Accept: 'application/json',
         },
       })
 
@@ -84,18 +97,78 @@ export default function QrScannerScreen() {
       console.log('STATUS:', response.status)
       console.log('RESPUESTA:', text)
 
+      let data: any = null
+
+      try {
+        data = text ? JSON.parse(text) : null
+      } catch {
+        console.log('La respuesta no vino como JSON.')
+      }
+
+      const mensajeBackend =
+        data?.message ||
+        data?.mensaje ||
+        'No se pudo verificar la entrada.'
+
       if (!response.ok) {
         setIsSuccess(false)
-        setResultMessage(`No se pudo verificar la entrada. Status ${response.status}`)
+
+        switch (response.status) {
+          case 400:
+            setResultMessage(mensajeBackend)
+            break
+
+          case 401:
+            setResultMessage(
+              'Tu sesión no es válida o no tenés permisos de funcionario.'
+            )
+            break
+
+          case 403:
+            setResultMessage(
+              mensajeBackend ||
+                'No estás autorizado a validar entradas de este sector.'
+            )
+            break
+
+          case 404:
+            setResultMessage('La entrada o el recurso solicitado no existe.')
+            break
+
+          case 500:
+            setResultMessage(
+              'Ocurrió un error interno en el servidor. Intentá nuevamente.'
+            )
+            break
+
+          default:
+            setResultMessage(
+              `${mensajeBackend} (Código ${response.status})`
+            )
+            break
+        }
+
         return
       }
 
       setIsSuccess(true)
-      setResultMessage('Entrada verificada correctamente.')
+      setResultMessage(
+        mensajeBackend || 'Entrada verificada correctamente.'
+      )
     } catch (error: any) {
       console.log('ERROR FETCH:', error)
+
       setIsSuccess(false)
-      setResultMessage(error.message || 'No se pudo conectar con el servidor.')
+
+      if (error.message?.includes('Network request failed')) {
+        setResultMessage(
+          'No se pudo conectar al servidor. Verificá la IP, que el backend esté levantado y que el celular esté en la misma red.'
+        )
+      } else {
+        setResultMessage(
+          error.message || 'No se pudo conectar con el servidor.'
+        )
+      }
     } finally {
       setLoading(false)
     }
@@ -106,6 +179,7 @@ export default function QrScannerScreen() {
     setEndpoint(null)
     setResultMessage(null)
     setIsSuccess(null)
+    setLoading(false)
   }
 
   return (
@@ -124,6 +198,7 @@ export default function QrScannerScreen() {
           <View style={styles.overlay}>
             <View style={styles.header}>
               <Text style={styles.titleLight}>Escanear entrada</Text>
+
               <Text style={styles.subtitleLight}>
                 Apuntá la cámara al código QR
               </Text>
@@ -166,11 +241,12 @@ export default function QrScannerScreen() {
           </Text>
 
           <Text style={styles.resultSubtitle}>
-            {resultMessage || 'Presioná continuar para verificar la entrada.'}
+            {resultMessage ||
+              'Presioná continuar para verificar la entrada.'}
           </Text>
 
           {endpoint && (
-            <Text numberOfLines={2} style={styles.qrText}>
+            <Text numberOfLines={3} style={styles.qrText}>
               {endpoint}
             </Text>
           )}
@@ -185,7 +261,7 @@ export default function QrScannerScreen() {
             disabled={loading || isSuccess === true}
           >
             {loading ? (
-              <ActivityIndicator />
+              <ActivityIndicator color="#ffffff" />
             ) : (
               <Text style={styles.primaryButtonText}>
                 {isSuccess === true ? 'Verificada' : 'Continuar'}
@@ -194,7 +270,9 @@ export default function QrScannerScreen() {
           </Pressable>
 
           <Pressable style={styles.secondaryButton} onPress={resetScanner}>
-            <Text style={styles.secondaryButtonText}>Escanear otro QR</Text>
+            <Text style={styles.secondaryButtonText}>
+              Escanear otro QR
+            </Text>
           </Pressable>
         </View>
       )}
@@ -207,12 +285,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0f172a',
   },
+
   center: {
     flex: 1,
     justifyContent: 'center',
     padding: 24,
     backgroundColor: '#0f172a',
   },
+
   overlay: {
     flex: 1,
     justifyContent: 'space-between',
@@ -221,10 +301,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.25)',
   },
+
   header: {
     alignItems: 'center',
     paddingHorizontal: 24,
   },
+
   title: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -232,33 +314,40 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
   },
+
   subtitle: {
     fontSize: 16,
     color: '#cbd5e1',
     textAlign: 'center',
     marginBottom: 24,
   },
+
   titleLight: {
     fontSize: 30,
     fontWeight: 'bold',
     color: '#ffffff',
   },
+
   subtitleLight: {
     marginTop: 8,
     fontSize: 16,
     color: '#e5e7eb',
+    textAlign: 'center',
   },
+
   scanBox: {
     width: 260,
     height: 260,
     position: 'relative',
   },
+
   corner: {
     position: 'absolute',
     width: 54,
     height: 54,
     borderColor: '#ffffff',
   },
+
   topLeft: {
     top: 0,
     left: 0,
@@ -266,6 +355,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 5,
     borderTopLeftRadius: 16,
   },
+
   topRight: {
     top: 0,
     right: 0,
@@ -273,6 +363,7 @@ const styles = StyleSheet.create({
     borderRightWidth: 5,
     borderTopRightRadius: 16,
   },
+
   bottomLeft: {
     bottom: 0,
     left: 0,
@@ -280,6 +371,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 5,
     borderBottomLeftRadius: 16,
   },
+
   bottomRight: {
     bottom: 0,
     right: 0,
@@ -287,22 +379,26 @@ const styles = StyleSheet.create({
     borderRightWidth: 5,
     borderBottomRightRadius: 16,
   },
+
   bottomInfo: {
     backgroundColor: 'rgba(15,23,42,0.75)',
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: 999,
   },
+
   infoText: {
     color: '#ffffff',
     fontSize: 14,
   },
+
   resultContainer: {
     flex: 1,
     justifyContent: 'center',
     padding: 24,
     alignItems: 'center',
   },
+
   statusCircle: {
     width: 96,
     height: 96,
@@ -312,17 +408,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 22,
   },
+
   statusSuccess: {
     backgroundColor: '#16a34a',
   },
+
   statusError: {
     backgroundColor: '#dc2626',
   },
+
   statusIcon: {
     color: '#ffffff',
     fontSize: 34,
     fontWeight: 'bold',
   },
+
   resultTitle: {
     fontSize: 28,
     fontWeight: 'bold',
@@ -330,18 +430,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
+
   resultSubtitle: {
     fontSize: 16,
     color: '#cbd5e1',
     textAlign: 'center',
     marginBottom: 18,
   },
+
   qrText: {
     color: '#94a3b8',
     fontSize: 12,
     textAlign: 'center',
     marginBottom: 24,
   },
+
   primaryButton: {
     width: '100%',
     backgroundColor: '#2563eb',
@@ -350,17 +453,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
+
   successButton: {
     backgroundColor: '#16a34a',
   },
+
   disabledButton: {
     opacity: 0.7,
   },
+
   primaryButtonText: {
     color: '#ffffff',
     fontSize: 16,
     fontWeight: 'bold',
   },
+
   secondaryButton: {
     width: '100%',
     paddingVertical: 15,
@@ -370,6 +477,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#475569',
   },
+
   secondaryButtonText: {
     color: '#e5e7eb',
     fontSize: 16,
