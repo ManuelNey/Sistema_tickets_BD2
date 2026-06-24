@@ -63,6 +63,70 @@ Los archivos en `database/init/` se ejecutan en orden numérico al crear el volu
 
 > El orden importa: schema primero, datos del mundial, luego usuarios (que son FK de operacion y negocio).
 
+## Aplicación móvil — React Native
+
+El proyecto incluye una aplicación móvil desarrollada con **React Native + Expo**, ubicada en la carpeta:
+
+```txt
+/mobile
+```
+
+La aplicación está destinada a los funcionarios encargados de validar entradas en puerta mediante el escaneo de códigos QR.
+
+> La aplicación móvil se ejecuta por separado de Docker Compose.
+
+### Requisitos
+
+Para ejecutar la aplicación móvil es necesario tener instalado:
+
+- Node.js
+- La aplicación **Expo Go** en el celular
+- El backend levantado en el puerto `8080`
+- El celular y la computadora conectados a la misma red Wi-Fi
+
+### Iniciar la aplicación móvil
+
+Desde una terminal ubicada en la carpeta raíz del proyecto, ejecutar:
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+Luego Expo mostrará un código QR en la terminal o en el navegador.
+
+1. Abrir la aplicación **Expo Go** en el celular.
+2. Escanear el código QR generado por Expo.
+3. La aplicación se abrirá en el dispositivo móvil.
+
+### Configuración de conexión con la API
+
+La aplicación móvil no puede utilizar `localhost` para conectarse al backend, porque desde el celular `localhost` representa al propio dispositivo.
+
+Por eso, se debe configurar la IP local de la computadora en los archivos **index.tsx** y **scanner.tsx**. Los cuales se encuentran en:
+```txt
+/mobile/app
+```
+
+```ts
+const API_URL = 'http://TU_IP_LOCAL:8080'
+```
+
+Ejemplo:
+
+```ts
+const API_URL = 'http://192.168.1.10:8080'
+```
+
+En Windows, se puede consultar la IP local ejecutando:
+
+```bash
+ipconfig
+```
+
+Se debe utilizar la dirección `IPv4` correspondiente a la red Wi-Fi activa.
+
 ---
 
 ## Autenticación y roles
