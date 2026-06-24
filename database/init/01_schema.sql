@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS usuario (
 
 CREATE TABLE IF NOT EXISTS funcionario (
   persona_mail VARCHAR(255) PRIMARY KEY REFERENCES persona(mail) ON DELETE CASCADE,
-  numero_legajo VARCHAR(100) NOT NULL UNIQUE
+  numero_legajo SERIAL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS administrador (

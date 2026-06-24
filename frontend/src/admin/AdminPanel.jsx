@@ -8,6 +8,7 @@ import DispositivosAdmin from './DispositivosAdmin'
 import EstadiosAdmin from './EstadiosAdmin'
 import SectoresAdmin from './SectoresAdmin'
 import ComisionAdmin from './ComisionAdmin'
+import FuncionariosAdmin from './FuncionariosAdmin'
 import Ticket from '../assets/ticket.png'
 import './AdminPanel.css'
 
@@ -17,6 +18,7 @@ const adminTabs = [
   { id: 'eventos', label: 'Encuentros', icon: 'calendar' },
   { id: 'dispositivos', label: 'Dispositivos', icon: 'device' },
   { id: 'comisiones', label: 'Comisiones', icon: 'percent' },
+  { id: 'funcionarios', label: 'Funcionarios', icon: 'profile' },
 ]
 
 function AdminPanel({ onLogout, user }) {
@@ -75,6 +77,8 @@ function AdminPanel({ onLogout, user }) {
           <DispositivosAdmin />
         ) : activeTab === 'comisiones' ? (
           <ComisionAdmin />
+        ) : activeTab === 'funcionarios' ? (
+          <FuncionariosAdmin />
         ) : activeTab === 'dashboard' ? (
           <DashboardAdmin />
         ) : (
