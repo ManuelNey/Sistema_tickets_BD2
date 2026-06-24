@@ -58,7 +58,7 @@ async function loadEncounterDetail(encounterId) {
 }
 
 async function getResponseErrorMessage(response, fallbackMessage) {
-  let detail = ''
+  let detail
 
   try {
     const contentType = response.headers.get('content-type') ?? ''
@@ -73,10 +73,10 @@ async function getResponseErrorMessage(response, fallbackMessage) {
     detail = ''
   }
 
-  const cleanDetail = String(detail).trim()
+  detail = String(detail).trim()
 
-  if (cleanDetail) {
-    return cleanDetail
+  if (detail) {
+    return detail
   }
 
   if (response.status === 401 || response.status === 403) {
