@@ -37,6 +37,7 @@ public class ComisionController : ControllerBase
         return Ok(comisiones);
     }
 
+    //Crea nuevas comisiones
     [HttpPost]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult> Create([FromBody] CrearComisionDto dto)

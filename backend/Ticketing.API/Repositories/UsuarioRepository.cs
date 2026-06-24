@@ -18,6 +18,7 @@ public class UsuarioRepository : IUsuarioRepository
         _passwordService = passwordService;
     }
 
+    // Busca un usuario a partir de su correo electrónico
     public async Task<UsuarioResponseDto?> GetByMailAsync(string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -213,15 +214,18 @@ public class UsuarioRepository : IUsuarioRepository
             return usuario;
     }
 
+    // Actualiza la información del perfil del usuario
     public async Task<bool> UpdateProfileAsync(string mail, ActualizarPerfilDto perfil)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Se utiliza una transacción porque se actualizan datos y teléfonos
         await using var tx = await connection.BeginTransactionAsync();
 
         try
         {
+            // Solo se genera un nuevo hash si el usuario cambió la contraseña
             var nuevaContrasenaHasheada = string.IsNullOrWhiteSpace(
                 perfil.NuevaContrasena
             )
@@ -231,6 +235,7 @@ public class UsuarioRepository : IUsuarioRepository
             using var updatePersonaCmd = connection.CreateCommand();
             updatePersonaCmd.Transaction = tx;
 
+            // Actualiza los datos personales del usuario
             updatePersonaCmd.CommandText = @"
                 UPDATE persona
                 SET
@@ -303,12 +308,14 @@ public class UsuarioRepository : IUsuarioRepository
 
             var filasActualizadas = await updatePersonaCmd.ExecuteNonQueryAsync();
 
+            // Si no se modificó ninguna fila, el usuario no existe
             if (filasActualizadas == 0)
             {
                 await tx.RollbackAsync();
                 return false;
             }
 
+            // Elimina los teléfonos anteriores para reemplazarlos por los nuevos
             using var deleteTelefonosCmd = connection.CreateCommand();
             deleteTelefonosCmd.Transaction = tx;
 
@@ -320,6 +327,7 @@ public class UsuarioRepository : IUsuarioRepository
 
             await deleteTelefonosCmd.ExecuteNonQueryAsync();
 
+            // Inserta nuevamente los teléfonos válidos enviados desde el perfil
             foreach (
                 var telefono in perfil.Telefonos
                     .Where(t => !string.IsNullOrWhiteSpace(t))
@@ -346,18 +354,18 @@ public class UsuarioRepository : IUsuarioRepository
 
                 await insertTelefonoCmd.ExecuteNonQueryAsync();
             }
-
             await tx.CommitAsync();
-
             return true;
         }
         catch
         {
+            // Revierte todos los cambios si ocurre algún error
             await tx.RollbackAsync();
             throw;
         }
     }
 
+        // Comprueba si la contraseña actual ingresada por el usuario es correcta
         public async Task<bool> ValidarContrasenaActualAsync(string mail, string contrasenaActual){
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
@@ -381,12 +389,14 @@ public class UsuarioRepository : IUsuarioRepository
         if (string.IsNullOrWhiteSpace(contrasenaHasheada))
             return false;
 
+        // Compara la contraseña ingresada con la almacenada de forma segura
         return _passwordService.VerifyPassword(
             contrasenaHasheada,
             contrasenaActual
         );
     }
 
+    // Obtiene todos los teléfonos registrados para una persona
     private static async Task<List<string>> GetTelefonosAsync(NpgsqlConnection connection, string mail)
     {
         var telefonos = new List<string>();

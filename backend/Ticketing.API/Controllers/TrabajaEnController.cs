@@ -16,6 +16,7 @@ public class TrabajaEnController : ControllerBase
         _trabajaEnRepository = trabajaEnRepository;
     }
 
+    // Obtiene las asignaciones de funcionarios para un encuentro
     [HttpGet("encuentro/{encuentroId:int}")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<IReadOnlyCollection<TrabajaEnDto>>> GetByEncuentro(int encuentroId)
@@ -24,6 +25,7 @@ public class TrabajaEnController : ControllerBase
         return Ok(asignaciones);
     }
 
+    // Asigna un funcionario a un sector habilitado para un encuentro
     [HttpPost]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult> Create([FromBody] CrearTrabajaEnDto asignacion)
@@ -38,6 +40,7 @@ public class TrabajaEnController : ControllerBase
         return Ok(new { message = "Funcionario asignado correctamente." });
     }
 
+    // Elimina una asignación existente de funcionario y sector
     [HttpDelete]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult> Delete(

@@ -19,17 +19,23 @@ public class EstadisticasController : ControllerBase
     {
         _estadisticasRepository = estadisticasRepository;
     }
+
+    // Obtiene los encuentros con mayor cantidad de entradas vendidas.
     [HttpGet("TopEncuentros")]
     [Authorize (Roles = "admin")]
     public async Task<ActionResult<IReadOnlyCollection<TopEncuentrosMasVendidosDto>>> GetAllAsync(
         [FromQuery] DateTime? desde,
         [FromQuery] DateTime? hasta)
     {
+        // Se ajustan las fechas recibidas para filtrar correctamente
         var fechas = NormalizarRango(desde, hasta);
+
+        // Se consultan los datos mediante el repositorio
         var encuentros = await _estadisticasRepository.GetAllAsync(fechas.Desde, fechas.Hasta);
         return Ok(encuentros);
     }
 
+    // Obtiene los usuarios que compraron más entradas
     [HttpGet("TopUsuarios")]
     [Authorize (Roles = "admin")]
     public async Task<ActionResult<IReadOnlyCollection<TopUsuariosMasEntradasCompradasDto>>> GetAllUsers(
@@ -41,6 +47,7 @@ public class EstadisticasController : ControllerBase
         return Ok(usuarios);
     }
 
+    // Obtiene el porcentaje de entradas canceladas dentro de un período
     [HttpGet("Canceladas")]
     [Authorize (Roles = "admin")]
     public async Task<ActionResult<PorcentajeCanceladasDto>> GetPorcentajeCanceladas(
@@ -51,6 +58,8 @@ public class EstadisticasController : ControllerBase
         var porcentaje = await _estadisticasRepository.GetPorcentajeCanceladas(fechas.Desde, fechas.Hasta);
         return Ok(porcentaje);
     }
+
+    // Obtiene la cantidad de entradas vendidas por estadio
     [HttpGet("EntradasPorEstadio")]
     [Authorize (Roles = "admin")]
     public async Task<ActionResult<IReadOnlyCollection<EstadioEntradasDto>>> GetEstadiosEntradas(
@@ -62,6 +71,7 @@ public class EstadisticasController : ControllerBase
         return Ok(estadios);
     }
 
+    // Obtiene los usuarios que realizaron más transferencias de entradas
     [HttpGet("UsuariosTransferencias")]
     [Authorize (Roles = "admin")]
     public async Task<ActionResult<IReadOnlyCollection<TopUsuariosTransferenciaDto>>> GetUsuariosTransferencias(
@@ -73,6 +83,7 @@ public class EstadisticasController : ControllerBase
         return Ok(usuarios);
     }
 
+    // Método auxiliar para preparar el rango de fechas usado en las consultas
     private static (DateTime? Desde, DateTime? Hasta) NormalizarRango(DateTime? desde, DateTime? hasta)
     {
         return (desde?.Date, hasta?.Date.AddDays(1));

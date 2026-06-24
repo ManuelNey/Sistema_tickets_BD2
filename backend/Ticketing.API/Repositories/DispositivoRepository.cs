@@ -13,12 +13,14 @@ public class DispositivoRepository : IDispositivoRepository
     {
         _connectionFactory = connectionFactory;
     }
-
+    
+    // Verifica que un dispositivo esté habilitado y asignado al funcionario indicado
     public async Task<bool> CheckDeviceEnabled(string deviceId, string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Consulta la relación entre el dispositivo, su estado y el funcionario
         const string sql = @"
             SELECT COUNT(*)
             FROM dispositivo d
@@ -38,11 +40,13 @@ public class DispositivoRepository : IDispositivoRepository
         return result > 0;
     }
 
+    // Obtiene todos los dispositivos junto con sus funcionarios asignados
     public async Task<IReadOnlyCollection<DispositivoDto>> GetDispositivos()
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Se usa LEFT JOIN para mostrar también dispositivos sin funcionarios
         const string sql = @"
             SELECT 
                 d.numero_dispositivo,
@@ -56,6 +60,7 @@ public class DispositivoRepository : IDispositivoRepository
 
         await using var cmd = new NpgsqlCommand(sql, connection);
 
+        // Se agrupan los resultados porque un dispositivo puede tener varios funcionarios
         var dispositivosPorNumero = new Dictionary<string, DispositivoDto>();
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -64,6 +69,7 @@ public class DispositivoRepository : IDispositivoRepository
         {
             var numero = reader.GetString(reader.GetOrdinal("numero_dispositivo"));
 
+            // Crea el dispositivo una única vez dentro del diccionario
             if (!dispositivosPorNumero.ContainsKey(numero))
             {
                 dispositivosPorNumero[numero] = new DispositivoDto
@@ -75,6 +81,7 @@ public class DispositivoRepository : IDispositivoRepository
                 };
             }
 
+            // Agrega el funcionario si existe una asignación
             var funcionarioOrdinal = reader.GetOrdinal("funcionario_mail");
 
             if (!reader.IsDBNull(funcionarioOrdinal))
@@ -88,6 +95,7 @@ public class DispositivoRepository : IDispositivoRepository
         return dispositivosPorNumero.Values.ToList();
     }
 
+    // Crea un nuevo dispositivo inicialmente habilitado
     public async Task<DispositivoDto?> CreateAsync(CrearDispositivoDto dispositivo)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -117,6 +125,7 @@ public class DispositivoRepository : IDispositivoRepository
         };
     }
 
+    // Actualiza los datos del dispositivo y reemplaza sus funcionarios asignados
     public async Task<DispositivoDto?> UpdateAsync(string numeroDispositivo, ActualizarDispositivoDto dispositivo)
     {
     await using var connection = _connectionFactory.CreateConnection();
@@ -126,6 +135,7 @@ public class DispositivoRepository : IDispositivoRepository
 
     try
     {
+        // Se utiliza una transacción porque se modifican varias tablas
         await using var command = new NpgsqlCommand(
             @"UPDATE dispositivo
             SET estado = @nuevoEstado,
@@ -141,6 +151,7 @@ public class DispositivoRepository : IDispositivoRepository
 
         await using var reader = await command.ExecuteReaderAsync();
 
+        // Si no se encontró el dispositivo, no se realiza la actualización
         if (!await reader.ReadAsync())
         {
             await transaction.RollbackAsync();
@@ -180,6 +191,7 @@ public class DispositivoRepository : IDispositivoRepository
             }
         }
 
+        // Elimina las asignaciones anteriores del dispositivo
         await using var deleteFuncionariosCommand = new NpgsqlCommand(
             @"DELETE FROM trabaja_con
             WHERE numero_dispositivo = @numeroDispositivo;",
@@ -192,6 +204,7 @@ public class DispositivoRepository : IDispositivoRepository
 
         foreach (var funcionarioMail in dispositivo.Funcionarios)
         {
+            // Inserta las nuevas asignaciones de funcionarios
             await using var insertFuncionarioCommand = new NpgsqlCommand(
                 @"INSERT INTO trabaja_con(funcionario_mail, numero_dispositivo)
                 VALUES (@funcionarioMail, @numeroDispositivo);",
@@ -212,11 +225,13 @@ public class DispositivoRepository : IDispositivoRepository
     }
     catch
     {
+        // Revierte los cambios si ocurre un error durante el proceso
         await transaction.RollbackAsync();
         throw;
     }
 }
 
+    // Elimina un dispositivo y primero elimina sus relaciones con funcionarios
     public async Task<bool> DeleteAsync(string numeroDispositivo)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -226,6 +241,7 @@ public class DispositivoRepository : IDispositivoRepository
 
         try
         {
+            // Elimina las asignaciones existentes
             await using var deleteFuncionariosCommand = new NpgsqlCommand(
                 @"DELETE FROM trabaja_con
                 WHERE numero_dispositivo = @numeroDispositivo;",
@@ -235,7 +251,8 @@ public class DispositivoRepository : IDispositivoRepository
             deleteFuncionariosCommand.Parameters.AddWithValue("@numeroDispositivo", numeroDispositivo);
 
             await deleteFuncionariosCommand.ExecuteNonQueryAsync();
-
+            
+            // Elimina el dispositivo principal
             await using var deleteDispositivoCommand = new NpgsqlCommand(
                 @"DELETE FROM dispositivo
                 WHERE numero_dispositivo = @numeroDispositivo;",

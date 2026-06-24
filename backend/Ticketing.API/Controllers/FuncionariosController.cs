@@ -20,6 +20,7 @@ public class FuncionariosController : ControllerBase
         _trabajaEnRepository = trabajaEnRepository;
     }
 
+    // Obtiene todos los funcionarios disponibles para el administrador
     [HttpGet("admin")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<IReadOnlyCollection<FuncionarioDto>>> GetFuncionariosDelPaisAdmin()
@@ -28,6 +29,7 @@ public class FuncionariosController : ControllerBase
         return Ok(funcionarios);
     }
 
+    // Obtiene los funcionarios asignados a un encuentro específico
     [HttpGet("encuentro/{encuentroId:int}")]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<IReadOnlyCollection<TrabajaEnDto>>> GetFuncionariosPorEncuentro(int encuentroId)
@@ -36,16 +38,19 @@ public class FuncionariosController : ControllerBase
         return Ok(asignaciones);
     }
 
+    // Registra una nueva persona como funcionario
     [HttpPost]
     [Authorize(Roles = "admin")]
     public async Task<ActionResult<FuncionarioDto>> CrearFuncionario([FromBody] CrearFuncionarioDto dto)
     {
+        // Valida que los datos principales estén completos
         if (string.IsNullOrWhiteSpace(dto.Mail) ||
             string.IsNullOrWhiteSpace(dto.Nombre) ||
             string.IsNullOrWhiteSpace(dto.Apellido) ||
             string.IsNullOrWhiteSpace(dto.Contrasena))
             return BadRequest(new { message = "Todos los campos son obligatorios. Por favor, complete todos los campos." });
 
+        // Verifica una longitud mínima para la contraseña
         if (dto.Contrasena.Length < 6)
             return BadRequest(new { message = "La contraseña debe tener al menos 6 caracteres." });
 
@@ -53,6 +58,7 @@ public class FuncionariosController : ControllerBase
         {
             var funcionario = await _funcionarioRepository.CreateAsync(dto);
 
+             // Evita crear funcionarios con datos ya registrados
             if (funcionario == null)
                 return Conflict(new { message = "El mail o el número de legajo ya están registrados." });
 
@@ -64,6 +70,7 @@ public class FuncionariosController : ControllerBase
         }
     }
 
+    // Elimina un funcionario a partir de su correo electrónico
     [HttpDelete("{mail}")]
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> EliminarFuncionario(string mail)

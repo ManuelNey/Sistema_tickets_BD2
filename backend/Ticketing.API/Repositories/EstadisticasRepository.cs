@@ -14,6 +14,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         _connectionFactory = connectionFactory;
     }
 
+    // Obtiene los 5 encuentros con mayor cantidad de entradas vendidas
     public async Task<IReadOnlyCollection<TopEncuentrosMasVendidosDto>> GetAllAsync(DateTime? desde, DateTime? hasta)
     {
         var encuentros = new List<TopEncuentrosMasVendidosDto>();
@@ -21,6 +22,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Consulta los encuentros y cuenta sus entradas vendidas
         await using var command = new NpgsqlCommand(
             @"SELECT
                 COUNT(e.id_entrada) AS cantidad_entradas_vendidas,
@@ -52,7 +54,7 @@ public class EstadisticasRepository : IEstadisticasRepository
 
         await using var reader = await command.ExecuteReaderAsync();
 
-
+        // Convierte cada resultado de la consulta a un DTO
         while (await reader.ReadAsync())
         {
             encuentros.Add(new TopEncuentrosMasVendidosDto
@@ -69,6 +71,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         return encuentros;
     }
 
+    // Obtiene los usuarios que compraron más entradas
     public async Task<IReadOnlyCollection<TopUsuariosMasEntradasCompradasDto>> GetAllUsers(DateTime? desde, DateTime? hasta)
     {
         var usuarios = new List<TopUsuariosMasEntradasCompradasDto>();
@@ -76,6 +79,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Cuenta las entradas compradas por cada usuario
         await using var command = new NpgsqlCommand(
             @"SELECT
                 c.fk_usuario_mail as mail,
@@ -105,12 +109,14 @@ public class EstadisticasRepository : IEstadisticasRepository
 
         return usuarios;
     }
-
+    
+    // Calcula datos generales sobre compras canceladas e ingresos
     public async Task<PorcentajeCanceladasDto> GetPorcentajeCanceladas(DateTime? desde, DateTime? hasta)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Obtiene la cantidad total de compras dentro del período
         await using var cmdTotal= new NpgsqlCommand(
             @"SELECT COUNT(*) as total
             FROM compra 
@@ -120,6 +126,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         AddDateRangeParameters(cmdTotal, desde, hasta);
         var totales = Convert.ToInt32(await cmdTotal.ExecuteScalarAsync());
 
+        // Obtiene la cantidad de compras canceladas
         await using var cmdCanceladas = new NpgsqlCommand(
             @"SELECT COUNT(*) AS canceladas
             FROM compra
@@ -129,7 +136,8 @@ public class EstadisticasRepository : IEstadisticasRepository
 
         AddDateRangeParameters(cmdCanceladas, desde, hasta);
         var canceladas = Convert.ToInt32(await cmdCanceladas.ExecuteScalarAsync());
-        
+
+        // Calcula el dinero asociado a compras canceladas
         await using var cmdMontoPerdido = new NpgsqlCommand(
             @"SELECT SUM(monto_total) as monto_total
             FROM compra 
@@ -147,6 +155,7 @@ public class EstadisticasRepository : IEstadisticasRepository
             montoPerdido = Convert.ToDecimal(resultadoMonto);
         }
 
+        // Calcula el total de ingresos de compras pagadas
         await using var cmdMontoGanado = new NpgsqlCommand(
             @"SELECT SUM(monto_total) as monto_total
             FROM compra 
@@ -164,6 +173,7 @@ public class EstadisticasRepository : IEstadisticasRepository
             ingresosTotales = Convert.ToDecimal(resultadoIngresos);
         }
 
+         // Evita dividir entre cero cuando no existen compras
         decimal porcentaje = 0;
 
         if (totales > 0)
@@ -181,6 +191,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         };
     }
 
+    // Obtiene la cantidad de entradas vendidas por estadio
     public async Task<IReadOnlyCollection<EstadioEntradasDto>> GetEstadioEntradas(DateTime? desde, DateTime? hasta)
     {
         var estadios = new List<EstadioEntradasDto>();
@@ -188,6 +199,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Agrupa las ventas de entradas según el estadio
         await using var command = new NpgsqlCommand(
             @"SELECT count(e.id_entrada) as cantidad, est.nombre
             FROM compra c
@@ -217,6 +229,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         return estadios;
     }
 
+    // Obtiene los usuarios que realizaron más transferencias de entradas
     public async Task<IReadOnlyCollection<TopUsuariosTransferenciaDto>> GetUsuariosTransferencias(DateTime? desde, DateTime? hasta)
     {
         var usuarios = new List<TopUsuariosTransferenciaDto>();
@@ -224,6 +237,7 @@ public class EstadisticasRepository : IEstadisticasRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Cuenta las transferencias realizadas por cada usuario
         await using var command = new NpgsqlCommand(
             @"SELECT COUNT(fk_usuario_mail_emisor) as cantidad, fk_usuario_mail_emisor as mail
             FROM transferencia
@@ -249,7 +263,8 @@ public class EstadisticasRepository : IEstadisticasRepository
 
         return usuarios;
     }
-
+    
+    // Agrega los parámetros de fecha a las consultas para poder filtrar por período
     private static void AddDateRangeParameters(NpgsqlCommand command, DateTime? desde, DateTime? hasta)
     {
         command.Parameters.Add("@desde", NpgsqlDbType.Timestamp).Value = desde ?? (object)DBNull.Value;

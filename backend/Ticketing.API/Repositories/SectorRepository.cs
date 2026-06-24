@@ -13,6 +13,7 @@ public class SectorRepository : ISectorRepository
         _connectionFactory = connectionFactory;
     }
 
+    // Obtiene todos los sectores correspondientes a un estadio
    public async Task<IReadOnlyCollection<SectorDto>> GetAllAsync(int id)
     {
         var sectores = new List<SectorDto>();
@@ -46,6 +47,7 @@ public class SectorRepository : ISectorRepository
         return sectores;
     }
 
+    // Crea un sector validando que el estadio pertenezca al país del administrador
     public async Task<SectorDto?> CreateAsync(CrearSectorDto sector, int paisSedeId)
     {
         //No se pueden agregar más de 4 sectores por estadio, ni agregar sectores a estadios que no sean de su país sede.
@@ -54,6 +56,7 @@ public class SectorRepository : ISectorRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Solo permite crear sectores en estadios autorizados y con menos de cuatro sectores
         await using var command = new NpgsqlCommand(
             @"INSERT INTO sector(nombre, capacidad_maxima, fk_estadio)
             SELECT @nombre, @capacidad, @idEstadio
@@ -75,7 +78,7 @@ public class SectorRepository : ISectorRepository
     
     await using var reader = await command.ExecuteReaderAsync();
 
-
+    // Si no devuelve una fila, no se pudo crear el sector
     if(!await reader.ReadAsync())
     {
         return null;
@@ -90,10 +93,13 @@ public class SectorRepository : ISectorRepository
     };
     }
 
+    // Actualiza un sector solo si pertenece a un estadio autorizado
     public async Task<SectorDto?> UpdateAsync(int id, ActualizarSectorDto sector, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
+
+        // Se relaciona el sector con su estadio para validar el país sede
         await using var command = new NpgsqlCommand(
             @"UPDATE sector AS s
                 SET nombre = @nuevoNombre, capacidad_maxima = @nuevaCapacidad
@@ -124,11 +130,13 @@ public class SectorRepository : ISectorRepository
             };
     }
 
+    // Elimina un sector solo si su estadio pertenece al país sede correspondiente
     public async Task<bool> DeleteAsync(int id, int paisSedeId)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // El USING permite validar la relación entre sector y estadio antes de eliminar
         await using var command = new NpgsqlCommand(
             @"DELETE FROM sector AS s
             USING estadio AS e

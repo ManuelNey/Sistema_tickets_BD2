@@ -13,6 +13,7 @@ public class TransferenciaRepository : ITransferenciaRepository
         _connectionFactory = connectionFactory;
     }
 
+    // Obtiene las transferencias enviadas por un usuario
     public async Task<IReadOnlyCollection<TransferenciasEnviadasDto>> GetAllAsync(string mailEmisor)
     {
         var transferencias = new List<TransferenciasEnviadasDto>();
@@ -20,6 +21,7 @@ public class TransferenciaRepository : ITransferenciaRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Consulta la información de las entradas transferidas y el encuentro asociado
         await using var command = new NpgsqlCommand(
             @"Select id_transferencia, enc.fecha, t.estado,fk_usuario_mail_receptor as receptor,
                 e.id_entrada,s.nombre as nombre_estadio,ql.nombre as equipo_local,
@@ -48,6 +50,7 @@ public class TransferenciaRepository : ITransferenciaRepository
 
         await using var reader = await command.ExecuteReaderAsync();
 
+        // Convierte cada fila de la consulta a un DTO
         while (await reader.ReadAsync())
         {
             transferencias.Add(new TransferenciasEnviadasDto
@@ -68,6 +71,7 @@ public class TransferenciaRepository : ITransferenciaRepository
         return transferencias;
     }
 
+    // Obtiene las transferencias recibidas por un usuario
     public async Task<IReadOnlyCollection<TransferenciasRecibidasDto>> GetAllReceived(string mailReceptor)
     {
         var transferencias = new List<TransferenciasRecibidasDto>();
@@ -75,6 +79,7 @@ public class TransferenciaRepository : ITransferenciaRepository
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Consulta las transferencias pendientes o resueltas recibidas por el usuario
         await using var command = new NpgsqlCommand(
             @"Select id_transferencia, enc.fecha, t.estado,fk_usuario_mail_emisor as emisor,
                 e.id_entrada,s.nombre as nombre_estadio,ql.nombre as equipo_local,
@@ -123,11 +128,13 @@ public class TransferenciaRepository : ITransferenciaRepository
         return transferencias;
     }
 
+    // Permite al receptor aceptar o rechazar una transferencia pendiente
     public async Task<ResolverTransferenciaDto?> ResolverTransferencia(
     int id,
     ResolverTransferenciaDto transferencia,
     string mailReceptor)
 {
+    // Solo permite los estados definidos para resolver una transferencia
     if (transferencia.Estado != "aceptada" && transferencia.Estado != "rechazada")
     {
         return null;
