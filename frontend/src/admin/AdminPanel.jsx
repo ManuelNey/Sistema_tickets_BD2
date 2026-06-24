@@ -10,7 +10,7 @@ import SectoresAdmin from './SectoresAdmin'
 import ComisionAdmin from './ComisionAdmin'
 import FuncionariosAdmin from './FuncionariosAdmin'
 import ValidacionesAdmin from './ValidacionesAdmin'
-import Ticket from '../assets/ticket.png'
+import Ticket from '../assets/pelota.png'
 import './AdminPanel.css'
 
 const adminTabs = [
