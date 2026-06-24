@@ -475,7 +475,8 @@
   display: flex;
   gap: 8px;
 }
-.filters-inline-selects select {
+.filters-inline-selects select,
+.filters-inline-selects input[type="text"] {
   flex: 1;
   padding: 6px 10px;
   border-radius: 7px;
@@ -485,8 +486,14 @@
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 500;
-  cursor: pointer;
   outline: none;
+}
+
+.filters-inline-selects select { cursor: pointer; }
+
+.filters-inline-selects input[type="text"]:focus {
+  border-color: #7C3AED;
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.08);
 }
 .filters-divider {
   height: 1px;

@@ -7,6 +7,7 @@ function CodigoQr() {
   const [entradas, setEntradas] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [busqueda, setBusqueda] = useState('')
 
   const [modalAbierto, setModalAbierto] = useState(false)
   const [entradaSeleccionada, setEntradaSeleccionada] = useState(null)
@@ -126,6 +127,15 @@ useEffect(() => {
     return `${horas}:${minutos}`
   }
 
+  const equiposUnicos = [...new Set(
+    entradas.flatMap(e => [e.equipoLocal, e.equipoVisitante])
+  )].sort((a, b) => a.localeCompare(b))
+
+  const entradasFiltradas = entradas.filter(e => {
+    if (!busqueda) return true
+    return e.equipoLocal === busqueda || e.equipoVisitante === busqueda
+  })
+
   return (
     <div className="buy-view">
       <header className="buy-header">
@@ -133,7 +143,32 @@ useEffect(() => {
           <h1 id="dashboard-title">Códigos QR</h1>
           <p>Accedé al QR de cada entrada para ingresar al estadio</p>
         </div>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#A09AAC' }}>
+          {!loading && !error && entradas.length > 0 ? `${entradasFiltradas.length} entrada${entradasFiltradas.length !== 1 ? 's' : ''}` : ''}
+        </span>
       </header>
+
+      <div className="filters-inline" role="search" aria-label="Filtros">
+        <span className="filters-inline-label">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M2 4h12M4 8h8M6 12h4" />
+          </svg>
+          Filtrar por
+        </span>
+        <div className="filters-inline-sep" />
+        <div className="filters-inline-selects">
+          <select
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            aria-label="Filtrar por equipo"
+          >
+            <option value="">Todos los equipos</option>
+            {equiposUnicos.map(eq => (
+              <option key={eq} value={eq}>{eq}</option>
+            ))}
+          </select>
+        </div>
+      </div>
       <div className="filters-divider" />
 
       {loading && <p className="matches-status">Cargando entradas...</p>}
@@ -141,10 +176,13 @@ useEffect(() => {
       {!loading && !error && entradas.length === 0 && (
         <p className="matches-status">No tenés entradas activas para generar QR.</p>
       )}
+      {!loading && !error && entradas.length > 0 && entradasFiltradas.length === 0 && (
+        <p className="matches-status">No hay entradas que coincidan con "{busqueda}".</p>
+      )}
 
-      {!loading && !error && entradas.length > 0 && (
+      {!loading && !error && entradasFiltradas.length > 0 && (
         <div className="matches-grid" style={{ marginTop: 16 }}>
-          {entradas.map((entrada) => (
+          {entradasFiltradas.map((entrada) => (
             <QrCard key={entrada.idEntrada} entrada={entrada} formatearFecha={formatearFecha} formatearHora={formatearHora} onVerQr={abrirModalQr} />
           ))}
         </div>
