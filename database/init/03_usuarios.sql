@@ -47,12 +47,12 @@ INSERT INTO usuario (persona_mail, identidad_verificada) VALUES
 ('usuario10@mail.com', false)
 ON CONFLICT (persona_mail) DO NOTHING;
 
-INSERT INTO funcionario (persona_mail, numero_legajo) VALUES
-('func1@mail.com', 'LEG001'),
-('func2@mail.com', 'LEG002'),
-('func3@mail.com', 'LEG003'),
-('func4@mail.com', 'LEG004'),
-('func5@mail.com', 'LEG005')
+INSERT INTO funcionario (persona_mail) VALUES
+('func1@mail.com'),
+('func2@mail.com'),
+('func3@mail.com'),
+('func4@mail.com'),
+('func5@mail.com')
 ON CONFLICT (persona_mail) DO NOTHING;
 
 -- admin1 → Canadá (pais_sede=1), admin2 → México (pais_sede=2), admin3 → USA (pais_sede=3)
