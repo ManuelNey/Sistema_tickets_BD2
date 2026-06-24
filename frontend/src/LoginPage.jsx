@@ -1,130 +1,154 @@
 import { useState } from 'react'
-import BallLogo from './shared/BallLogo'
 import { useAuth } from './context/useAuth'
+import soccerBall from './assets/ticket.png'
 
 function LoginPage({ onRegister }) {
   const { login } = useAuth()
-
-  const [email, setEmail] = useState('')
+  const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [showPass, setShowPass] = useState(false)
+  const [error, setError]       = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [emailFocus, setEmailFocus] = useState(false)
+  const [passFocus,  setPassFocus]  = useState(false)
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     setError('')
     setIsLoading(true)
-
     try {
-      const response = await fetch('http://localhost:8080/api/usuario/login', {
+      const res = await fetch('http://localhost:8080/api/usuario/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          mail: email,
-          contrasena: password,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mail: email, contrasena: password }),
       })
-
       let data = null
-
-      try {
-        data = await response.json()
-      } catch {
-        data = null
-      }
-
-      if (!response.ok) {
-        throw new Error(data?.message || 'Login failed')
-      }
-
+      try { data = await res.json() } catch { data = null }
+      if (!res.ok) throw new Error(data?.message || 'Login failed')
       const usuario = data?.usuario || data?.Usuario || data
       if (usuario?.rol === 'funcionario') {
         setError('Los funcionarios deben iniciar sesión desde la app móvil.')
         return
       }
-
       login(data)
     } catch {
-      setError('No se pudo iniciar sesión')
+      setError('No se pudo iniciar sesión. Verificá tus credenciales.')
     } finally {
       setIsLoading(false)
     }
   }
 
+  const hasError = !!error
+  const emailBorder = emailFocus ? '#7C3AED' : hasError ? 'rgba(239,68,68,0.5)' : '#E2E0E8'
+  const passBorder  = passFocus  ? '#7C3AED' : hasError ? 'rgba(239,68,68,0.5)' : '#E2E0E8'
+  const focusShadow = '0 0 0 3px rgba(124,58,237,0.1)'
+
   return (
-    <main className="login-page">
-      <section className="login-card" aria-labelledby="login-title">
-        <div className="brand-mark" aria-hidden="true">
-          <BallLogo />
+    <div className="auth-shell">
+
+      {/* ── Panel de marca ── */}
+      <div className="auth-brand">
+        <div className="auth-blob auth-blob--1" />
+        <div className="auth-blob auth-blob--2" />
+        <div className="auth-grid-bg" />
+        <div className="auth-brand-content">
+          <div className="auth-logo-box">
+            <img src={soccerBall} alt="TicketMatch" className="auth-logo-img" />
+          </div>
+          <div className="auth-brand-title">TicketMatch</div>
+          <div className="auth-brand-sub">
+            La mejor plataforma para comprar entradas para el Mundial FIFA 2026.
+          </div>
+          <div className="auth-fifa-badge">
+            <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#A78BFA" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+              <circle cx="7" cy="7" r="5.5" /><path d="M7 3.5v3l2 2" />
+            </svg>
+            Copa Mundial FIFA 2026
+          </div>
         </div>
+      </div>
 
-        <header className="login-header">
-          <h1 id="login-title">TicketMatch</h1>
-          <p>Ingresá a tu cuenta</p>
-        </header>
+      {/* ── Panel de formulario ── */}
+      <div className="auth-form-panel">
+        <div className="auth-form-inner">
 
-        <form className="login-form" onSubmit={handleSubmit}>
-          <label className="field">
-            <span>Email</span>
+          <div className="auth-form-header">
+            <div className="auth-form-title">Bienvenido de nuevo</div>
+            <div className="auth-form-sub">Ingresá tus credenciales para continuar</div>
+          </div>
 
-            <span className="input-shell">
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M4 6.5h16v11H4z" />
-                <path d="m4.5 7 7.5 6 7.5-6" />
-              </svg>
+          <form onSubmit={handleSubmit} className="auth-fields">
 
-              <input
-                type="email"
-                name="email"
-                placeholder="tu@email.com"
-                autoComplete="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </span>
-          </label>
+            {/* Email */}
+            <div>
+              <label className="auth-label">Correo electrónico</label>
+              <div className="auth-input-wrap" style={{ borderColor: emailBorder, boxShadow: emailFocus ? focusShadow : 'none' }}>
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#B0ACBA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }} aria-hidden="true">
+                  <rect x="1.5" y="3.5" width="13" height="9" rx="1.5" /><path d="M1.5 5.5l6.5 4 6.5-4" />
+                </svg>
+                <input
+                  type="email"
+                  placeholder="usuario@mail.com"
+                  autoComplete="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError('') }}
+                  onFocus={() => setEmailFocus(true)}
+                  onBlur={() => setEmailFocus(false)}
+                  className="auth-input"
+                />
+              </div>
+            </div>
 
-          <label className="field">
-            <span>Contraseña</span>
+            {/* Contraseña */}
+            <div>
+              <label className="auth-label">Contraseña</label>
+              <div className="auth-input-wrap" style={{ borderColor: passBorder, boxShadow: passFocus ? focusShadow : 'none' }}>
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="#B0ACBA" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ flex: 'none' }} aria-hidden="true">
+                  <rect x="3.5" y="7" width="9" height="7" rx="1.5" /><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+                </svg>
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setError('') }}
+                  onFocus={() => setPassFocus(true)}
+                  onBlur={() => setPassFocus(false)}
+                  className="auth-input"
+                />
+                <button type="button" className="auth-eye-btn" onClick={() => setShowPass(v => !v)} aria-label={showPass ? 'Ocultar' : 'Mostrar'}>
+                  {showPass
+                    ? <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="M1 8s2.5-5.5 7-5.5S15 8 15 8s-2.5 5.5-7 5.5S1 8 1 8z" /><circle cx="8" cy="8" r="2" /><line x1="1" y1="1" x2="15" y2="15" /></svg>
+                    : <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true"><path d="M1 8s2.5-5.5 7-5.5S15 8 15 8s-2.5 5.5-7 5.5S1 8 1 8z" /><circle cx="8" cy="8" r="2" /></svg>
+                  }
+                </button>
+              </div>
+            </div>
 
-            <span className="input-shell">
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M6.5 10.5h11v9h-11z" />
-                <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
-              </svg>
+            {/* Error */}
+            {hasError && (
+              <div className="auth-error">
+                <svg viewBox="0 0 14 14" width="13" height="13" fill="none" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" style={{ flex: 'none' }} aria-hidden="true">
+                  <circle cx="7" cy="7" r="5.5" /><line x1="7" y1="4.5" x2="7" y2="7.5" /><circle cx="7" cy="9.5" r="0.6" fill="#EF4444" />
+                </svg>
+                {error}
+              </div>
+            )}
 
-              <input
-                type="password"
-                name="password"
-                placeholder="********"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </span>
-          </label>
+            <button type="submit" className="auth-submit-btn" disabled={isLoading}>
+              {isLoading ? 'Ingresando...' : 'Iniciar sesión'}
+            </button>
+          </form>
 
-          {error && <p className="login-error">{error}</p>}
+          <div className="auth-switch">
+            ¿No tenés cuenta?{' '}
+            <button type="button" className="auth-switch-link" onClick={onRegister}>Registrate</button>
+          </div>
 
-          <button className="login-button" type="submit" disabled={isLoading}>
-            {isLoading ? 'Ingresando...' : 'Iniciar sesión'}
-          </button>
-        </form>
-      </section>
+        </div>
+      </div>
 
-      <p className="register-link">
-        ¿No tenés cuenta?{' '}
-        <button
-          type="button"
-          className="register-button-link"
-          onClick={onRegister}
-        >
-          Registrate
-        </button>
-      </p>
-    </main>
+    </div>
   )
 }
 

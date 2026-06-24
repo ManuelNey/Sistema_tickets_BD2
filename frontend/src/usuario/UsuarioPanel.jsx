@@ -9,7 +9,7 @@ import CodigoQr from './CodigoQr'
 import TransferenciasEnviadas from './TransferenciasEnviadas'
 import TransferenciasRecibidas from './TransferenciasRecibidas'
 import MiPerfil from './MiPerfil'
-import Ticket from '../assets/ticket.png'
+import Ticket from '../assets/pelota.png'
 
 // Panel del costadito, no es side bar pero es maso así.
 const userTabs = [
