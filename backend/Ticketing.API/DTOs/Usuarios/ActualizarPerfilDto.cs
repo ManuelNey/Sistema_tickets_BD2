@@ -18,4 +18,9 @@ public class ActualizarPerfilDto
     public string CodigoPostal { get; set; } = string.Empty;
 
     public List<string> Telefonos { get; set; } = new();
+
+    // Si los tres quedan vacíos, solo actualiza perfil.
+    public string? ContrasenaActual { get; set; }
+    public string? NuevaContrasena { get; set; }
+    public string? ConfirmarNuevaContrasena { get; set; }
 }

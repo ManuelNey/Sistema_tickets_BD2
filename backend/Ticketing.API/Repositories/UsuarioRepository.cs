@@ -213,97 +213,179 @@ public class UsuarioRepository : IUsuarioRepository
             return usuario;
     }
 
-    public async Task<bool> UpdateProfileAsync(
-    string mail,
-    ActualizarPerfilDto perfil
-)
-{
-    await using var connection = _connectionFactory.CreateConnection();
-    await connection.OpenAsync();
-    await using var tx = await connection.BeginTransactionAsync();
-
-    using var updatePersonaCmd = connection.CreateCommand();
-    updatePersonaCmd.Transaction = tx;
-
-    updatePersonaCmd.CommandText = @"
-        UPDATE persona
-        SET
-            nombre = @nombre,
-            apellido = @apellido,
-            fecha_nacimiento = @fechaNacimiento,
-            tipo_documento = @tipoDocumento,
-            numero_documento = @numeroDocumento,
-            pais_documento = @paisDocumento,
-            pais_casa = @paisCasa,
-            localidad = @localidad,
-            calle = @calle,
-            numero_casa = @numeroCasa,
-            codigo_postal = @codigoPostal
-        WHERE mail = @mail;";
-
-    updatePersonaCmd.Parameters.AddWithValue("@mail", mail);
-    updatePersonaCmd.Parameters.AddWithValue("@nombre", perfil.Nombre);
-    updatePersonaCmd.Parameters.AddWithValue("@apellido", perfil.Apellido);
-    updatePersonaCmd.Parameters.AddWithValue(
-        "@fechaNacimiento",
-        (object?)perfil.FechaNacimiento ?? DBNull.Value
-    );
-    updatePersonaCmd.Parameters.AddWithValue("@tipoDocumento", perfil.TipoDocumento);
-    updatePersonaCmd.Parameters.AddWithValue("@numeroDocumento", perfil.NumeroDocumento);
-    updatePersonaCmd.Parameters.AddWithValue("@paisDocumento", perfil.PaisDocumento);
-    updatePersonaCmd.Parameters.AddWithValue("@paisCasa", perfil.PaisCasa);
-    updatePersonaCmd.Parameters.AddWithValue("@localidad", perfil.Localidad);
-    updatePersonaCmd.Parameters.AddWithValue("@calle", perfil.Calle);
-    updatePersonaCmd.Parameters.AddWithValue("@numeroCasa", perfil.NumeroCasa);
-    updatePersonaCmd.Parameters.AddWithValue("@codigoPostal", perfil.CodigoPostal);
-
-    var filasActualizadas = await updatePersonaCmd.ExecuteNonQueryAsync();
-
-    if (filasActualizadas == 0)
+    public async Task<bool> UpdateProfileAsync(string mail, ActualizarPerfilDto perfil)
     {
-        return false;
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var tx = await connection.BeginTransactionAsync();
+
+        try
+        {
+            var nuevaContrasenaHasheada = string.IsNullOrWhiteSpace(
+                perfil.NuevaContrasena
+            )
+                ? null
+                : _passwordService.HashPassword(perfil.NuevaContrasena);
+
+            using var updatePersonaCmd = connection.CreateCommand();
+            updatePersonaCmd.Transaction = tx;
+
+            updatePersonaCmd.CommandText = @"
+                UPDATE persona
+                SET
+                    nombre = @nombre,
+                    apellido = @apellido,
+                    fecha_nacimiento = @fechaNacimiento,
+                    tipo_documento = @tipoDocumento,
+                    numero_documento = @numeroDocumento,
+                    pais_documento = @paisDocumento,
+                    pais_casa = @paisCasa,
+                    localidad = @localidad,
+                    calle = @calle,
+                    numero_casa = @numeroCasa,
+                    codigo_postal = @codigoPostal,
+                    contrasena = COALESCE(@nuevaContrasena, contrasena)
+                WHERE mail = @mail;";
+
+            updatePersonaCmd.Parameters.AddWithValue("@mail", mail);
+            updatePersonaCmd.Parameters.AddWithValue("@nombre", perfil.Nombre);
+            updatePersonaCmd.Parameters.AddWithValue("@apellido", perfil.Apellido);
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@fechaNacimiento",
+                (object?)perfil.FechaNacimiento ?? DBNull.Value
+            );
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@tipoDocumento",
+                perfil.TipoDocumento
+            );
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@numeroDocumento",
+                perfil.NumeroDocumento
+            );
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@paisDocumento",
+                perfil.PaisDocumento
+            );
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@paisCasa",
+                perfil.PaisCasa
+            );
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@localidad",
+                perfil.Localidad
+            );
+
+            updatePersonaCmd.Parameters.AddWithValue("@calle", perfil.Calle);
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@numeroCasa",
+                perfil.NumeroCasa
+            );
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@codigoPostal",
+                string.IsNullOrWhiteSpace(perfil.CodigoPostal)
+                    ? DBNull.Value
+                    : perfil.CodigoPostal
+            );
+
+            updatePersonaCmd.Parameters.AddWithValue(
+                "@nuevaContrasena",
+                nuevaContrasenaHasheada ?? (object)DBNull.Value
+            );
+
+            var filasActualizadas = await updatePersonaCmd.ExecuteNonQueryAsync();
+
+            if (filasActualizadas == 0)
+            {
+                await tx.RollbackAsync();
+                return false;
+            }
+
+            using var deleteTelefonosCmd = connection.CreateCommand();
+            deleteTelefonosCmd.Transaction = tx;
+
+            deleteTelefonosCmd.CommandText = @"
+                DELETE FROM telefonos
+                WHERE persona_mail = @mail;";
+
+            deleteTelefonosCmd.Parameters.AddWithValue("@mail", mail);
+
+            await deleteTelefonosCmd.ExecuteNonQueryAsync();
+
+            foreach (
+                var telefono in perfil.Telefonos
+                    .Where(t => !string.IsNullOrWhiteSpace(t))
+                    .Select(t => t.Trim())
+                    .Distinct()
+            )
+            {
+                if (!telefono.All(char.IsDigit))
+                {
+                    throw new InvalidOperationException(
+                        "El teléfono solo puede contener números."
+                    );
+                }
+
+                using var insertTelefonoCmd = connection.CreateCommand();
+                insertTelefonoCmd.Transaction = tx;
+
+                insertTelefonoCmd.CommandText = @"
+                    INSERT INTO telefonos (persona_mail, telefono)
+                    VALUES (@mail, @telefono);";
+
+                insertTelefonoCmd.Parameters.AddWithValue("@mail", mail);
+                insertTelefonoCmd.Parameters.AddWithValue("@telefono", telefono);
+
+                await insertTelefonoCmd.ExecuteNonQueryAsync();
+            }
+
+            await tx.CommitAsync();
+
+            return true;
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
-    using var deleteTelefonosCmd = connection.CreateCommand();
-    deleteTelefonosCmd.Transaction = tx;
+        public async Task<bool> ValidarContrasenaActualAsync(string mail, string contrasenaActual){
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
 
-    deleteTelefonosCmd.CommandText = @"
-        DELETE FROM telefonos
-        WHERE persona_mail = @mail;";
+        using var command = connection.CreateCommand();
 
-    deleteTelefonosCmd.Parameters.AddWithValue("@mail", mail);
+        command.CommandText = @"
+            SELECT contrasena
+            FROM persona
+            WHERE mail = @mail;";
 
-    await deleteTelefonosCmd.ExecuteNonQueryAsync();
+        command.Parameters.AddWithValue("@mail", mail);
 
-    foreach (var telefono in perfil.Telefonos.Select(t => t.Trim()).Distinct())
-    {
-        if (string.IsNullOrWhiteSpace(telefono))
-        {
-            continue;
-        }
+        var resultado = await command.ExecuteScalarAsync();
 
-        if (!telefono.All(char.IsDigit))
-        {
-            throw new InvalidOperationException("El teléfono solo puede contener números.");
-        }
+        if (resultado == null || resultado == DBNull.Value)
+            return false;
 
-        using var insertTelefonoCmd = connection.CreateCommand();
-        insertTelefonoCmd.Transaction = tx;
+        var contrasenaHasheada = resultado.ToString();
 
-        insertTelefonoCmd.CommandText = @"
-            INSERT INTO telefonos (persona_mail, telefono)
-            VALUES (@mail, @telefono);";
+        if (string.IsNullOrWhiteSpace(contrasenaHasheada))
+            return false;
 
-        insertTelefonoCmd.Parameters.AddWithValue("@mail", mail);
-        insertTelefonoCmd.Parameters.AddWithValue("@telefono", telefono);
-
-        await insertTelefonoCmd.ExecuteNonQueryAsync();
+        return _passwordService.VerifyPassword(
+            contrasenaHasheada,
+            contrasenaActual
+        );
     }
-
-    await tx.CommitAsync();
-
-    return true;
-}
 
     private static async Task<List<string>> GetTelefonosAsync(NpgsqlConnection connection, string mail)
     {
