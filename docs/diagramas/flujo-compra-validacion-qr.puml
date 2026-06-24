@@ -1,0 +1,106 @@
+@startuml
+title Flujo principal de compra y validacion QR
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  BackgroundColor #F8F5FF
+  BorderColor #6D28D9
+  FontColor #111827
+}
+skinparam partition {
+  BackgroundColor #FFFFFF
+  BorderColor #C4B5FD
+  FontColor #111827
+}
+skinparam note {
+  BackgroundColor #F3E8FF
+  BorderColor #7C3AED
+  FontColor #111827
+}
+skinparam arrow {
+  Color #6D28D9
+}
+
+start
+
+partition "Usuario web" {
+  :Selecciona encuentro;
+  :Elige sector y cantidad;
+  :Confirma reserva o compra;
+}
+
+partition "Frontend React" {
+  :Envia solicitud a la API;
+}
+
+partition "Backend .NET" {
+  :Recibe datos de compra;
+  :Valida JWT del usuario;
+  :Valida cupos disponibles;
+  :Valida maximo de entradas por compra;
+}
+
+if ("Hay cupo y datos validos?") then ("si")
+  partition "PostgreSQL" {
+    :Registra compra;
+    :Genera entradas;
+    :Guarda token QR por entrada;
+  }
+
+  partition "Backend .NET" {
+    :Devuelve confirmacion de compra;
+  }
+
+  partition "Usuario web" {
+    :Ve la compra en Mis Entradas;
+    :Presenta QR en el estadio;
+  }
+
+  partition "Funcionario mobile" {
+    :Escanea QR con la app movil;
+  }
+
+  partition "App Movil Expo" {
+    :Envia token QR y dispositivo a la API;
+  }
+
+  partition "Backend .NET" {
+    :Busca entrada por token;
+    :Verifica que la entrada este activa;
+    :Verifica funcionario/dispositivo asignado;
+  }
+
+  if ("Entrada valida?") then ("si")
+    partition "PostgreSQL" {
+      :Registra validacion;
+      :Marca entrada como utilizada;
+    }
+
+    partition "App Movil Expo" {
+      :Muestra validacion aceptada;
+    }
+  else ("no")
+    partition "App Movil Expo" {
+      :Muestra validacion rechazada;
+    }
+  endif
+
+else ("no")
+  partition "Backend .NET" {
+    :Rechaza la compra;
+  }
+
+  partition "Frontend React" {
+    :Muestra mensaje de error;
+  }
+endif
+
+note right
+  El cambio a utilizada es irreversible.
+  La tabla de validacion conserva la auditoria:
+  entrada, token usado, funcionario, dispositivo,
+  fecha y hora.
+end note
+
+stop
+@enduml

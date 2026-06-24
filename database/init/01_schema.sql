@@ -120,7 +120,6 @@ CREATE TABLE IF NOT EXISTS habilita (
 CREATE TABLE IF NOT EXISTS compra (
   id_compra SERIAL PRIMARY KEY,
   fecha TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-  hora TIME,
   estado VARCHAR(50) NOT NULL,
   monto_total NUMERIC(12,2) NOT NULL,
   fk_comision INTEGER REFERENCES comision(id_comision),

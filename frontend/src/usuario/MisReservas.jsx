@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Countdown from './Countdown'
 import PagoEntrada from './PagoEntrada'
 import CompraExitosa from './CompraExitosa'
@@ -171,7 +171,6 @@ function MisReservas({ onIrAMisEntradas }) {
 
 // Card de cada reserva en el listado.
 function ReservaCard({ reserva, onPagar, onCancelar }) {
-  const [expirada, setExpirada] = useState(false)
   const esPendiente = reserva.estado === 'pendiente'
   const expiraMs = getExpiracion(reserva.fechaReserva)
 
@@ -237,18 +236,12 @@ function ReservaCard({ reserva, onPagar, onCancelar }) {
             <span className="reserva-status-dot" style={{ background: st.dot }} />
             <span style={{ color: st.color }}>{st.label}</span>
           </div>
-
-          {esPendiente && !expirada && (
-            <Countdown expiraMs={expiraMs} onExpire={() => setExpirada(true)} />
-          )}
-          {esPendiente && expirada && (
-            <span className="countdown-pill is-expired">Reserva expirada</span>
-          )}
+          {esPendiente && <Countdown expiraMs={expiraMs} />}
 
           <div style={{ flex: 1 }} />
 
           <div className="reserva-card-actions">
-            {esPendiente && !expirada && (
+            {esPendiente && (
               <>
                 <button className="reserva-btn-secondary" type="button" onClick={onCancelar}>Cancelar</button>
                 <button className="reserva-btn-primary" type="button" onClick={onPagar}>Pagar ahora</button>
