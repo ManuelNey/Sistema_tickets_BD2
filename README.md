@@ -244,6 +244,8 @@ Si una transferencia está en estado `pendiente` por más de 24 horas, el servic
 - cambia la transferencia a `rechazada`;
 - cambia la entrada asociada de `transferida` a `activa`.
 
+---
+
 ### Encuentro
 ```
 programado → en_juego     (manual vía PUT /api/encuentros/{id} o automático al llegar la hora)
