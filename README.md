@@ -204,6 +204,46 @@ Esto funciona porque `Program.cs` configura `RoleClaimType = "rol"` en los pará
 
 ## Máquinas de estado
 
+Un `BackgroundService` corre cada minuto y actualiza estados automáticamente.
+
+### Servicios en segundo plano
+
+El backend incluye servicios en segundo plano que se ejecutan automáticamente mientras la API está levantada. Estos servicios revisan periódicamente ciertos estados del sistema y los actualizan cuando corresponde.
+
+#### ActualizarEstadosBackgroundService
+
+Es el servicio que se ejecuta en segundo plano. Cada 1 minuto llama al servicio coordinador `ActualizarEstadosService`, que se encarga de ejecutar todas las actualizaciones automáticas del sistema.
+
+#### ActualizarEstadosService
+
+Funciona como servicio coordinador. Su responsabilidad es llamar a los servicios específicos que actualizan estados de distintas entidades:
+
+- encuentros
+- compras
+- transferencias
+
+#### ActualizarEstadosEncuentrosService
+
+Actualiza automáticamente el estado de los encuentros según la fecha y hora:
+
+- Los encuentros `programado` pasan a `en_juego` cuando llega su fecha.
+- Los encuentros `en_juego` pasan a `finalizado` cuando ya pasó el tiempo definido para el partido.
+
+#### ActualizarEstadosComprasService
+
+Cancela automáticamente las compras que quedaron pendientes demasiado tiempo.
+
+Si una compra está en estado `pendiente` por más de 15 minutos, el servicio la cambia a `cancelada`.
+
+#### ActualizarEstadosTransferenciasService
+
+Rechaza automáticamente las transferencias pendientes vencidas.
+
+Si una transferencia está en estado `pendiente` por más de 24 horas, el servicio:
+
+- cambia la transferencia a `rechazada`;
+- cambia la entrada asociada de `transferida` a `activa`.
+
 ### Encuentro
 ```
 programado → en_juego     (manual vía PUT /api/encuentros/{id} o automático al llegar la hora)
@@ -404,3 +444,5 @@ Sistema_tickets_BD2/
 ```
 
 ---
+
+
