@@ -235,6 +235,28 @@ public class EntradaRepository : IEntradaRepository
         if (await cmdReceptor.ExecuteScalarAsync() == null)
             throw new KeyNotFoundException("El destinatario no es un usuario registrado");
 
+        // Revisamos si ya tiene 3 trasnferencias
+        await using var cmdEntradasLimite = new NpgsqlCommand(@"
+            SELECT COUNT(*)
+            FROM entrada
+            WHERE fk_habilita_id = @idHabilita
+            AND fk_usuario_mail = @emisor
+            AND estado = 'activa'
+            AND cantidad_transferencias >= 3;",
+            connection,
+            transaction);
+
+        cmdEntradasLimite.Parameters.AddWithValue("idHabilita", idHabilita);
+        cmdEntradasLimite.Parameters.AddWithValue("emisor", emisorMail);
+
+        var entradasConLimite = Convert.ToInt32(await cmdEntradasLimite.ExecuteScalarAsync());
+
+        if (entradasConLimite > 0)
+        {
+            throw new InvalidOperationException(
+                "Esta entrada ya fue transferida 3 veces y no puede volver a transferirse.");
+        }
+
         // Obtener las entradas disponibles
         var listaIds = new List<int>();
 
@@ -242,9 +264,9 @@ public class EntradaRepository : IEntradaRepository
             SELECT id_entrada
             FROM entrada
             WHERE fk_habilita_id = @idHabilita
-              AND fk_usuario_mail = @emisor
-              AND estado = 'activa'
-              AND cantidad_transferencias < 3
+                AND fk_usuario_mail = @emisor
+                AND estado = 'activa'
+                AND cantidad_transferencias < 3
             ORDER BY id_entrada
             LIMIT @cantidad
             FOR UPDATE;",
@@ -308,6 +330,7 @@ public class EntradaRepository : IEntradaRepository
             cmdIns.Parameters.AddWithValue("idEntrada", idEntrada);
 
             await cmdIns.ExecuteNonQueryAsync();
+
         }
 
         await transaction.CommitAsync();
