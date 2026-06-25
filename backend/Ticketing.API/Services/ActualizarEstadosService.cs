@@ -5,14 +5,16 @@ public class ActualizarEstadosService
 {
     private readonly ActualizarEstadosEncuentrosService _encuentrosService;
     private readonly ActualizarEstadosComprasService _comprasService;
+    private readonly ActualizarEstadosTransferenciasService _transferenciasService;
 
     // Recibe los servicios específicos encargados de actualizar cada entidad.
     public ActualizarEstadosService(
         ActualizarEstadosEncuentrosService encuentrosService,
-        ActualizarEstadosComprasService comprasService)
+        ActualizarEstadosComprasService comprasService, ActualizarEstadosTransferenciasService transferenciasService)
     {
         _encuentrosService = encuentrosService;
         _comprasService = comprasService;
+        _transferenciasService = transferenciasService;
     }
 
     // Ejecuta las actualizaciones de estados del sistema.
@@ -22,5 +24,7 @@ public class ActualizarEstadosService
         await _encuentrosService.ActualizarAsync(stoppingToken);
         // Actualiza estados de compras pendientes vencidas.
         await _comprasService.ActualizarAsync(stoppingToken);
+        // Actualiza estados de transferencias pendientes vencidas.
+        await _transferenciasService.ActualizarAsync(stoppingToken);
     }
 }
