@@ -67,6 +67,7 @@ builder.Services.AddSingleton<IValidacionRepository, ValidacionRepository>();
 //Esto hace que cuando arraque la API también arranca este servicio en segundo plano
 builder.Services.AddSingleton<ActualizarEstadosComprasService>();
 builder.Services.AddSingleton<ActualizarEstadosEncuentrosService>();
+builder.Services.AddSingleton<ActualizarEstadosTransferenciasService>();
 builder.Services.AddSingleton<ActualizarEstadosService>();
 builder.Services.AddHostedService<ActualizarEstadosBackgroundService>();
 
