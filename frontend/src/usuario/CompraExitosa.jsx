@@ -52,7 +52,6 @@ function CompraExitosa({ resumen, onIrAMisEntradas, onVolver }) {
           </div>
         </div>
 
-
         <div className="exito-actions">
           <button className="exito-home" type="button" onClick={handleIrAMisEntradas}>
             <TicketIcon />

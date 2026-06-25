@@ -13,6 +13,7 @@ public class EntradaRepository : IEntradaRepository
         _connectionFactory = connectionFactory;
     }
 
+    // Obtiene la disponibilidad de entradas para una habilitación específica, incluyendo información del encuentro, estadio, equipos y cantidad de entradas disponibles
     public async Task<DisponibilidadDto?> GetDisponibilidadAsync(int idHabilita)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -44,12 +45,16 @@ public class EntradaRepository : IEntradaRepository
         await using var reader = await cmd.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
+        {
+            // Si no se encuentra la habilitación, devolvemos null 
             return null;
+        }
 
         var capacidad = reader.GetInt32(reader.GetOrdinal("capacidad_maxima"));
         var vendidas  = reader.GetInt32(reader.GetOrdinal("entradas_vendidas"));
         var fecha     = reader.GetDateTime(reader.GetOrdinal("fecha_encuentro"));
 
+        // Formateamos la información obtenida en un DTO para devolverla a la API
         return new DisponibilidadDto
         {
             IdHabilita      = idHabilita,
@@ -65,10 +70,14 @@ public class EntradaRepository : IEntradaRepository
         };
     }
 
+    // Metodo que retorna el estado de una entrada específica para un usuario dado, 
+    // verificando que la entrada pertenezca al usuario y devolviendo null si no se encuentra.
     public async Task<EntradaEstadoDto?> ObtenerEntrada(int idEntrada, string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
+
+        // Consultamos el estado de la entrada y verificamos que pertenezca al usuario especificado
 
         await using var cmd = new NpgsqlCommand(@"
             SELECT id_entrada, estado 
@@ -83,8 +92,11 @@ public class EntradaRepository : IEntradaRepository
         await using var reader = await cmd.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
-            return null;
+        {
+             return null;
+        }
 
+        // Formateamos la información obtenida en un DTO para devolverla a la API
         return new EntradaEstadoDto
         {
             IdEntrada = reader.GetInt32(reader.GetOrdinal("id_entrada")),
@@ -92,11 +104,13 @@ public class EntradaRepository : IEntradaRepository
         };
     }
 
+    // Obtiene las entradas activas de un usuario específico, incluyendo información del encuentro, equipos, estadio y sector 
     public async Task<IReadOnlyCollection<EntradaCodigoQrDto>> ObtenerEntradasQr(string mail)
     {
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        // Consultamos las entradas activas del usuario, junto con la información del encuentro, equipos, estadio y sector
         await using var cmd = new NpgsqlCommand(@" 
             SELECT e.id_entrada AS IdEntrada, equipo_local.pais AS EquipoLocal, equipo_visitante.pais AS EquipoVisitante,
                 enc.fecha AS FechaEncuentro, s.nombre AS Sector, e.estado AS Estado
@@ -114,20 +128,20 @@ public class EntradaRepository : IEntradaRepository
 
         var entradas = new List<EntradaCodigoQrDto>();
 
-    while (await reader.ReadAsync())
-    {
-        entradas.Add(new EntradaCodigoQrDto
+        //Formateamos cada fila de la consulta a un DTO para devolverlo a la API como tal
+        while (await reader.ReadAsync())
         {
-            IdEntrada = reader.GetInt32(reader.GetOrdinal("identrada")),
-            EquipoLocal = reader.GetString(reader.GetOrdinal("equipolocal")),
-            EquipoVisitante = reader.GetString(reader.GetOrdinal("equipovisitante")),
-            FechaEncuentro = reader.GetDateTime(reader.GetOrdinal("fechaencuentro")),
-            Sector = reader.GetString(reader.GetOrdinal("sector")),
-            Estado = reader.GetString(reader.GetOrdinal("estado"))
-        });
-    }
-
-    return entradas;
+            entradas.Add(new EntradaCodigoQrDto
+            {
+                IdEntrada = reader.GetInt32(reader.GetOrdinal("identrada")),
+                EquipoLocal = reader.GetString(reader.GetOrdinal("equipolocal")),
+                EquipoVisitante = reader.GetString(reader.GetOrdinal("equipovisitante")),
+                FechaEncuentro = reader.GetDateTime(reader.GetOrdinal("fechaencuentro")),
+                Sector = reader.GetString(reader.GetOrdinal("sector")),
+                Estado = reader.GetString(reader.GetOrdinal("estado"))
+            });
+        }
+        return entradas;
     }
 
     // "Mis Entradas": entradas que el usuario posee ahora (fk_usuario_mail = mail),
@@ -307,6 +321,9 @@ public class EntradaRepository : IEntradaRepository
     }
 }
 
+    // Validación de entrada: marca la entrada como utilizada y registra la validación en la tabla validacion.
+    // Devuelve true si la entrada fue marcada como utilizada, false si no se encontró la
+    // entrada activa para el usuario, y lanza una excepción si ocurre algún error en la base de datos.
     public async Task<bool> MarcarEntradaComoUtilizadaAsync(int entradaId, string mailUsuario, string? mailFuncionario, string tokenUtilizado, string numeroDispositivo)
     {
         await using var connection = _connectionFactory.CreateConnection();
@@ -349,6 +366,7 @@ public class EntradaRepository : IEntradaRepository
         return true;
     }
 
+    // Retorna true si el funcionario puede validar la entrada especificada, false en caso contrario.
     public async Task<bool> FuncionarioPuedeValidarEntradaAsync(int entradaId, string mailFuncionario){
         await using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
