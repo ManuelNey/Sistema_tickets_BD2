@@ -404,3 +404,47 @@ Sistema_tickets_BD2/
 ```
 
 ---
+
+## Servicios en segundo plano
+
+El backend incluye servicios en segundo plano que se ejecutan automáticamente mientras la API está levantada. Estos servicios revisan periódicamente ciertos estados del sistema y los actualizan cuando corresponde.
+
+### ActualizarEstadosBackgroundService
+
+Es el servicio que se ejecuta en segundo plano. Cada 1 minuto llama al servicio coordinador `ActualizarEstadosService`, que se encarga de ejecutar todas las actualizaciones automáticas del sistema.
+
+### ActualizarEstadosService
+
+Funciona como servicio coordinador. Su responsabilidad es llamar a los servicios específicos que actualizan estados de distintas entidades:
+
+- encuentros
+- compras
+- transferencias
+
+De esta forma, la lógica queda separada y cada servicio se encarga de una sola responsabilidad.
+
+### ActualizarEstadosEncuentrosService
+
+Actualiza automáticamente el estado de los encuentros según la fecha y hora:
+
+- Los encuentros `programado` pasan a `en_juego` cuando llega su fecha.
+- Los encuentros `en_juego` pasan a `finalizado` cuando ya pasó el tiempo definido para el partido.
+
+### ActualizarEstadosComprasService
+
+Cancela automáticamente las compras que quedaron pendientes demasiado tiempo.
+
+Si una compra está en estado `pendiente` por más de 15 minutos, el servicio la cambia a `cancelada`.
+
+Esto evita que una reserva quede pendiente indefinidamente.
+
+### ActualizarEstadosTransferenciasService
+
+Rechaza automáticamente las transferencias pendientes vencidas.
+
+Si una transferencia está en estado `pendiente` por más de 24 horas, el servicio:
+
+- cambia la transferencia a `rechazada`;
+- cambia la entrada asociada de `transferida` a `activa`.
+
+Esto permite que la entrada vuelva a quedar disponible para el usuario que la envió originalmente.
