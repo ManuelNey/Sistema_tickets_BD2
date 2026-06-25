@@ -1,6 +1,6 @@
 # Sistema de Ticketing — Mundial 2026
 
-API REST para la gestión de entradas al Mundial 2026. Permite registro de usuarios, compra y transferencia de entradas, y validación en puerta mediante QR.
+Sistema completo de venta y gestión de entradas para el Mundial FIFA 2026. Incluye portal web para usuarios y administradores, y app móvil para funcionarios. Permite registro, compra de entradas, transferencias entre usuarios y validación en puerta mediante códigos QR.
 
 ## Stack tecnológico
 
@@ -10,44 +10,33 @@ API REST para la gestión de entradas al Mundial 2026. Permite registro de usuar
 | Base de datos | PostgreSQL 17 |
 | Acceso a datos | ADO.NET + Npgsql (sin ORM) |
 | Autenticación | JWT Bearer (claims personalizados) |
-| Frontend | React + Vite |
+| Frontend | React 19 + Vite 8 (JSX) |
+| Mobile | React Native 0.81 + Expo 54 |
 | Infraestructura | Docker Compose |
 
 ---
 
 ## Levantar el proyecto
 
-Para levantar el proyecto es necesario tener instalado **Docker Desktop**.
+Requiere **Docker Desktop** instalado.
 
-El archivo principal para iniciar el proyecto es:
-
-```txt
-docker-compose.yml
-```
-
-Desde una terminal ubicada en la carpeta raíz del proyecto, ejecutar:
+Desde la raíz del proyecto:
 
 ```bash
 docker compose up --build
 ```
 
-Este comando levanta tres contenedores:
+### Contenedores
 
 | Contenedor | Puerto | Descripción |
 |---|---|---|
 | `ticketing-db` | 5432 | PostgreSQL 17 |
-| `ticketing-api` | 8080 | API REST (.NET 8) |
-| `ticketing-front` | 5173 | Frontend React (pendiente) |
+| `ticketing-api` | 8080 | API REST (.NET 8) + Swagger |
+| `ticketing-front` | 5173 | Frontend React |
 
 La BD se inicializa automáticamente la primera vez: Docker ejecuta los archivos de `database/init/` en orden alfabético al crear el volumen.
 
-### Resetear docker
-```bash
-docker compose down -v
-docker compose up --build
-```
-
-El comando `docker compose down -v` elimina los volúmenes.
+> Si el volumen ya existe, Docker **no** vuelve a ejecutar los scripts de init. Para partir de cero: `docker compose down -v && docker compose up --build`
 
 ## Inicialización de la base de datos
 
@@ -55,11 +44,14 @@ Los archivos en `database/init/` se ejecutan en orden numérico al crear el volu
 
 | Archivo | Contenido |
 |---|---|
-| `01_schema.sql` | Creación de todas las tablas, constraints e índices |
+| `01_schema.sql` | Tablas, constraints, índices, extensión btree_gist |
 | `02_tablasMundial.sql` | 3 países sede, 16 estadios, 48 equipos, 72 encuentros |
 | `03_usuarios.sql` | 10 usuarios, 5 funcionarios, 3 administradores de prueba |
-| `04_operacion.sql` | Dispositivos, sectores (64 en total), habilitaciones, entradas |
-| `05_negocio.sql` | Compras, transferencias y datos de operación |
+| `04_operacion.sql` | 10 dispositivos, 64 sectores, habilitaciones, entradas |
+| `05_negocio.sql` | Compras, transferencias y validaciones de ejemplo |
+| `06_triggers.sql` | 2 triggers sobre transferencia (cambian estado de entrada) |
+| `07_grants.sql` | 3 roles PostgreSQL: app_admin, app_funcionario, app_usuario |
+| `08_trabaja_en.sql` | Asignaciones iniciales funcionario↔habilita |
 
 > El orden importa: schema primero, datos del mundial, luego usuarios (que son FK de operacion y negocio).
 
@@ -170,84 +162,215 @@ Esto funciona porque `Program.cs` configura `RoleClaimType = "rol"` en los pará
 | `admin1@mail.com` | `Password123` | admin | Canadá (1) |
 | `admin2@mail.com` | `Password123` | admin | México (2) |
 | `admin3@mail.com` | `Password123` | admin | USA (3) |
-| `func1@mail.com` | `Password123` | funcionario | — |
-| `func2@mail.com` | `Password123` | funcionario | — |
-| `func3@mail.com` | `Password123` | funcionario | — |
+| `funcionario1@mail.com` | `Password123` | funcionario | — |
+| `funcionario2@mail.com` | `Password123` | funcionario | — |
 
+
+---
+
+---
+
+## Flujos principales
+
+### Flujo de compra
+
+1. Usuario consulta partidos disponibles → `GET /api/menumatch/matches`
+2. Selecciona sectores y cantidades → `POST /api/compra/reservar` (estado: `pendiente`)
+3. La reserva expira en 15 minutos si no se paga
+4. Usuario confirma el pago → `POST /api/compra/{id}/confirmar` (estado: `pagada`)
+   - Las entradas asociadas pasan de `reservada` → `activa`
+   - Usa `SELECT FOR UPDATE` para evitar race conditions de disponibilidad
+5. También puede cancelar → `POST /api/compra/{id}/cancelar` (estado: `cancelada`)
+
+### Flujo QR (validación en puerta)
+
+1. Usuario genera QR → `POST /api/entradas/{id}/Qr`
+   - El backend devuelve un JWT firmado con `tipo=qr_entrada`, expira en **30 segundos**
+2. El frontend muestra ese JWT como código QR
+3. Funcionario escanea con la app mobile → `POST /api/entradas/ScanQr?token=&deviceId=`
+   - Valida: JWT vigente + `tipo=qr_entrada` + funcionario asignado al sector + entrada `activa`
+   - Si todo es válido: entrada pasa a `utilizada`, se registra en `validacion`
+
+### Flujo de transferencia
+
+1. Usuario transfiere una entrada → `POST /api/transferencia`
+   - La entrada pasa de `activa` → `transferida` (trigger `trg_transferencia_creada`)
+2. Receptor acepta o rechaza → `PUT /api/transferencia/{id}/resolver`
+   - Si acepta: entrada pasa a `activa` para el receptor (trigger `trg_transferencia_resuelta`)
+   - Si rechaza: entrada vuelve a `activa` para el emisor
+   - Límite: máximo 2 transferencias aceptadas por entrada
+
+---
+
+## Máquinas de estado
+
+### Encuentro
+```
+programado → en_juego     (manual vía PUT /api/encuentros/{id} o automático al llegar la hora)
+programado → cancelado
+en_juego   → finalizado   (manual o automático: hora del partido + 2h)
+cancelado  → programado
+```
+Un `BackgroundService` corre cada minuto y actualiza estados automáticamente.
+
+### Compra
+```
+pendiente → pagada     (POST /api/compra/{id}/confirmar)
+pendiente → cancelada  (POST /api/compra/{id}/cancelar)
+```
+
+### Entrada
+```
+reservada   → activa       (al confirmar la compra)
+activa      → transferida  (trigger al insertar en transferencia)
+transferida → activa       (trigger al resolver la transferencia)
+activa      → utilizada    (ScanQr exitoso)
+```
+
+---
+
+## Decisiones de base de datos
+
+### Roles de PostgreSQL
+
+La aplicación usa **3 roles de BD distintos**, uno por tipo de usuario. La conexión que se abre depende del claim `rol` del JWT:
+
+| Rol JWT | Usuario PostgreSQL | Permisos |
+|---|---|---|
+| `admin` | `app_admin` | CRUD sobre recursos de su país sede |
+| `funcionario` | `app_funcionario` | Solo lectura/escritura en validaciones |
+| `usuario` | `app_usuario` | Solo sus propias entradas y compras |
+| (público) | `postgres` | Endpoints sin auth (login, registro) |
+
+Esto garantiza que a nivel de BD un usuario no pueda acceder a datos de otro rol, independientemente de la lógica de la API.
+
+### Triggers
+
+Definidos en `06_triggers.sql`, manejan las transiciones de estado de `entrada` al operar sobre `transferencia`:
+
+- **`trg_transferencia_creada`** — al insertar una transferencia, cambia la entrada a `transferida`
+- **`trg_transferencia_resuelta`** — al actualizar el estado de una transferencia, cambia la entrada a `activa` (tanto si se acepta como si se rechaza)
+
+### `SELECT FOR UPDATE` en compra
+
+`CompraRepository.ConfirmarAsync` usa una transacción con `SELECT ... FOR UPDATE` sobre las entradas antes de confirmarlas. Esto evita que dos requests simultáneos confirmen la misma entrada dos veces en caso de doble click o requests concurrentes.
 
 ---
 
 ## Endpoints disponibles
 
+Swagger disponible en `http://localhost:8080/swagger` con todos los endpoints documentados e interactivos.
+
 ### Usuario (`/api/usuario`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| `POST` | `/api/usuario/registro` | No | Registra un nuevo usuario. Devuelve el JWT. |
-| `POST` | `/api/usuario/login` | No | Autentica y devuelve el JWT con claims de rol. |
-| `GET` | `/api/usuario/perfil/{mail}` | No | Perfil de un usuario por mail. |
-
-#### Body de registro
-```json
-{
-  "mail": "nuevo@mail.com",
-  "nombre": "Juan",
-  "apellido": "García",
-  "contrasena": "mipassword",
-  "fechaNacimiento": "1995-03-15",
-  "tipoDocumento": "CI",
-  "paisDocumento": "Uruguay",
-  "numeroDocumento": "12345678",
-  "paisCasa": "Uruguay",
-  "localidad": "Montevideo",
-  "calle": "Av. 18 de Julio",
-  "numeroCasa": "1234",
-  "codigoPostal": "11100"
-}
-```
-
-#### Body de login
-```json
-{
-  "mail": "admin1@mail.com",
-  "contrasena": "adminpass1"
-}
-```
-
----
+| `POST` | `/api/usuario/registro` | No | Registra un nuevo usuario |
+| `POST` | `/api/usuario/login` | No | Autentica y devuelve JWT |
+| `GET` | `/api/usuario/perfil/{mail}` | `usuario` | Perfil del usuario autenticado |
+| `PUT` | `/api/usuario/perfil/{mail}` | `usuario` | Actualiza perfil y/o contraseña |
 
 ### Estadios (`/api/estadios`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| `GET` | `/api/estadios` | `admin`, `usuario` | Lista todos los estadios. |
-| `POST` | `/api/estadios/registro` | `admin` | Crea un nuevo estadio. |
-| `PUT` | `/api/estadios/{id}` | `admin` | Actualiza un estadio existente. |
+| `GET` | `/api/estadios` | `admin`, `usuario` | Lista estadios (admin: solo su país) |
+| `POST` | `/api/estadios/registro` | `admin` | Crea estadio en su país sede |
+| `PUT` | `/api/estadios/{id}` | `admin` | Actualiza estadio |
 
-#### Body de crear estadio
-```json
-{
-  "nombre": "Estadio Ejemplo",
-  "ciudad": "Montevideo",
-  "fkPaisSede": 1
-}
-```
-
----
-
-### Partidos (`/api/menumatch`)
+### Sectores (`/api/sectores`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| `GET` | `/api/menumatch/matches` | No | Lista encuentros con equipos, estadio y fecha. |
+| `GET` | `/api/sectores/{estadioId}` | `admin` | Lista sectores de un estadio |
+| `POST` | `/api/sectores` | `admin` | Crea sector (máx. 4 por estadio) |
+| `PUT` | `/api/sectores/{id}` | `admin` | Actualiza sector |
+| `DELETE` | `/api/sectores/{id}` | `admin` | Elimina sector |
 
----
-
-### Health check (`/api/health`)
+### Encuentros (`/api/encuentros`)
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| `GET` | `/api/health` | No | Verifica que la API está corriendo. |
+| `GET` | `/api/encuentros` | Público | Lista todos los encuentros |
+| `POST` | `/api/encuentros` | `admin` | Crea encuentro en su país sede |
+| `PUT` | `/api/encuentros/{id}` | `admin` | Actualiza estado o datos del encuentro |
+
+### Compra (`/api/compra`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `POST` | `/api/compra/reservar` | `usuario` | Reserva entradas (estado: pendiente) |
+| `POST` | `/api/compra/{id}/confirmar` | `usuario` | Confirma pago (estado: pagada) |
+| `POST` | `/api/compra/{id}/cancelar` | `usuario` | Cancela reserva |
+| `GET` | `/api/compra/mis-reservas/pendientes` | `usuario` | Lista reservas pendientes |
+| `GET` | `/api/compra/mis-reservas/pagadas` | `usuario` | Lista compras pagadas |
+
+### Entradas (`/api/entradas`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/entradas/mis-entradas` | `usuario` | Lista entradas activas del usuario |
+| `GET` | `/api/entradas/codigosQr` | `usuario` | Lista entradas disponibles para QR |
+| `POST` | `/api/entradas/{id}/Qr` | `usuario` | Genera JWT QR (expira en 30s) |
+| `POST` | `/api/entradas/ScanQr` | `funcionario` | Valida QR y marca entrada como utilizada |
+
+### Transferencias (`/api/transferencia`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `POST` | `/api/transferencia` | `usuario` | Transfiere entrada a otro usuario |
+| `GET` | `/api/transferencia/enviadas` | `usuario` | Lista transferencias enviadas |
+| `GET` | `/api/transferencia/recibidas` | `usuario` | Lista transferencias recibidas |
+| `PUT` | `/api/transferencia/{id}/resolver` | `usuario` | Acepta o rechaza transferencia recibida |
+
+### Funcionarios (`/api/funcionarios`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/funcionarios` | `admin` | Lista todos los funcionarios |
+| `POST` | `/api/funcionarios` | `admin` | Crea un funcionario |
+| `DELETE` | `/api/funcionarios/{mail}` | `admin` | Elimina un funcionario |
+
+### Trabaja en (`/api/trabajaEn`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `POST` | `/api/trabajaEn` | `admin` | Asigna funcionario a una habilitación (encuentro+sector) |
+| `DELETE` | `/api/trabajaEn` | `admin` | Desasigna funcionario |
+
+### Dispositivos (`/api/dispositivo`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/dispositivo` | Público | Lista dispositivos registrados |
+| `POST` | `/api/dispositivo` | `admin` | Registra dispositivo |
+| `DELETE` | `/api/dispositivo/{id}` | `admin` | Elimina dispositivo |
+
+### Comisiones (`/api/comision`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/comision/vigente` | `admin` | Comisión activa actual |
+| `GET` | `/api/comision` | `admin` | Historial de comisiones |
+| `POST` | `/api/comision` | `admin` | Crea nueva comisión |
+
+### Estadísticas (`/api/estadisticas`)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/estadisticas/entradas-por-encuentro` | `admin` | Entradas vendidas por partido |
+| `GET` | `/api/estadisticas/entradas-por-estadio` | `admin` | Entradas vendidas por estadio |
+| `GET` | `/api/estadisticas/top-compradores` | `admin` | Usuarios con más compras |
+| `GET` | `/api/estadisticas/top-transferidores` | `admin` | Usuarios con más transferencias |
+| `GET` | `/api/estadisticas/validaciones-por-dia` | `admin` | Validaciones agrupadas por día |
+
+### Otros
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| `GET` | `/api/paises` | `admin`, `usuario` | Lista los 3 países sede |
+| `GET` | `/api/menumatch/matches` | `usuario` | Partidos con precio y cupos disponibles |
+| `GET` | `/api/health` | Público | Estado de la API |
 
 ---
 
@@ -271,62 +394,13 @@ Sistema_tickets_BD2/
 │       ├── 02_tablasMundial.sql
 │       ├── 03_usuarios.sql
 │       ├── 04_operacion.sql
-│       └── 05_negocio.sql
-│       └── 06_triggers.sql
-│       └── 07_grants.sql
+│       ├── 05_negocio.sql
+│       ├── 06_triggers.sql
+│       ├── 07_grants.sql
 │       └── 08_trabaja_en.sql
-├── frontend/                  → React + Vite 
-├── mobile/                    → React Native + Vite 
-├── scripts/                   → bootstrap, reset-db, reset-backend, reset-all (.ps1 y .sh)
+├── frontend/                  → React 19 + Vite 8
+├── mobile/                    → React Native 0.81 + Expo 54
 └── docker-compose.yml
-```
-
----
-
-## Cómo añadir un nuevo endpoint
-
-1. **DTO**: Crear en `DTOs/` el objeto de entrada y/o respuesta que necesite el endpoint.
-2. **Interfaz del repositorio**: Declarar el método en `IXxxRepository`.
-3. **Implementación**: En `XxxRepository.cs`, escribir la query SQL y mapear el resultado al DTO.
-   - Si hay que leer un `DateOnly` o `TimeOnly` desde el reader, usar `reader.GetFieldValue<DateOnly>(ordinal)`.
-   - Si hay múltiples INSERTs relacionados, envolverlos en `NpgsqlTransaction`.
-4. **Controller**: Crear el controller con `[ApiController]`, `[Route("api/[controller]")]` y los atributos de autorización que correspondan.
-5. **Registrar en `Program.cs`**: `builder.Services.AddSingleton<IXxxRepository, XxxRepository>();`
-6. **Probar**: Swagger está disponible en `http://localhost:8080/swagger`.
-
-### Patrón de repositorio (ejemplo)
-
-```csharp
-// Repositories/IEjemploRepository.cs
-public interface IEjemploRepository {
-    Task<EjemploDto?> GetByIdAsync(int id);
-}
-
-// Repositories/EjemploRepository.cs
-public class EjemploRepository : IEjemploRepository {
-    private readonly IPostgresConnectionFactory _connectionFactory;
-
-    public EjemploRepository(IPostgresConnectionFactory connectionFactory) {
-        _connectionFactory = connectionFactory;
-    }
-
-    public async Task<EjemploDto?> GetByIdAsync(int id) {
-        await using var connection = _connectionFactory.CreateConnection();
-        await connection.OpenAsync();
-        using var cmd = connection.CreateCommand();
-
-        cmd.CommandText = "SELECT id, nombre FROM ejemplo WHERE id = @id";
-        cmd.Parameters.AddWithValue("@id", id);
-
-        using var reader = await cmd.ExecuteReaderAsync();
-        if (!await reader.ReadAsync()) return null;
-
-        return new EjemploDto {
-            Id = reader.GetInt32(reader.GetOrdinal("id")),
-            Nombre = reader.GetString(reader.GetOrdinal("nombre"))
-        };
-    }
-}
 ```
 
 ---
