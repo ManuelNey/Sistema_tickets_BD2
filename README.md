@@ -265,7 +265,7 @@ pendiente → cancelada  (POST /api/compra/{id}/cancelar)
 ```
 reservada   → activa       (al confirmar la compra)
 activa      → transferida  (trigger al insertar en transferencia)
-transferida → activa       (trigger al resolver la transferencia)
+transferida → activa       (trigger al resolver la transferencia o por evento automático de +24h para cancelarla)
 activa      → utilizada    (ScanQr exitoso)
 ```
 
@@ -293,11 +293,6 @@ Definidos en `06_triggers.sql`, manejan las transiciones de estado de `entrada` 
 - **`trg_transferencia_creada`** — al insertar una transferencia, cambia la entrada a `transferida`
 - **`trg_transferencia_resuelta`** — al actualizar el estado de una transferencia, cambia la entrada a `activa` (tanto si se acepta como si se rechaza)
 
-### `SELECT FOR UPDATE` en compra
-
-`CompraRepository.ConfirmarAsync` usa una transacción con `SELECT ... FOR UPDATE` sobre las entradas antes de confirmarlas. Esto evita que dos requests simultáneos confirmen la misma entrada dos veces en caso de doble click o requests concurrentes.
-
----
 
 ## Endpoints disponibles
 
@@ -446,5 +441,3 @@ Sistema_tickets_BD2/
 ```
 
 ---
-
-

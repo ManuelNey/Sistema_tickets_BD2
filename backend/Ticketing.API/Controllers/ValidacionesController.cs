@@ -18,10 +18,11 @@ public class ValidacionesController : ControllerBase
         _validacionRepository = validacionRepository;
     }
 
+    // Obtiene un resumen de las validaciones de entradas para el país sede del usuario autenticado
     [HttpGet("resumen")]
     public async Task<ActionResult<ValidacionResumenDto>> GetResumen()
     {
-        if (!TryGetPaisSede(out var paisSedeId))
+        if (!TryGetPaisSede(out var paisSedeId)) // Intentamos obtener el pais sede del usuario autenticado desde el token.
             return Forbid();
 
         var resumen = await _validacionRepository.GetResumenAsync(paisSedeId);
@@ -29,6 +30,7 @@ public class ValidacionesController : ControllerBase
     }
 
     [HttpGet]
+    // Obtiene una lista de validaciones de entradas para el país sede del usuario autenticado, con filtros opcionales
     public async Task<ActionResult<ValidacionesListaDto>> GetValidaciones(
         [FromQuery] DateTime? desde,
         [FromQuery] DateTime? hasta,
@@ -40,8 +42,15 @@ public class ValidacionesController : ControllerBase
         if (!TryGetPaisSede(out var paisSedeId))
             return Forbid();
 
-        if (numeroPagina < 1) numeroPagina = 1;
-        if (cantidadPorPagina < 1 || cantidadPorPagina > 100) cantidadPorPagina = 20;
+        if (numeroPagina < 1) 
+        {
+            numeroPagina = 1;
+        }
+        // Limita la cantidad de resultados por página a un rango si realista
+        if (cantidadPorPagina < 1 || cantidadPorPagina > 100)
+        {
+            cantidadPorPagina = 20;
+        } 
 
         var lista = await _validacionRepository.GetValidacionesAsync(
             paisSedeId, desde, hasta, estadioId, funcionarioMail, numeroPagina, cantidadPorPagina);
@@ -49,6 +58,7 @@ public class ValidacionesController : ControllerBase
         return Ok(lista);
     }
 
+    // Método auxiliar para obtener el país sede del usuario autenticado desde su token
     private bool TryGetPaisSede(out int paisSedeId)
     {
         paisSedeId = 0;

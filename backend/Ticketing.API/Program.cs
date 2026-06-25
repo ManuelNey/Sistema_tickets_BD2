@@ -10,6 +10,7 @@ builder.WebHost.UseUrls("http://0.0.0.0:8080");
 var jwtKey = builder.Configuration["Jwt:Key"]
     ?? throw new InvalidOperationException("JWT key not configured in appsettings.");
 
+// Configura la autenticación JWT para la API, especificando que se utilizará el esquema "Bearer" y estableciendo los parámetros de validación del token
 builder.Services.AddAuthentication("Bearer").AddJwtBearer(opt =>
 {
     opt.RequireHttpsMetadata = false;
@@ -46,6 +47,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => c.SchemaFilter<DateOnlySchemaFilter>());
 
+// Inserta las implementaciones de los repositorios y servicios en el contenedor.
+// Esto permite que cuando se necesite un repositorio o servicio en un controlador, se pueda inyectar automáticamente sin necesidad de instanciarlo manualmente
 builder.Services.AddSingleton<Ticketing.API.Data.IPostgresConnectionFactory, Ticketing.API.Data.PostgresConnectionFactory>();
 builder.Services.AddSingleton<Ticketing.API.Repositories.IMenuMatchDtoRepository, Ticketing.API.Repositories.MenuMatchDtoRepository>();
 builder.Services.AddSingleton<IUsuarioRepository, UsuarioRepository>();
@@ -77,6 +80,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// Configura los cors para permitir solicitudes desde el frontend en desarrollo.
 app.UseCors("FrontendDev");
 
 app.UseAuthentication();
