@@ -235,27 +235,21 @@ public class EntradaRepository : IEntradaRepository
         if (await cmdReceptor.ExecuteScalarAsync() == null)
             throw new KeyNotFoundException("El destinatario no es un usuario registrado");
 
-        // Revisamos si ya tiene 3 trasnferencias
-        await using var cmdEntradasLimite = new NpgsqlCommand(@"
+
+        // Veo cuantas puedo transferir
+        await using var cmdActivas = new NpgsqlCommand(@"
             SELECT COUNT(*)
             FROM entrada
             WHERE fk_habilita_id = @idHabilita
             AND fk_usuario_mail = @emisor
-            AND estado = 'activa'
-            AND cantidad_transferencias >= 3;",
+            AND estado = 'activa';",
             connection,
             transaction);
 
-        cmdEntradasLimite.Parameters.AddWithValue("idHabilita", idHabilita);
-        cmdEntradasLimite.Parameters.AddWithValue("emisor", emisorMail);
+        cmdActivas.Parameters.AddWithValue("idHabilita", idHabilita);
+        cmdActivas.Parameters.AddWithValue("emisor", emisorMail);
 
-        var entradasConLimite = Convert.ToInt32(await cmdEntradasLimite.ExecuteScalarAsync());
-
-        if (entradasConLimite > 0)
-        {
-            throw new InvalidOperationException(
-                "Esta entrada ya fue transferida 3 veces y no puede volver a transferirse.");
-        }
+        var entradasActivas = Convert.ToInt32(await cmdActivas.ExecuteScalarAsync());
 
         // Obtener las entradas disponibles
         var listaIds = new List<int>();
@@ -286,8 +280,16 @@ public class EntradaRepository : IEntradaRepository
         }
 
         if (listaIds.Count < cantidad)
+        {
+            if (entradasActivas >= cantidad)
+            {
+                throw new InvalidOperationException(
+                    "Una o más entradas ya fueron transferidas 3 veces y no pueden volver a transferirse.");
+            }
+
             throw new InvalidOperationException(
                 "No tenés suficientes entradas disponibles para enviar");
+        }
 
         // Crear transferencias pendientes
         foreach (var idEntrada in listaIds)
