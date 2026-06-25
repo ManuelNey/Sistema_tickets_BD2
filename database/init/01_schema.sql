@@ -1,7 +1,5 @@
 -- Esquema alineado al modelo final BD2
 -- Ordenado para poder ejecutarse desde cero en PostgreSQL sin dependencias rotas.
-CREATE EXTENSION IF NOT EXISTS btree_gist;
-
 CREATE TABLE IF NOT EXISTS pais_sede (
   id_pais_sede SERIAL PRIMARY KEY,
   nombre VARCHAR(200) NOT NULL UNIQUE
