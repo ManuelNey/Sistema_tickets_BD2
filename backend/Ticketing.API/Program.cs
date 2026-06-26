@@ -65,7 +65,8 @@ builder.Services.AddSingleton<ITransferenciaRepository, TransferenciaRepository>
 builder.Services.AddSingleton<IEstadisticasRepository, EstadisticasRepository>();
 builder.Services.AddSingleton<ITrabajaEnRepository, TrabajaEnRepository>();
 builder.Services.AddSingleton<IValidacionRepository, ValidacionRepository>();
-//Esto hace que cuando arraque la API también arranca este servicio en segundo plano
+//Esto hace que cuando arraque la API también arranca este servicio en segundo plano 
+// Bla bla bla
 builder.Services.AddSingleton<ActualizarEstadosComprasService>();
 builder.Services.AddSingleton<ActualizarEstadosEncuentrosService>();
 builder.Services.AddSingleton<ActualizarEstadosTransferenciasService>();
