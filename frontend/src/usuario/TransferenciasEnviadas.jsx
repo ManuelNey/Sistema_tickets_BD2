@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useMemo, useState } from 'react'
 import './reserva.css'
 
@@ -19,7 +20,7 @@ function TransferenciasEnviadas() {
 
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const response = await fetch('http://localhost:8080/api/Transferencia', {
+      const response = await fetch(`${API_URL}/api/Transferencia`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 

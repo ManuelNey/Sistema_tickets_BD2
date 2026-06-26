@@ -1,6 +1,7 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState, useCallback } from 'react'
 
-const API = 'http://localhost:8080'
+const API = `${API_URL}`
 const POR_PAGINA = 20
 
 function getAuthHeaders(extra = {}) {
@@ -121,7 +122,7 @@ function ValidacionesAdmin({ user }) {
       </div>
 
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 18 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 18 }}>
         {[
           { label: 'Total validaciones', value: resumen?.totalMes?.toLocaleString() ?? '—',    sub: 'Este mes'           },
           { label: 'Hoy',                value: resumen?.hoy?.toLocaleString() ?? '—',          sub: 'Últimas 24hs'       },
@@ -168,7 +169,8 @@ function ValidacionesAdmin({ user }) {
       </div>
 
       {/* Tabla */}
-      <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04)' }}>
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: 14 }}>
+      <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04)', minWidth: 640 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.4fr 1.2fr 1.4fr 1fr 0.8fr', padding: '11px 18px', background: '#F8F7FB', borderBottom: '1px solid #ECEAF2' }}>
           {['Partido', 'Estadio · Sector', 'Funcionario', 'Dispositivo', 'Fecha · Hora', 'Token'].map((col) => (
             <span key={col} style={{ fontSize: 10.5, fontWeight: 700, color: '#9490A0', textTransform: 'uppercase', letterSpacing: '0.3px' }}>{col}</span>
@@ -202,6 +204,7 @@ function ValidacionesAdmin({ user }) {
             </BtnPagina>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

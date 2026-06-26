@@ -1,3 +1,4 @@
+﻿import { API_URL } from './config.js'
 import { useState } from 'react'
 import { useAuth } from './context/useAuth'
 import soccerBall from './assets/ticket.png'
@@ -17,7 +18,7 @@ function LoginPage({ onRegister }) {
     setError('')
     setIsLoading(true)
     try {
-      const res = await fetch('http://localhost:8080/api/usuario/login', {
+      const res = await fetch(`${API_URL}/api/usuario/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mail: email, contrasena: password }),

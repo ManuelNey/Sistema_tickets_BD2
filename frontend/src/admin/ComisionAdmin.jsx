@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState } from 'react'
 
 function getAuthHeaders(extraHeaders = {}) {
@@ -22,8 +23,8 @@ function ComisionAdmin() {
     setError('')
     try {
       const [resVigente, resHistorial] = await Promise.all([
-        fetch('http://localhost:8080/api/comision/vigente', { headers: getAuthHeaders() }),
-        fetch('http://localhost:8080/api/comision', { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/api/comision/vigente`, { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/api/comision`, { headers: getAuthHeaders() }),
       ])
       if (resVigente.ok) setVigente(await resVigente.json())
       if (resHistorial.ok) setHistorial(await resHistorial.json())
@@ -52,7 +53,7 @@ function ComisionAdmin() {
     setDeleteError('')
     setDeletingId(id)
     try {
-      const res = await fetch(`http://localhost:8080/api/comision/${id}`, {
+      const res = await fetch(`${API_URL}/api/comision/${id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       })
@@ -75,7 +76,7 @@ function ComisionAdmin() {
     setFormError('')
     setSaving(true)
     try {
-      const res = await fetch('http://localhost:8080/api/comision', {
+      const res = await fetch(`${API_URL}/api/comision`, {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({

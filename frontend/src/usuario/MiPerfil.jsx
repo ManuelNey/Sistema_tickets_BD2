@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useAuth } from '../context/useAuth'
+import { API_URL as API_BASE } from '../config.js'
 
-const API_URL = 'http://localhost:8080/api/usuario'
+const API_URL = API_BASE + '/api/usuario'
 
 function MiPerfil({ user }) {
   const { updateUser } = useAuth()

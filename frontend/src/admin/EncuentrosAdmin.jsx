@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState } from 'react'
 import SidebarIcon from '../shared/SidebarIcon'
 import { flagUrl } from '../usuario/teamFlags'
@@ -42,7 +43,7 @@ function getAuthHeaders(extraHeaders = {}) {
 
 async function loadEncounterDetail(encounterId) {
   try {
-    const response = await fetch(`http://localhost:8080/api/encuentros/${encounterId}`, {
+    const response = await fetch(`${API_URL}/api/encuentros/${encounterId}`, {
       headers: getAuthHeaders(),
     })
 
@@ -121,7 +122,7 @@ function EncuentrosAdmin({ user }) {
     setEncuentrosLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8080/api/encuentros', {
+      const response = await fetch(`${API_URL}/api/encuentros`, {
         headers: getAuthHeaders(),
       })
 
@@ -153,7 +154,7 @@ function EncuentrosAdmin({ user }) {
     setStadiumsLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8080/api/estadios/admin', {
+      const response = await fetch(`${API_URL}/api/estadios/admin`, {
         headers: getAuthHeaders(),
       })
 
@@ -179,7 +180,7 @@ function EncuentrosAdmin({ user }) {
     setSectorsLoading(true)
 
     try {
-      const response = await fetch(`http://localhost:8080/api/sectores/${stadiumId}`, {
+      const response = await fetch(`${API_URL}/api/sectores/${stadiumId}`, {
         headers: getAuthHeaders(),
       })
 
@@ -202,7 +203,7 @@ function EncuentrosAdmin({ user }) {
     setCountriesLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8080/api/Paises', {
+      const response = await fetch(`${API_URL}/api/Paises`, {
         headers: getAuthHeaders(),
       })
 
@@ -221,7 +222,7 @@ function EncuentrosAdmin({ user }) {
 
   const loadCurrentEventSectors = async (eventId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/encuentros/${eventId}/sectores`, {
+      const response = await fetch(`${API_URL}/api/encuentros/${eventId}/sectores`, {
         headers: getAuthHeaders(),
       })
 
@@ -348,7 +349,7 @@ function EncuentrosAdmin({ user }) {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/encuentros/registro', {
+      const response = await fetch(`${API_URL}/api/encuentros/registro`, {
         method: 'POST',
         headers: getAuthHeaders({
           'Content-Type': 'application/json',
@@ -463,7 +464,7 @@ function EncuentrosAdmin({ user }) {
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/encuentros/${selectedEvent.id}`, {
+      const response = await fetch(`${API_URL}/api/encuentros/${selectedEvent.id}`, {
         method: 'PUT',
         headers: getAuthHeaders({
           'Content-Type': 'application/json',
@@ -798,8 +799,8 @@ function FuncionariosModal({ adminCountryId, encuentro, onClose }) {
       setError('')
       try {
         const [resAsig, resTodos] = await Promise.all([
-          fetch(`http://localhost:8080/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() }),
-          fetch('http://localhost:8080/api/funcionarios/admin', { headers: getAuthHeaders() }),
+          fetch(`${API_URL}/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() }),
+          fetch(`${API_URL}/api/funcionarios/admin`, { headers: getAuthHeaders() }),
         ])
         if (!resAsig.ok || !resTodos.ok) throw new Error()
         setAsignaciones(await resAsig.json())
@@ -835,13 +836,13 @@ function FuncionariosModal({ adminCountryId, encuentro, onClose }) {
   const asignar = async (habilitaId, mail) => {
     setSaving(true)
     try {
-      const res = await fetch('http://localhost:8080/api/trabajaen', {
+      const res = await fetch(`${API_URL}/api/trabajaen`, {
         method: 'POST',
         headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ funcionarioMail: mail, habilitaId }),
       })
       if (!res.ok) throw new Error()
-      const updated = await fetch(`http://localhost:8080/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() })
+      const updated = await fetch(`${API_URL}/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() })
       setAsignaciones(await updated.json())
     } catch {
       setError('No se pudo asignar el funcionario')
@@ -854,12 +855,12 @@ function FuncionariosModal({ adminCountryId, encuentro, onClose }) {
   const desasignar = async (habilitaId, mail) => {
     setSaving(true)
     try {
-      const res = await fetch(`http://localhost:8080/api/trabajaen?funcionarioMail=${encodeURIComponent(mail)}&habilitaId=${habilitaId}`, {
+      const res = await fetch(`${API_URL}/api/trabajaen?funcionarioMail=${encodeURIComponent(mail)}&habilitaId=${habilitaId}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       })
       if (!res.ok) throw new Error()
-      const updated = await fetch(`http://localhost:8080/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() })
+      const updated = await fetch(`${API_URL}/api/trabajaen/encuentro/${encuentro.id}`, { headers: getAuthHeaders() })
       setAsignaciones(await updated.json())
     } catch {
       setError('No se pudo quitar el funcionario')

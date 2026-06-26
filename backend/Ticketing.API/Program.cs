@@ -35,7 +35,8 @@ builder.Services.AddCors(options =>
                 "http://127.0.0.1:5173",
                 "http://localhost:5174",
                 "http://127.0.0.1:5174",
-                "http://192.168.1.23:8081"
+                "http://192.168.1.23:8081",
+                "https://manuelney.github.io"
             ).AllowAnyHeader()
             .AllowAnyMethod();
     });

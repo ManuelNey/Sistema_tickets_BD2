@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useMemo, useState } from 'react'
 import './DashboardAdmin.css'
 
@@ -439,7 +440,7 @@ function formatMoney(value) {
 }
 
 function buildStatsUrl(endpoint, rangoFechas) {
-  const url = new URL(`http://localhost:8080/api/Estadisticas/${endpoint}`)
+  const url = new URL(`${API_URL}/api/Estadisticas/${endpoint}`)
 
   if (rangoFechas.desde) {
     url.searchParams.set('desde', rangoFechas.desde)

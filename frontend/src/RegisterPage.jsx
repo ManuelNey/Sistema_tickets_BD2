@@ -1,3 +1,4 @@
+﻿import { API_URL } from './config.js'
 import { useState } from 'react'
 import './RegisterPage.css'
 import soccerBall from './assets/pelota.png'
@@ -82,7 +83,7 @@ function RegisterPage({ onVolverLogin }) {
       contrasena: datos.contrasena, fechaNacimiento: datos.fechaNacimiento || null,
     }
     try {
-      const res = await fetch('http://localhost:8080/api/Usuario/registro', {
+      const res = await fetch(`${API_URL}/api/Usuario/registro`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

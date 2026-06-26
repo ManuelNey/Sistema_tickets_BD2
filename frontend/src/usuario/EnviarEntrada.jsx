@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useState } from 'react'
 import { SendIcon } from './matchIcons'
 import { formatDate, formatTime } from './format'
@@ -27,7 +28,7 @@ function EnviarEntrada({ grupo, onVolver, onEnviado }) {
     setEnviando(true)
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const res = await fetch('http://localhost:8080/api/entradas/transferir', {
+      const res = await fetch(`${API_URL}/api/entradas/transferir`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({

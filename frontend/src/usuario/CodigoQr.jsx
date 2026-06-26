@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useCallback, useEffect, useState } from 'react'
 import QRCode from 'react-qr-code'
 import { flagUrl } from './teamFlags'
@@ -22,7 +23,7 @@ function CodigoQr() {
 
       const token = localStorage.getItem('ticketmatch-token')
 
-      const response = await fetch('http://localhost:8080/api/Entradas/codigosQr', {
+      const response = await fetch(`${API_URL}/api/Entradas/codigosQr`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -49,7 +50,7 @@ function CodigoQr() {
 
       const token = localStorage.getItem('ticketmatch-token')
 
-      const response = await fetch(`http://localhost:8080/api/Entradas/${idEntrada}/qr`, {
+      const response = await fetch(`${API_URL}/api/Entradas/${idEntrada}/qr`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

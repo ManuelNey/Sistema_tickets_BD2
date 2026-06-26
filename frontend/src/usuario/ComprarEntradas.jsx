@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState } from 'react'
 import MatchCard from './MatchCard'
 import CompraDetalle from './CompraDetalle'
@@ -31,7 +32,7 @@ function ComprarEntradas({ onIrAMisEntradas }) {
       if (estId) params.append('estadioId', estId)
       const qs = params.toString()
       const res = await fetch(
-        `http://localhost:8080/api/menumatch/matches${qs ? '?' + qs : ''}`,
+        `${API_URL}/api/menumatch/matches${qs ? '?' + qs : ''}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       if (!res.ok) throw new Error()
@@ -51,8 +52,8 @@ function ComprarEntradas({ onIrAMisEntradas }) {
         const token = localStorage.getItem('ticketmatch-token')
         const headers = { Authorization: `Bearer ${token}` }
         const [matchRes, estadiosRes] = await Promise.all([
-          fetch('http://localhost:8080/api/menumatch/matches', { headers }),
-          fetch('http://localhost:8080/api/estadios', { headers }),
+          fetch(`${API_URL}/api/menumatch/matches`, { headers }),
+          fetch(`${API_URL}/api/estadios`, { headers }),
         ])
         if (!matchRes.ok || !estadiosRes.ok) throw new Error()
         const [matchData, estadiosData] = await Promise.all([matchRes.json(), estadiosRes.json()])

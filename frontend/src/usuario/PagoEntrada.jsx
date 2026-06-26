@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useState } from 'react'
 import Countdown from './Countdown'
 import { formatPrice, getExpiracion } from './format'
@@ -28,7 +29,7 @@ function PagoEntrada({ pedido, onPagoExitoso, onVolver }) {
       // Si se hace en un futuro correspondería implementar un endpoint específico para procesar el pago
       // que a su vez se integraría con la pasarela real.
       const response = await fetch(
-        `http://localhost:8080/api/compra/${pedido.idCompra}/confirmar`,
+        `${API_URL}/api/compra/${pedido.idCompra}/confirmar`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },

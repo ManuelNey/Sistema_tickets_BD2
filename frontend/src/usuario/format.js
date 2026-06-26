@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 // Helpers de formato compartidos entre las pantallas de compra.
 
 export function formatDate(date) {
@@ -42,7 +43,7 @@ export function calcularTotales(precioUnitario, cantidad, comisionRate = 0) {
 export async function fetchComisionVigente() {
   try {
     const token = localStorage.getItem('ticketmatch-token')
-    const res = await fetch('http://localhost:8080/api/comision/vigente', {
+    const res = await fetch(`${API_URL}/api/comision/vigente`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     if (!res.ok) return 0

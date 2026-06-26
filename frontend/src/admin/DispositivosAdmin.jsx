@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState } from 'react'
 import SidebarIcon from '../shared/SidebarIcon'
 
@@ -45,7 +46,7 @@ function DispositivosAdmin() {
     setDevicesLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8080/api/Dispositivo', {
+      const response = await fetch(`${API_URL}/api/Dispositivo`, {
         headers: getAuthHeaders(),
       })
 
@@ -104,7 +105,7 @@ function DispositivosAdmin() {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/Dispositivo/registro', {
+      const response = await fetch(`${API_URL}/api/Dispositivo/registro`, {
         method: 'POST',
         headers: getAuthHeaders({
           'Content-Type': 'application/json',
@@ -129,7 +130,7 @@ function DispositivosAdmin() {
     setFuncionariosLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8080/api/Funcionarios/admin', {
+      const response = await fetch(`${API_URL}/api/Funcionarios/admin`, {
         headers: getAuthHeaders(),
       })
 
@@ -217,7 +218,7 @@ function DispositivosAdmin() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/Dispositivo/${encodeURIComponent(selectedDevice.numeroDispositivo)}`,
+        `${API_URL}/api/Dispositivo/${encodeURIComponent(selectedDevice.numeroDispositivo)}`,
         {
           method: 'PUT',
           headers: getAuthHeaders({
@@ -251,7 +252,7 @@ function DispositivosAdmin() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/Dispositivo/${encodeURIComponent(device.numeroDispositivo)}`,
+        `${API_URL}/api/Dispositivo/${encodeURIComponent(device.numeroDispositivo)}`,
         {
           method: 'PUT',
           headers: getAuthHeaders({
@@ -291,7 +292,7 @@ function DispositivosAdmin() {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/Dispositivo/${encodeURIComponent(deviceToDelete.numeroDispositivo)}`,
+        `${API_URL}/api/Dispositivo/${encodeURIComponent(deviceToDelete.numeroDispositivo)}`,
         {
           method: 'DELETE',
           headers: getAuthHeaders(),

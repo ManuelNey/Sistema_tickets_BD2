@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState } from 'react'
 import SidebarIcon from '../shared/SidebarIcon'
 import StadiumModal from './StadiumModal'
@@ -19,7 +20,7 @@ function getAuthHeaders(extraHeaders = {}) {
 
 async function loadStadiumSectorStats(stadiumId) {
   try {
-    const response = await fetch(`http://localhost:8080/api/sectores/${stadiumId}`, {
+    const response = await fetch(`${API_URL}/api/sectores/${stadiumId}`, {
       headers: getAuthHeaders(),
     })
 
@@ -69,7 +70,7 @@ function EstadiosAdmin({ onOpenSectors, user }) {
     setStadiumStats({})
 
     try {
-      const response = await fetch('http://localhost:8080/api/estadios', {
+      const response = await fetch(`${API_URL}/api/estadios`, {
         headers: getAuthHeaders(),
       })
 
@@ -137,8 +138,8 @@ function EstadiosAdmin({ onOpenSectors, user }) {
 
     try {
       const url = isEdit
-        ? `http://localhost:8080/api/estadios/${selectedStadium.id}`
-        : 'http://localhost:8080/api/estadios/registro'
+        ? `${API_URL}/api/estadios/${selectedStadium.id}`
+        : `${API_URL}/api/estadios/registro`
 
       const response = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -180,7 +181,7 @@ function EstadiosAdmin({ onOpenSectors, user }) {
     setStadiumDeleting(true)
 
     try {
-      const response = await fetch(`http://localhost:8080/api/estadios/${stadiumToDelete.id}`, {
+      const response = await fetch(`${API_URL}/api/estadios/${stadiumToDelete.id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       })

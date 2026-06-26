@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useCallback, useEffect, useState } from 'react'
 import SidebarIcon from '../shared/SidebarIcon'
 
@@ -32,7 +33,7 @@ function SectoresAdmin({ onBack, stadium, user }) {
     setSectorsLoading(true)
 
     try {
-      const response = await fetch(`http://localhost:8080/api/sectores/${stadium.id}`, {
+      const response = await fetch(`${API_URL}/api/sectores/${stadium.id}`, {
         headers: getAuthHeaders(),
       })
 
@@ -102,8 +103,8 @@ function SectoresAdmin({ onBack, stadium, user }) {
 
     try {
       const url = isEdit
-        ? `http://localhost:8080/api/sectores/${selectedSector.id}`
-        : 'http://localhost:8080/api/sectores/registro'
+        ? `${API_URL}/api/sectores/${selectedSector.id}`
+        : `${API_URL}/api/sectores/registro`
 
       const response = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
@@ -140,7 +141,7 @@ function SectoresAdmin({ onBack, stadium, user }) {
     setSectorDeleting(true)
 
     try {
-      const response = await fetch(`http://localhost:8080/api/sectores/${sectorToDelete.id}`, {
+      const response = await fetch(`${API_URL}/api/sectores/${sectorToDelete.id}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
       })

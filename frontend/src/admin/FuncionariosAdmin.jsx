@@ -1,6 +1,7 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState } from 'react'
 
-const API = 'http://localhost:8080'
+const API = `${API_URL}`
 
 function getAuthHeaders(extra = {}) {
   const token = localStorage.getItem('ticketmatch-token')
@@ -152,7 +153,8 @@ function FuncionariosAdmin() {
       )}
 
       {/* Tabla */}
-      <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04)' }}>
+      <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', borderRadius: 14 }}>
+      <div style={{ background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.05), 0 3px 12px rgba(0,0,0,0.04)', minWidth: 560 }}>
         {/* Encabezado */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1fr', padding: '11px 18px', background: '#F8F7FB', borderBottom: '1px solid #ECEAF2' }}>
           {['Funcionario', 'Email', 'Legajo', 'Documento', 'Acciones'].map((col) => (
@@ -178,6 +180,7 @@ function FuncionariosAdmin() {
             onEliminar={() => eliminar(fc.mail)}
           />
         ))}
+      </div>
       </div>
 
       {/* Modal */}

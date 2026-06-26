@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useMemo, useState } from 'react'
 import './reserva.css'
 
@@ -21,7 +22,7 @@ function TransferenciasRecibidas() {
 
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const response = await fetch('http://localhost:8080/api/Transferencia/recibidas', {
+      const response = await fetch(`${API_URL}/api/Transferencia/recibidas`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -53,7 +54,7 @@ function TransferenciasRecibidas() {
 
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const response = await fetch(`http://localhost:8080/api/Transferencia/${transferenciaId}/resolver`, {
+      const response = await fetch(`${API_URL}/api/Transferencia/${transferenciaId}/resolver`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,

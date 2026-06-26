@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState } from 'react'
 import Countdown from './Countdown'
 import PagoEntrada from './PagoEntrada'
@@ -48,7 +49,7 @@ function MisReservas({ onIrAMisEntradas }) {
     setError('')
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const res = await fetch(`http://localhost:8080/api/compra/mis-reservas/${tab}`, {
+      const res = await fetch(`${API_URL}/api/compra/mis-reservas/${tab}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error('No se pudieron cargar las reservas')
@@ -85,7 +86,7 @@ function MisReservas({ onIrAMisEntradas }) {
     setErrorCancelar('')
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const res = await fetch(`http://localhost:8080/api/compra/${confirmarCancelar.idCompra}/cancelar`, {
+      const res = await fetch(`${API_URL}/api/compra/${confirmarCancelar.idCompra}/cancelar`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })

@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useMemo, useState } from 'react'
 import { flagUrl } from './teamFlags'
 import { fetchComisionVigente, formatDate, formatPrice, formatTime } from './format'
@@ -32,7 +33,7 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
       try {
         const token = localStorage.getItem('ticketmatch-token')
         const res = await fetch(
-          `http://localhost:8080/api/encuentros/${match.idEncuentro}/sectores`,
+          `${API_URL}/api/encuentros/${match.idEncuentro}/sectores`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         if (!res.ok) throw new Error()
@@ -100,7 +101,7 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
 
       // Manda todos los sectores del carrito en una sola llamada; el back crea una compra con toda
       const payload = cartItems.map(item => ({ idHabilita: item.idHabilita, cantidad: item.qty }))
-      const res = await fetch('http://localhost:8080/api/compra/reservar', {
+      const res = await fetch(`${API_URL}/api/compra/reservar`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
@@ -111,7 +112,7 @@ function CompraDetalle({ match, onVolver, onReservaExitosa }) {
       }
       const { idCompra: idCompraNueva } = await res.json()
 
-      const detalleRes = await fetch(`http://localhost:8080/api/compra/${idCompraNueva}`, {
+      const detalleRes = await fetch(`${API_URL}/api/compra/${idCompraNueva}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!detalleRes.ok) throw new Error('No se pudo obtener el detalle de la reserva.')

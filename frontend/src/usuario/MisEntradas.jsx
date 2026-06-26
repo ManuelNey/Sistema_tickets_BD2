@@ -1,3 +1,4 @@
+﻿import { API_URL } from '../config.js'
 import { useEffect, useState } from 'react'
 import { flagUrl } from './teamFlags'
 import { formatDate, formatTime } from './format'
@@ -18,7 +19,7 @@ function MisEntradas({ onIrAEnviadas }) {
     setError('')
     try {
       const token = localStorage.getItem('ticketmatch-token')
-      const res = await fetch('http://localhost:8080/api/entradas/mis-entradas', {
+      const res = await fetch(`${API_URL}/api/entradas/mis-entradas`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       if (!res.ok) throw new Error('No se pudieron cargar las entradas')
